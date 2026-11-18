@@ -99,13 +99,15 @@ final class Updater {
 				return $cached;
 			}
 		}
+		$url = add_query_arg( 't', time(), self::MANIFEST_URL );
 		$response = wp_remote_get(
-			self::MANIFEST_URL,
+			$url,
 			array(
 				'timeout' => 15,
 				'headers' => array(
 					'Accept'        => 'application/json',
 					'Cache-Control' => 'no-cache, no-store, must-revalidate',
+					'Pragma'        => 'no-cache',
 				),
 			)
 		);
@@ -164,7 +166,7 @@ final class Updater {
 			'ok'              => true,
 			'message'         => $has_update
 				? sprintf( __( 'Versi baru v%s tersedia! (Versi terpasang: v%s)', 'lp-generator' ), $latest, $current )
-				: sprintf( __( 'Plugin sudah menggunakan versi terbaru (v%s).', 'lp-generator' ), $current ),
+				: sprintf( __( 'Plugin sudah menggunakan versi terbaru (v%s). Remote version: v%s', 'lp-generator' ), $current, $latest ),
 			'current_version' => $current,
 			'latest_version'  => $latest,
 			'has_update'      => $has_update,
