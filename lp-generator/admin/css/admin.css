@@ -1,0 +1,146 @@
+.lpgen-wrap {
+	max-width: 1200px;
+}
+
+.lpgen-table {
+	margin-top: 12px;
+}
+
+.lpgen-table th {
+	width: 220px;
+	text-align: left;
+	vertical-align: top;
+}
+
+.lpgen-table td {
+	vertical-align: top;
+}
+
+.lpgen-table textarea {
+	width: 100%;
+	max-width: 640px;
+}
+
+.lpgen-status-line {
+	padding: 8px 12px;
+	background: #f0f6fc;
+	border-left: 4px solid #2271b1;
+}
+
+.lpgen-panel {
+	margin: 12px 0;
+	padding: 8px 12px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-left: 4px solid #2271b1;
+}
+
+.lpgen-panel p { margin: 6px 0; }
+.lpgen-panel code { margin-right: 4px; }
+
+.lpgen-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 10px;
+	background: #e0e0e0;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.lpgen-badge--generated,
+.lpgen-badge--review,
+.lpgen-badge--approved { background: #d1f2e4; color: #0c6b43; }
+
+.lpgen-badge--failed,
+.lpgen-badge--rejected { background: #ffdadd; color: #9b1c24; }
+
+.lpgen-badge--published,
+.lpgen-badge--done { background: #d9eaff; color: #145a9c; }
+
+.lpgen-badge--generating,
+.lpgen-badge--publishing,
+.lpgen-badge--queued { background: #fff2cc; color: #7a5b00; }
+
+.lpgen-progress {
+	width: 160px;
+	height: 10px;
+	border-radius: 5px;
+	background: #dcdcde;
+	overflow: hidden;
+}
+
+.lpgen-progress__bar {
+	height: 100%;
+	background: #2271b1;
+	transition: width .3s ease;
+}
+
+#lpgen-action-result,
+#lpgen-tool-result {
+	margin-top: 12px;
+	padding: 8px 12px;
+	min-height: 1em;
+}
+
+.lpgen-result--ok { border-left: 4px solid #00a32a; background: #edfaef; }
+.lpgen-result--error { border-left: 4px solid #d63638; background: #fdf0f0; }
+
+.lpgen-log-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+	gap: 10px;
+	margin: 16px 0;
+}
+
+.lpgen-stat {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 12px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-left: 4px solid #2271b1;
+	text-align: left;
+	cursor: pointer;
+}
+
+.lpgen-stat--static { cursor: default; }
+.lpgen-stat strong { font-size: 22px; line-height: 1.1; }
+.lpgen-stat span { color: #50575e; font-size: 12px; }
+.lpgen-stat:hover { border-color: #2271b1; background: #f6f7f7; }
+.lpgen-stat:focus-visible { outline: 2px solid #2271b1; outline-offset: 2px; }
+
+.lpgen-log-filters {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 10px;
+	padding: 12px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+}
+
+.lpgen-log-filters label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #50575e; }
+.lpgen-log-search input { min-width: 220px; }
+.lpgen-log-auto { flex-direction: row !important; align-items: center; gap: 6px !important; }
+.lpgen-log-count { color: #50575e; }
+
+.lpgen-log-table-wrap { overflow-x: auto; }
+.lpgen-log-table td { font-size: 12px; }
+.lpgen-log-table code { max-width: 240px; overflow: hidden; text-overflow: ellipsis; display: inline-block; white-space: nowrap; vertical-align: middle; }
+.lpgen-log-check { width: 34px; text-align: center; }
+
+.lpgen-log-level {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 10px;
+	background: #e0e0e0;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+.lpgen-log-level--info { background: #e7f2ff; color: #0b4f8a; }
+.lpgen-log-level--success { background: #d1f2e4; color: #0c6b43; }
+.lpgen-log-level--warn, .lpgen-log-level--warning { background: #fff3cd; color: #7a5b00; }
+.lpgen-log-level--error { background: #ffdadd; color: #9b1c24; }

@@ -1,0 +1,5 @@
+*.zip
+!lp-generator-1.3.0.zip
+lp-generator/tests/probe*.txt
+.DS_Store
+Thumbs.db

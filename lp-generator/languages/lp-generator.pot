@@ -1,0 +1,66 @@
+# Copyright (C) 2026 Marzuki
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: LP Generator 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-17 00:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"X-Domain: lp-generator\n"
+
+#. Plugin Name of the plugin
+msgid "LP Generator"
+msgstr ""
+
+#. Description of the plugin
+msgid "Generate a complete TOFU/MOFU/BOFU funnel using 9Router AI and submit new URLs to PuSH and IndexNow."
+msgstr ""
+
+#: admin/class-review-ui.php
+msgid "Dashboard"
+msgstr ""
+
+#: admin/class-review-ui.php
+msgid "Review Konten"
+msgstr ""
+
+#: admin/class-review-ui.php
+msgid "Logs"
+msgstr ""
+
+#: admin/class-review-ui.php
+msgid "Settings"
+msgstr ""
+
+#: admin/class-campaign-ui.php
+msgid "Detail Offer & Funnel"
+msgstr ""
+
+#: admin/class-campaign-ui.php
+msgid "Tipe offer"
+msgstr ""
+
+#: admin/class-campaign-ui.php
+msgid "Start generation"
+msgstr ""
+
+#: admin/class-review-ui.php
+msgid "Publish & Index"
+msgstr ""
+
+#: admin/class-review-ui.php
+msgid "Approve"
+msgstr ""
+
+#: admin/class-review-ui.php
+msgid "Reject"
+msgstr ""
+
+#: admin/class-review-ui.php
+msgid "Regenerate"
+msgstr ""
