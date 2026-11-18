@@ -89,3 +89,9 @@ lpg_assert_true(
 	false !== strpos( $settings_src, 'aria-current="page"' ),
 	'tab aktif punya aria-current'
 );
+
+$admin_src = (string) file_get_contents( $root . '/admin/class-admin.php' );
+lpg_assert_true(
+	false === strpos( $admin_src, 'wp_safe_redirect( admin_url( \'edit.php?post_type=lpgen_campaign\' )' ),
+	'Campaigns submenu tidak redirect setelah output admin'
+);

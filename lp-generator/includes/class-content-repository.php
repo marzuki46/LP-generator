@@ -42,6 +42,12 @@ final class ContentRepository {
 		'article_category',
 		'index_enabled',
 		'index_delay',
+		'content_push_enabled',
+		'content_push_until',
+		'internal_link_enabled',
+		'internal_link_until',
+		'internal_link_target',
+		'target_areas',
 		'phone',
 		'brand',
 		'city',
@@ -156,6 +162,10 @@ final class ContentRepository {
 		$context['bonus']    = Utils::lines( (string) $context['bonus'] );
 		$context['mofu_count'] = Utils::clamp_count( $context['mofu_count'] ?: 2 );
 		$context['tofu_count'] = Utils::clamp_count( $context['tofu_count'] ?: 3 );
+		$context['content_push_enabled'] = empty( $context['content_push_enabled'] ) ? 0 : 1;
+		$context['internal_link_enabled'] = empty( $context['internal_link_enabled'] ) ? 0 : 1;
+		$context['internal_link_target'] = in_array( (string) $context['internal_link_target'], array( 'bofu', 'next_stage' ), true ) ? (string) $context['internal_link_target'] : 'bofu';
+		$context['target_areas'] = Utils::lines( (string) $context['target_areas'] );
 
 		$framework          = Frameworks::get( (string) $context['framework'] );
 		$context['framework']        = $framework['label'];

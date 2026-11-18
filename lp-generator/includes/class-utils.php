@@ -35,13 +35,13 @@ final class Utils {
 	}
 
 	/**
-	 * Parse a comma separated list into clean values.
+	 * Parse a comma/newline separated list into clean values.
 	 *
 	 * @param string $csv Comma separated values.
 	 * @return string[]
 	 */
 	public static function parse_csv( string $csv ): array {
-		$parts = explode( ',', $csv );
+		$parts = preg_split( '/[\r\n,]+/', $csv ) ?: array();
 		$out   = array();
 		foreach ( $parts as $part ) {
 			$part = trim( $part );

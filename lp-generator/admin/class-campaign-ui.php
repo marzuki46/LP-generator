@@ -52,9 +52,15 @@ final class CampaignUI {
 			'publish_status'    => 'publish',
 			'index_enabled'     => 1,
 			'index_delay'       => 10,
+			'content_push_enabled' => 1,
+			'content_push_until' => '',
+			'internal_link_enabled' => 1,
+			'internal_link_until' => '',
+			'internal_link_target' => 'bofu',
 			'phone'             => '',
 			'brand'             => '',
 			'city'              => '',
+			'target_areas'      => '',
 			'entity_enabled'    => 1,
 			'entity_count'      => 8,
 			'tag_max'           => 3,
@@ -211,6 +217,23 @@ final class CampaignUI {
 				<th><label for="lpgen_index_delay"><?php echo esc_html__( 'Jeda index (detik)', 'lp-generator' ); ?></label></th>
 				<td><input type="number" min="0" max="300" name="lpgen[index_delay]" id="lpgen_index_delay" value="<?php echo esc_attr( (string) $values['index_delay'] ); ?>" /></td>
 			</tr>
+			<tr>
+				<th><label for="lpgen_content_push_enabled"><?php echo esc_html__( 'Push konten campaign', 'lp-generator' ); ?></label></th>
+				<td>
+					<input type="hidden" name="lpgen[content_push_enabled]" value="0" />
+					<label><input type="checkbox" name="lpgen[content_push_enabled]" value="1" id="lpgen_content_push_enabled" <?php checked( 1, (int) $values['content_push_enabled'] ); ?> /> <?php echo esc_html__( 'Izinkan TOFU/MOFU dipublish oleh antrean campaign', 'lp-generator' ); ?></label>
+					<p><label for="lpgen_content_push_until"><?php echo esc_html__( 'Berakhir pada (kosong = tanpa batas)', 'lp-generator' ); ?></label><br /><input type="date" name="lpgen[content_push_until]" id="lpgen_content_push_until" value="<?php echo esc_attr( (string) $values['content_push_until'] ); ?>" /></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="lpgen_internal_link_enabled"><?php echo esc_html__( 'Internal link ke BOFU', 'lp-generator' ); ?></label></th>
+				<td>
+					<input type="hidden" name="lpgen[internal_link_enabled]" value="0" />
+					<label><input type="checkbox" name="lpgen[internal_link_enabled]" value="1" id="lpgen_internal_link_enabled" <?php checked( 1, (int) $values['internal_link_enabled'] ); ?> /> <?php echo esc_html__( 'Semua artikel mengarahkan pembaca ke LP BOFU campaign', 'lp-generator' ); ?></label>
+					<p><label for="lpgen_internal_link_target"><?php echo esc_html__( 'Target link', 'lp-generator' ); ?></label><br /><select name="lpgen[internal_link_target]" id="lpgen_internal_link_target"><option value="bofu" <?php selected( $values['internal_link_target'], 'bofu' ); ?>><?php echo esc_html__( 'Selalu BOFU (disarankan)', 'lp-generator' ); ?></option><option value="next_stage" <?php selected( $values['internal_link_target'], 'next_stage' ); ?>><?php echo esc_html__( 'Tahap berikutnya', 'lp-generator' ); ?></option></select></p>
+					<p><label for="lpgen_internal_link_until"><?php echo esc_html__( 'Internal link aktif sampai (kosong = tanpa batas)', 'lp-generator' ); ?></label><br /><input type="date" name="lpgen[internal_link_until]" id="lpgen_internal_link_until" value="<?php echo esc_attr( (string) $values['internal_link_until'] ); ?>" /></p>
+				</td>
+			</tr>
 			<tr><th colspan="2"><h3><?php echo esc_html__( 'Data Campaign (placeholder SEO)', 'lp-generator' ); ?></h3></th></tr>
 			<tr>
 				<th><label for="lpgen_phone"><?php echo esc_html__( 'No HP / WhatsApp', 'lp-generator' ); ?></label></th>
@@ -223,6 +246,10 @@ final class CampaignUI {
 			<tr>
 				<th><label for="lpgen_city"><?php echo esc_html__( 'Kota / area layanan', 'lp-generator' ); ?></label></th>
 				<td><input type="text" class="regular-text" name="lpgen[city]" id="lpgen_city" value="<?php echo esc_attr( (string) $values['city'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label for="lpgen_target_areas"><?php echo esc_html__( 'Target area TOFU/MOFU', 'lp-generator' ); ?></label></th>
+				<td><textarea class="large-text" rows="3" name="lpgen[target_areas]" id="lpgen_target_areas" placeholder="Solo&#10;Sukoharjo&#10;Karanganyar"><?php echo esc_textarea( (string) $values['target_areas'] ); ?></textarea><p class="description"><?php echo esc_html__( 'Satu area per baris. AI akan membagi topik lokal secara alami dan semuanya tetap diarahkan ke BOFU campaign ini.', 'lp-generator' ); ?></p></td>
 			</tr>
 			<tr><th colspan="2"><h3><?php echo esc_html__( 'Entitas Keyword & Tag', 'lp-generator' ); ?></h3></th></tr>
 			<tr>
@@ -394,6 +421,17 @@ final class CampaignUI {
 				case 'index_delay':
 					$data[ $key ] = max( 0, min( 300, absint( $value ) ) );
 					break;
+				case 'content_push_enabled':
+				case 'internal_link_enabled':
+					$data[ $key ] = empty( $value ) ? 0 : 1;
+					break;
+				case 'content_push_until':
+				case 'internal_link_until':
+					$data[ $key ] = preg_match( '/^\d{4}-\d{2}-\d{2}$/', (string) $value ) ? (string) $value : '';
+					break;
+				case 'internal_link_target':
+					$data[ $key ] = in_array( $value, array( 'bofu', 'next_stage' ), true ) ? $value : 'bofu';
+					break;
 				case 'index_enabled':
 					$data[ $key ] = empty( $value ) ? 0 : 1;
 					break;
@@ -439,6 +477,7 @@ final class CampaignUI {
 				case 'phone':
 				case 'brand':
 				case 'city':
+				case 'target_areas':
 				case 'amazon_keyword':
 					$data[ $key ] = Utils::clean_text( $value );
 					break;

@@ -57,6 +57,7 @@ final class Activator {
 					'indexnow_key'           => $index_key,
 					'indexnow_key_location'  => '',
 					'indexnow_endpoints'     => Indexer::INDEXNOW_ENDPOINT,
+					'rss_endpoints'          => implode( "\n", Indexer::RSS_ENDPOINTS ),
 					'push_enabled'           => 1,
 					'push_hub'               => Indexer::PUSH_HUB,
 					'index_delay'            => 10,

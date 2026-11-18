@@ -20,6 +20,7 @@ $context = array(
 	'item_index'       => 0,
 	'target_stage'     => 'bofu',
 	'existing_titles'  => array( 'Judul lama' ),
+	'target_areas'     => array( 'Solo', 'Sukoharjo' ),
 );
 
 $lp = Prompts::build_lp( $context );
@@ -36,6 +37,7 @@ lpg_assert_true( false !== strpos( $lp['system'], 'ONLY a single valid JSON obje
 $topic = Prompts::build_topic( array_merge( $context, array( 'stage' => 'mofu' ) ) );
 lpg_assert_true( in_array( 'funnel_link_angle', $topic['required'], true ), 'topic punya funnel_link_angle' );
 lpg_assert_true( false !== strpos( $topic['user'], 'MOFU' ), 'topic prompt menyebut stage' );
+lpg_assert_true( false !== strpos( $topic['user'], 'Solo' ), 'topic prompt memakai target area' );
 
 $article = Prompts::build_article( array_merge( $context, array( 'topic_title' => 'Cara Memilih Hosting' ) ) );
 lpg_assert_true( in_array( 'anchor_suggestion', $article['required'], true ), 'artikel punya anchor_suggestion' );

@@ -27,6 +27,16 @@ final class Indexer {
 	public const INDEXNOW_ENDPOINT = 'https://api.indexnow.org/indexnow';
 
 	/**
+	 * Free WebSub hubs. They receive a ping and fetch the public RSS feed.
+	 *
+	 * @var string[]
+	 */
+	public const RSS_ENDPOINTS = array(
+		'https://pubsubhubbub.appspot.com/publish',
+		'https://pubsubhubbub.superfeedr.com/',
+	);
+
+	/**
 	 * Build the x-www-form-urlencoded body for Google PuSH publish.
 	 *
 	 * @param string $feed_url Feed URL.
@@ -124,26 +134,35 @@ final class Indexer {
 		);
 
 		if ( ! empty( $settings['push_enabled'] ) ) {
-			$hub      = self::PUSH_HUB;
-			$response = wp_remote_post(
-				$hub,
-				array(
-					'timeout' => 15,
-					'body'    => self::build_push_body( get_feed_link( 'rss2' ) ),
-				)
-			);
-			$code = is_wp_error( $response ) ? 0 : (int) wp_remote_retrieve_response_code( $response );
-			$results['push'] = array(
-				'ok'   => $code >= 200 && $code < 300,
-				'code' => $code,
-			);
-			Database::log(
-				$code >= 200 && $code < 300 ? 'info' : 'warning',
-				sprintf( 'PuSH publish returned HTTP %d', $code ),
-				$campaign,
-				$job_id,
-				array( 'url' => $permalink )
-			);
+			$endpoints = Utils::parse_csv( (string) ( $settings['rss_endpoints'] ?? '' ) );
+			if ( empty( $endpoints ) ) {
+				$endpoints = self::RSS_ENDPOINTS;
+			}
+			$results['push']['providers'] = array();
+			foreach ( $endpoints as $endpoint ) {
+				if ( false === wp_http_validate_url( $endpoint ) ) {
+					continue;
+				}
+				$response = wp_remote_post(
+					$endpoint,
+					array(
+						'timeout' => 15,
+						'body'    => self::build_push_body( get_feed_link( 'rss2' ) ),
+					)
+				);
+				$code = is_wp_error( $response ) ? 0 : (int) wp_remote_retrieve_response_code( $response );
+				$ok   = $code >= 200 && $code < 300;
+				$results['push']['providers'][ $endpoint ] = array( 'ok' => $ok, 'code' => $code );
+				$results['push']['ok'] = $results['push']['ok'] || $ok;
+				$results['push']['code'] = $code;
+				Database::log(
+					$ok ? 'info' : 'warning',
+					sprintf( 'RSS/WebSub %s returned HTTP %d', wp_parse_url( $endpoint, PHP_URL_HOST ), $code ),
+					$campaign,
+					$job_id,
+					array( 'url' => $permalink, 'endpoint' => $endpoint )
+				);
+			}
 		}
 
 		$key = (string) ( $settings['indexnow_key'] ?? '' );

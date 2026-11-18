@@ -16,6 +16,8 @@ lpg_assert_same(
 	$push,
 	'PuSH publish body'
 );
+lpg_assert_true( in_array( Indexer::PUSH_HUB, Indexer::RSS_ENDPOINTS, true ), 'Google WebSub tetap menjadi provider RSS' );
+lpg_assert_true( in_array( 'https://pubsubhubbub.superfeedr.com/', Indexer::RSS_ENDPOINTS, true ), 'Superfeedr ditambahkan sebagai provider RSS gratis' );
 
 $payload = Indexer::build_indexnow_payload(
 	'https://example.test/lp/',

@@ -218,6 +218,13 @@ final class Generator {
 				'jobs'    => 0,
 			);
 		}
+		if ( ! self::content_push_active( $campaign ) ) {
+			return array(
+				'ok'      => false,
+				'message' => __( 'Push konten campaign sedang nonaktif atau sudah melewati tanggal akhir.', 'lp-generator' ),
+				'jobs'    => 0,
+			);
+		}
 		$items = ContentRepository::items( $campaign_id );
 		if ( self::auto_publish_enabled( $campaign ) ) {
 			foreach ( $items as $item ) {
@@ -449,12 +456,18 @@ final class Generator {
 		if ( empty( $campaign ) || empty( $item ) ) {
 			throw new \RuntimeException( 'campaign_or_item_missing' );
 		}
+		if ( ! self::content_push_active( $campaign ) ) {
+			Database::log( 'info', 'Publish dilewati: campaign melewati batas push konten', $campaign_id );
+			return;
+		}
 
 		$target = '';
-		if ( 'article' === $item['kind'] ) {
-			$target = 'bofu' === $item['target_stage']
+		if ( 'article' === $item['kind'] && self::internal_link_active( $campaign ) ) {
+			$target = 'bofu' === (string) ( $campaign['internal_link_target'] ?? 'bofu' )
 				? self::find_published_permalink( $campaign_id, 'bofu' )
-				: self::find_published_permalink( $campaign_id, 'mofu' );
+				: ( 'bofu' === $item['target_stage']
+				? self::find_published_permalink( $campaign_id, 'bofu' )
+				: self::find_published_permalink( $campaign_id, 'mofu' ) );
 			if ( '' === $target ) {
 				$target = self::find_published_permalink( $campaign_id, 'bofu' );
 			}
@@ -465,6 +478,28 @@ final class Generator {
 		}
 		$permalink = (string) get_permalink( $post_id );
 		Database::log( 'success', sprintf( 'Item %d published as post %d: %s', $item_id, $post_id, $permalink ), $campaign_id );
+	}
+
+	/**
+	 * Whether campaign content may still be published.
+	 */
+	private static function content_push_active( array $campaign ): bool {
+		if ( array_key_exists( 'content_push_enabled', $campaign ) && empty( $campaign['content_push_enabled'] ) ) {
+			return false;
+		}
+		$until = trim( (string) ( $campaign['content_push_until'] ?? '' ) );
+		return '' === $until || $until >= current_time( 'Y-m-d' );
+	}
+
+	/**
+	 * Whether article-to-BOFU internal linking is still enabled.
+	 */
+	private static function internal_link_active( array $campaign ): bool {
+		if ( array_key_exists( 'internal_link_enabled', $campaign ) && empty( $campaign['internal_link_enabled'] ) ) {
+			return false;
+		}
+		$until = trim( (string) ( $campaign['internal_link_until'] ?? '' ) );
+		return '' === $until || $until >= current_time( 'Y-m-d' );
 	}
 
 	/**

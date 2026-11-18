@@ -42,14 +42,7 @@ final class Admin {
 			__( 'Campaigns', 'lp-generator' ),
 			__( 'Campaigns', 'lp-generator' ),
 			'lpgen_manage',
-			'lpg-campaigns',
-			static function (): void {
-				if ( ! current_user_can( 'lpgen_manage' ) ) {
-					return;
-				}
-				wp_safe_redirect( admin_url( 'edit.php?post_type=lpgen_campaign' ) );
-				exit;
-			}
+			'edit.php?post_type=lpgen_campaign'
 		);
 		add_submenu_page(
 			'lp-generator',

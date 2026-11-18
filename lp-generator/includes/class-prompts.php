@@ -67,6 +67,8 @@ final class Prompts {
 			'phone',
 			'brand',
 			'city',
+			'target_areas',
+			'internal_link_target',
 			'entities',
 			'amazon_products',
 			'tags',
@@ -298,6 +300,8 @@ final class Prompts {
 				self::format_context( $context ),
 				self::language_line( (string) ( $context['language'] ?? 'id' ) ),
 				'tofu topics = broad awareness/education ("what is", "common mistakes", "beginner guide"). mofu topics = comparison, review, case study, "how to choose".',
+				'Use the target areas as local SEO context and distribute topics naturally across them without inventing local facts: ' . implode( ', ', (array) ( $context['target_areas'] ?? array() ) ) . '.',
+				'Every TOFU and MOFU topic must support the campaign BOFU landing page and use the BOFU offer as the final commercial direction.',
 				sprintf( 'This is topic number %d of the %s stage.', (int) ( $context['item_index'] ?? 0 ) + 1, strtoupper( $stage ) ),
 				'Return JSON with exactly these keys: "title" (string, specific and click-worthy, <=70 chars), "angle" (string), "intent" (informational/commercial/transactional), "keywords" (array of 3–6 strings), "outline" (array of 4–6 heading strings), "funnel_link_angle" (string: the natural transition sentence that will lead the reader to the next funnel stage).',
 			)
@@ -328,6 +332,7 @@ final class Prompts {
 				self::entity_line( $context ),
 				self::framework_line( $context ),
 				sprintf( 'The final CTA paragraph MUST transition to the %s content. Suggest a short descriptive anchor (2–6 words), not "klik di sini".', $target ),
+				'When internal linking is enabled, the final CTA and one natural in-body mention must point to the campaign BOFU URL. Do not create links to unrelated offers.',
 				'Return JSON with exactly these keys: "title" (string), "seo_title" (string <=60), "meta_description" (string <=155), "intro" (string 60–100 words), "sections" (array of {"heading":string,"hint":string,"body":string,"bullets":string[]}, 4–7 items), "cta_paragraph" (string 2–3 sentences ending with the suggested anchor as a natural phrase), "anchor_suggestion" (string), "faq" (array of {"q":string,"a":string}), "tags" (string[]).',
 				self::tags_line( $context ),
 			)

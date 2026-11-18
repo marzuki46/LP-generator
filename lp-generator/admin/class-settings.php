@@ -112,6 +112,12 @@ final class Settings {
 				'section' => 'indexing',
 				'desc'    => __( 'Dipisah koma. Default global endpoint sudah fan-out ke engine peserta.', 'lp-generator' ),
 			),
+			'rss_endpoints'         => array(
+				'label'   => __( 'RSS/WebSub Providers', 'lp-generator' ),
+				'type'    => 'textarea',
+				'section' => 'indexing',
+				'desc'    => __( 'Satu URL per baris. Default: Google WebSub dan Superfeedr. Plugin mengirim ping ke feed RSS; konten tetap berada di situs Anda.', 'lp-generator' ),
+			),
 			'push_enabled'          => array(
 				'label'   => __( 'Google PuSH / WebSub', 'lp-generator' ),
 				'type'    => 'checkbox',
@@ -548,6 +554,10 @@ final class Settings {
 		if ( empty( $settings['indexnow_endpoints'] ) ) {
 			$settings['indexnow_endpoints'] = Indexer::INDEXNOW_ENDPOINT;
 			$changed                        = true;
+		}
+		if ( empty( $settings['rss_endpoints'] ) ) {
+			$settings['rss_endpoints'] = implode( "\n", Indexer::RSS_ENDPOINTS );
+			$changed = true;
 		}
 		if ( $changed ) {
 			update_option( self::OPTION, $settings );
