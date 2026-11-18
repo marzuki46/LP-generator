@@ -113,10 +113,10 @@ final class Settings {
 				'desc'    => __( 'Dipisah koma. Default global endpoint sudah fan-out ke engine peserta.', 'lp-generator' ),
 			),
 			'rss_endpoints'         => array(
-				'label'   => __( 'RSS/WebSub Providers', 'lp-generator' ),
+				'label'   => __( 'RSS/WebSub Providers & XML-RPC Ping', 'lp-generator' ),
 				'type'    => 'textarea',
 				'section' => 'indexing',
-				'desc'    => __( 'Satu URL per baris. Default: Google WebSub dan Superfeedr. Plugin mengirim ping ke feed RSS; konten tetap berada di situs Anda.', 'lp-generator' ),
+				'desc'    => __( 'Satu URL per baris (12 provider default). Termasuk Google WebSub, Superfeedr, WebSubHub, Ping-o-Matic, Weblogs, Blo.gs, Yahoo, FeedBurner. Notifikasi instan dikirim saat konten dipublish.', 'lp-generator' ),
 			),
 			'push_enabled'          => array(
 				'label'   => __( 'Google PuSH / WebSub', 'lp-generator' ),

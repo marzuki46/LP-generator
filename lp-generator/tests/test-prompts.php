@@ -48,3 +48,10 @@ lpg_assert_true( false !== strpos( $repaired['user'], 'not valid JSON' ), 'repai
 
 $encoded = Prompts::format_context( array( 'offer_name' => 'A "quoted" name' ) );
 lpg_assert_true( false !== strpos( $encoded, '\\"quoted\\"' ), 'context di-encode aman' );
+
+$suggest = Prompts::build_campaign_suggestion( 'Jasa Website Solo', 'id' );
+lpg_assert_true( in_array( 'audience', $suggest['required'], true ), 'suggestion required audience' );
+lpg_assert_true( in_array( 'problem', $suggest['required'], true ), 'suggestion required problem' );
+lpg_assert_true( in_array( 'promise', $suggest['required'], true ), 'suggestion required promise' );
+lpg_assert_true( false !== strpos( $suggest['user'], 'Jasa Website Solo' ), 'suggestion memuat keyword user' );
+lpg_assert_true( false !== strpos( $suggest['user'], 'Bahasa Indonesia' ), 'suggestion meminta Bahasa Indonesia' );

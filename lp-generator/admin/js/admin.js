@@ -56,16 +56,50 @@
 			return;
 		}
 
-		if ('start-campaign' === action && !window.confirm(config.i18n.confirmStart)) {
-			return;
+		if ('start-campaign' === action) {
+			if (!window.confirm(config.i18n.confirmStart)) {
+				return;
+			}
+			// Auto-serialize all campaign form inputs so user edits are saved even if draft wasn't published yet
+			var formValues = {};
+			$('input[name^="lpgen["], select[name^="lpgen["], textarea[name^="lpgen["]').each(function () {
+				var name = $(this).attr('name');
+				var match = name.match(/lpgen\[([^\]]+)\]/);
+				if (match) {
+					var key = match[1];
+					if ($(this).is(':checkbox')) {
+						formValues[key] = $(this).is(':checked') ? 1 : 0;
+					} else if ($(this).is(':radio')) {
+						if ($(this).is(':checked')) {
+							formValues[key] = $(this).val();
+						}
+					} else {
+						formValues[key] = $(this).val();
+					}
+				}
+			});
+			data.lpgen = formValues;
+			var postTitle = $('#title').val();
+			if (postTitle) {
+				data.post_title = postTitle;
+			}
 		}
 		if ('publish-campaign' === action && !window.confirm(config.i18n.confirmPublish)) {
 			return;
 		}
 
-		var data = {};
+		var data = data || {};
 		if (campaign) {
 			data.campaign = campaign;
+		}
+		if ('suggest-campaign' === action) {
+			var kw = $('#lpgen_offer_name').val() || $('#title').val() || '';
+			if (!$.trim(kw)) {
+				alert('Silakan ketik Nama Produk / Jasa / Keyword terlebih dahulu.');
+				return;
+			}
+			data.keyword = $.trim(kw);
+			data.language = $('#lpgen_language').val() || 'id';
 		}
 		if ('set-status' === action) {
 			data.item = $button.data('item');
@@ -93,6 +127,37 @@
 
 		call(action.replace(/-/g, '_'), data)
 			.done(function (response) {
+				if ('suggest-campaign' === action) {
+					if (response && response.ok && response.data) {
+						var d = response.data;
+						if (d.audience) { $('#lpgen_audience').val(d.audience); }
+						if (d.problem) { $('#lpgen_problem').val(d.problem); }
+						if (d.promise) { $('#lpgen_promise').val(d.promise); }
+						if (d.benefits) {
+							var bText = $.isArray(d.benefits) ? d.benefits.join("\n") : d.benefits;
+							$('#lpgen_benefits').val(bText);
+						}
+						if (d.manual_mofu_topics) {
+							var mText = $.isArray(d.manual_mofu_topics) ? d.manual_mofu_topics.join("\n") : d.manual_mofu_topics;
+							$('#lpgen_manual_mofu_topics').val(mText);
+						}
+						if (d.manual_tofu_topics) {
+							var tText = $.isArray(d.manual_tofu_topics) ? d.manual_tofu_topics.join("\n") : d.manual_tofu_topics;
+							$('#lpgen_manual_tofu_topics').val(tText);
+						}
+						if (d.target_areas) {
+							var aText = $.isArray(d.target_areas) ? d.target_areas.join("\n") : d.target_areas;
+							$('#lpgen_target_areas').val(aText);
+						}
+						// Open accordion so user sees the generated preview
+						$('details').prop('open', true);
+						showResult('✨ Rekomendasi AI berhasil diisikan ke form! Anda bisa mengubahnya sebelum mulai generate.', true);
+					} else {
+						showResult(response && response.message ? response.message : 'Gagal memproses rekomendasi AI', false);
+					}
+					return;
+				}
+
 				if ('check-update' === action && response && response.ok) {
 					var $target = $('#lpgen-action-result');
 					if (!$target.length) { $target = $('#lpgen-tool-result'); }

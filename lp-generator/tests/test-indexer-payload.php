@@ -23,6 +23,9 @@ lpg_assert_true( in_array( 'http://rpc.pingomatic.com/', Indexer::RSS_ENDPOINTS,
 lpg_assert_true( in_array( 'http://rpc.weblogs.com/RPC2', Indexer::RSS_ENDPOINTS, true ), 'Weblogs.com ditambahkan' );
 lpg_assert_true( in_array( 'http://ping.blo.gs/', Indexer::RSS_ENDPOINTS, true ), 'Blo.gs ditambahkan' );
 lpg_assert_true( in_array( 'http://blogsearch.google.com/ping/RPC2', Indexer::RSS_ENDPOINTS, true ), 'Google Blog Search Ping ditambahkan' );
+lpg_assert_true( in_array( 'http://api.my.yahoo.com/RPC2', Indexer::RSS_ENDPOINTS, true ), 'Yahoo Ping ditambahkan' );
+lpg_assert_true( in_array( 'http://ping.feedburner.com', Indexer::RSS_ENDPOINTS, true ), 'FeedBurner Ping ditambahkan' );
+lpg_assert_true( count( Indexer::RSS_ENDPOINTS ) >= 12, 'minimal 12 RSS/WebSub/XML-RPC ping providers' );
 
 $invalid_ping = Indexer::ping_rss_endpoint( 'not-a-url', 'https://example.test/feed/' );
 lpg_assert_same( 'invalid', $invalid_ping['type'], 'ping menolak URL invalid' );

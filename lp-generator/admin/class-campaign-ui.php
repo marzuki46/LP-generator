@@ -108,7 +108,24 @@ final class CampaignUI {
 					<tr>
 						<th><label for="lpgen_offer_name"><?php echo esc_html__( 'Nama Produk / Jasa / Offer', 'lp-generator' ); ?> *</label></th>
 						<td>
-							<input type="text" class="large-text" name="lpgen[offer_name]" id="lpgen_offer_name" value="<?php echo esc_attr( (string) $values['offer_name'] ); ?>" placeholder="Contoh: Jasa Pembuatan Website Solo / Kursus SEO / Hosting X" required />
+							<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+								<input type="text" class="large-text" name="lpgen[offer_name]" id="lpgen_offer_name" value="<?php echo esc_attr( (string) $values['offer_name'] ); ?>" placeholder="Contoh: Jasa Pembuatan Website Solo / Madu Herbal Lambung" required style="flex:1;min-width:280px;" />
+								<button type="button" class="button button-secondary" id="lpgen_btn_suggest" data-lpgen-action="suggest-campaign" title="<?php echo esc_attr__( 'Dapatkan gambaran dan ide otomatis dari AI berdasarkan nama produk/keyword yang Anda ketik.', 'lp-generator' ); ?>">
+									<span class="dashicons dashicons-admin-generic" aria-hidden="true" style="vertical-align:text-bottom;font-size:16px;"></span>
+									<?php echo esc_html__( '✨ Rekomendasi Ide AI', 'lp-generator' ); ?>
+								</button>
+							</div>
+							<p class="description"><?php echo esc_html__( 'Ketik keyword/produk Anda, lalu klik "Rekomendasi Ide AI" untuk mendapatkan gambaran audiens, masalah, dan topik otomatis.', 'lp-generator' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th><label for="lpgen_language"><?php echo esc_html__( 'Bahasa Konten', 'lp-generator' ); ?> *</label></th>
+						<td>
+							<select name="lpgen[language]" id="lpgen_language" style="font-weight:600;min-width:220px;">
+								<option value="id" <?php selected( $values['language'], 'id' ); ?>>🇮🇩 Bahasa Indonesia (Rekomendasi)</option>
+								<option value="en" <?php selected( $values['language'], 'en' ); ?>>🇺🇸 English</option>
+							</select>
+							<p class="description"><?php echo esc_html__( 'Pilih bahasa utama untuk Landing Page dan seluruh artikel TOFU/MOFU yang akan dibuat.', 'lp-generator' ); ?></p>
 						</td>
 					</tr>
 					<tr>
@@ -298,15 +315,6 @@ final class CampaignUI {
 								<td><input type="text" class="regular-text" name="lpgen[voice]" id="lpgen_voice" value="<?php echo esc_attr( (string) $values['voice'] ); ?>" placeholder="profesional, ramah, persuasif" /></td>
 							</tr>
 							<tr>
-								<th><label for="lpgen_language"><?php echo esc_html__( 'Bahasa', 'lp-generator' ); ?></label></th>
-								<td>
-									<select name="lpgen[language]" id="lpgen_language">
-										<option value="id" <?php selected( $values['language'], 'id' ); ?>><?php echo esc_html__( 'Bahasa Indonesia', 'lp-generator' ); ?></option>
-										<option value="en" <?php selected( $values['language'], 'en' ); ?>><?php echo esc_html__( 'English', 'lp-generator' ); ?></option>
-									</select>
-								</td>
-							</tr>
-							<tr>
 								<th><label for="lpgen_lp_post_type"><?php echo esc_html__( 'Post type LP', 'lp-generator' ); ?></label></th>
 								<td>
 									<select name="lpgen[lp_post_type]" id="lpgen_lp_post_type">
@@ -443,6 +451,16 @@ final class CampaignUI {
 			return;
 		}
 		$raw = isset( $_POST['lpgen'] ) && is_array( $_POST['lpgen'] ) ? wp_unslash( $_POST['lpgen'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		self::save_meta_data( $post_id, $raw );
+	}
+
+	/**
+	 * Sanitize and save campaign meta data array.
+	 *
+	 * @param int   $post_id Post ID.
+	 * @param array $raw     Raw input key-values.
+	 */
+	public static function save_meta_data( int $post_id, array $raw ): void {
 		$data = array();
 		foreach ( ContentRepository::CAMPAIGN_KEYS as $key ) {
 			if ( ! array_key_exists( $key, $raw ) ) {

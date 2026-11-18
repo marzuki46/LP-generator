@@ -966,4 +966,35 @@ final class Generator {
 	private static function release_lock(): void {
 		delete_option( 'lpgen_job_lock' );
 	}
+
+	/**
+	 * Generate campaign suggestions based on keyword/offer name.
+	 *
+	 * @param string $keyword  Keyword or offer name.
+	 * @param string $language Language (id|en).
+	 * @return array{ok:bool,message:string,data?:array}
+	 */
+	public static function suggest_campaign( string $keyword, string $language = 'id' ): array {
+		$keyword = trim( $keyword );
+		if ( '' === $keyword ) {
+			return array(
+				'ok'      => false,
+				'message' => __( 'Silakan ketik Nama Produk / Keyword terlebih dahulu untuk meminta rekomendasi AI.', 'lp-generator' ),
+			);
+		}
+		$prompt = Prompts::build_campaign_suggestion( $keyword, $language );
+		try {
+			$result = AiClient::generate( $prompt );
+			return array(
+				'ok'      => true,
+				'message' => __( 'Rekomendasi ide AI berhasil dibuat!', 'lp-generator' ),
+				'data'    => $result['structured'],
+			);
+		} catch ( \RuntimeException $e ) {
+			return array(
+				'ok'      => false,
+				'message' => sprintf( __( 'Gagal meminta rekomendasi AI: %s', 'lp-generator' ), $e->getMessage() ),
+			);
+		}
+	}
 }

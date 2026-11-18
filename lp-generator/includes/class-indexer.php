@@ -39,6 +39,11 @@ final class Indexer {
 		'http://rpc.weblogs.com/RPC2',
 		'http://ping.blo.gs/',
 		'http://blogsearch.google.com/ping/RPC2',
+		'http://api.my.yahoo.com/RPC2',
+		'http://api.my.yahoo.com/rss/ping',
+		'http://feedburner.google.com/fb/a/ping',
+		'http://ping.feedburner.com',
+		'http://xping.pubsubhubbub.appspot.com/publish',
 	);
 
 	/**
@@ -69,8 +74,8 @@ final class Indexer {
 		$site_name = function_exists( 'get_bloginfo' ) ? (string) get_bloginfo( 'name' ) : 'WordPress';
 		$home_url  = function_exists( 'home_url' ) ? (string) home_url( '/' ) : 'https://example.test/';
 
-		// XML-RPC Ping (Ping-o-Matic, Weblogs.com, Blo.gs, Google Blogsearch).
-		if ( false !== stripos( $endpoint, 'rpc' ) || false !== stripos( $endpoint, 'blo.gs' ) ) {
+		// XML-RPC Ping (Ping-o-Matic, Weblogs.com, Blo.gs, Google Blogsearch, Feedburner, Yahoo, etc).
+		if ( false !== stripos( $endpoint, 'rpc' ) || false !== stripos( $endpoint, 'blo.gs' ) || ( false !== stripos( $endpoint, 'ping' ) && false === stripos( $endpoint, 'pubsub' ) && false === stripos( $endpoint, 'websub' ) ) ) {
 			$xml = '<?xml version="1.0"?>' . "\n" .
 				'<methodCall>' .
 				'<methodName>weblogUpdates.ping</methodName>' .
@@ -192,9 +197,10 @@ final class Indexer {
 		);
 
 		if ( ! empty( $settings['push_enabled'] ) ) {
-			$endpoints = Utils::parse_csv( (string) ( $settings['rss_endpoints'] ?? '' ) );
-			if ( empty( $endpoints ) ) {
-				$endpoints = self::RSS_ENDPOINTS;
+			$raw_list  = Utils::lines( (string) ( $settings['rss_endpoints'] ?? '' ) );
+			$endpoints = ! empty( $raw_list ) ? $raw_list : self::RSS_ENDPOINTS;
+			if ( count( $endpoints ) <= 2 ) {
+				$endpoints = array_values( array_unique( array_merge( $endpoints, self::RSS_ENDPOINTS ) ) );
 			}
 			$feed_url = function_exists( 'get_feed_link' ) ? (string) get_feed_link( 'rss2' ) : ( home_url( '/feed/' ) );
 			$results['push']['providers'] = array();

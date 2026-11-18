@@ -37,6 +37,7 @@ final class Ajax {
 			'clear-logs',
 			'create-key-file',
 			'check-update',
+			'suggest-campaign',
 		);
 		foreach ( $actions as $action ) {
 			add_action( 'wp_ajax_lpgen_' . str_replace( '-', '_', $action ), array( self::class, 'handle' ) );
@@ -76,7 +77,25 @@ final class Ajax {
 		}
 		switch ( $action ) {
 			case 'start-campaign':
-				$result = Generator::start( isset( $_POST['campaign'] ) ? absint( $_POST['campaign'] ) : 0 );
+				$campaign_id = isset( $_POST['campaign'] ) ? absint( $_POST['campaign'] ) : 0;
+				// Auto-save form payload if sent directly from the Campaign UI.
+				if ( $campaign_id > 0 && isset( $_POST['lpgen'] ) && is_array( $_POST['lpgen'] ) ) {
+					$raw = wp_unslash( $_POST['lpgen'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+					CampaignUI::save_meta_data( $campaign_id, (array) $raw );
+					if ( ! empty( $_POST['post_title'] ) ) {
+						$raw_title = sanitize_text_field( (string) wp_unslash( $_POST['post_title'] ) );
+						$current   = get_post_field( 'post_title', $campaign_id );
+						if ( '' !== $raw_title && ( '' === $current || 'Auto Draft' === $current ) ) {
+							wp_update_post( array( 'ID' => $campaign_id, 'post_title' => $raw_title ) );
+						}
+					}
+				}
+				$result = Generator::start( $campaign_id );
+				break;
+			case 'suggest-campaign':
+				$raw_kw   = isset( $_POST['keyword'] ) ? sanitize_text_field( (string) wp_unslash( $_POST['keyword'] ) ) : '';
+				$raw_lang = isset( $_POST['language'] ) ? sanitize_key( (string) wp_unslash( $_POST['language'] ) ) : 'id';
+				$result   = Generator::suggest_campaign( $raw_kw, $raw_lang );
 				break;
 			case 'publish-campaign':
 				$result = Generator::start_publish( isset( $_POST['campaign'] ) ? absint( $_POST['campaign'] ) : 0 );
