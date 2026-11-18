@@ -59,48 +59,82 @@ final class Generator {
 			);
 		}
 
-		// 1. BOFU landing page.
-		$lp_id    = ContentRepository::create_item( $campaign_id, 'bofu', 'lp', 0 );
-		$items[]  = array( 'id' => $lp_id, 'kind' => 'generate_lp', 'stage' => 'bofu', 'index' => 0 );
+		// 1. BOFU landing page (only if bofu_mode is 'new').
+		$bofu_mode = (string) ( $campaign['bofu_mode'] ?? 'new' );
+		if ( 'new' === $bofu_mode ) {
+			$lp_id    = ContentRepository::create_item( $campaign_id, 'bofu', 'lp', 0 );
+			$items[]  = array( 'id' => $lp_id, 'kind' => 'generate_lp', 'stage' => 'bofu', 'index' => 0 );
+		}
 
-		// 2. MOFU topics.
+		// 2. MOFU topics (manual or automatic).
+		$topic_mode  = (string) ( $campaign['topic_mode'] ?? 'auto' );
 		$mofu_topics = array();
-		for ( $i = 0; $i < (int) $campaign['mofu_count']; $i++ ) {
-			$id            = ContentRepository::create_item( $campaign_id, 'mofu', 'topic', $i );
-			$mofu_topics[] = $id;
-			$items[]       = array( 'id' => $id, 'kind' => 'generate_topic', 'stage' => 'mofu', 'index' => $i );
+		if ( 'manual' === $topic_mode && ! empty( $campaign['manual_mofu_topics'] ) ) {
+			$manual_mofu = array_values( (array) $campaign['manual_mofu_topics'] );
+			foreach ( $manual_mofu as $i => $title ) {
+				$title = trim( (string) $title );
+				if ( '' === $title ) {
+					continue;
+				}
+				$id = ContentRepository::create_item( $campaign_id, 'mofu', 'topic', $i );
+				ContentRepository::set_item_status( $id, 'approved' );
+				update_post_meta( $id, '_lpgen_title', $title );
+				update_post_meta( $id, '_lpgen_structured', wp_json_encode( array( 'title' => $title, 'angle' => $title ) ) );
+				$mofu_topics[] = $id;
+			}
+		} else {
+			for ( $i = 0; $i < (int) $campaign['mofu_count']; $i++ ) {
+				$id            = ContentRepository::create_item( $campaign_id, 'mofu', 'topic', $i );
+				$mofu_topics[] = $id;
+				$items[]       = array( 'id' => $id, 'kind' => 'generate_topic', 'stage' => 'mofu', 'index' => $i );
+			}
 		}
 
 		// 3. MOFU articles, each bound to its topic.
-		for ( $i = 0; $i < (int) $campaign['mofu_count']; $i++ ) {
+		foreach ( $mofu_topics as $i => $topic_id ) {
 			$id      = ContentRepository::create_item( $campaign_id, 'mofu', 'article', $i );
 			$items[] = array(
 				'id'            => $id,
 				'kind'          => 'generate_article',
 				'stage'         => 'mofu',
 				'index'         => $i,
-				'topic_item_id' => $mofu_topics[ $i ] ?? 0,
+				'topic_item_id' => $topic_id,
 				'target_stage'  => 'bofu',
 			);
 		}
 
-		// 4. TOFU topics.
+		// 4. TOFU topics (manual or automatic).
 		$tofu_topics = array();
-		for ( $i = 0; $i < (int) $campaign['tofu_count']; $i++ ) {
-			$id            = ContentRepository::create_item( $campaign_id, 'tofu', 'topic', $i );
-			$tofu_topics[] = $id;
-			$items[]       = array( 'id' => $id, 'kind' => 'generate_topic', 'stage' => 'tofu', 'index' => $i );
+		if ( 'manual' === $topic_mode && ! empty( $campaign['manual_tofu_topics'] ) ) {
+			$manual_tofu = array_values( (array) $campaign['manual_tofu_topics'] );
+			foreach ( $manual_tofu as $i => $title ) {
+				$title = trim( (string) $title );
+				if ( '' === $title ) {
+					continue;
+				}
+				$id = ContentRepository::create_item( $campaign_id, 'tofu', 'topic', $i );
+				ContentRepository::set_item_status( $id, 'approved' );
+				update_post_meta( $id, '_lpgen_title', $title );
+				update_post_meta( $id, '_lpgen_structured', wp_json_encode( array( 'title' => $title, 'angle' => $title ) ) );
+				$tofu_topics[] = $id;
+			}
+		} else {
+			for ( $i = 0; $i < (int) $campaign['tofu_count']; $i++ ) {
+				$id            = ContentRepository::create_item( $campaign_id, 'tofu', 'topic', $i );
+				$tofu_topics[] = $id;
+				$items[]       = array( 'id' => $id, 'kind' => 'generate_topic', 'stage' => 'tofu', 'index' => $i );
+			}
 		}
 
 		// 5. TOFU articles.
-		for ( $i = 0; $i < (int) $campaign['tofu_count']; $i++ ) {
+		foreach ( $tofu_topics as $i => $topic_id ) {
 			$id      = ContentRepository::create_item( $campaign_id, 'tofu', 'article', $i );
 			$items[] = array(
 				'id'            => $id,
 				'kind'          => 'generate_article',
 				'stage'         => 'tofu',
 				'index'         => $i,
-				'topic_item_id' => $tofu_topics[ $i ] ?? 0,
+				'topic_item_id' => $topic_id,
 				'target_stage'  => 'mofu',
 			);
 		}
@@ -741,19 +775,124 @@ final class Generator {
 	}
 
 	/**
-	 * Find the first published permalink in a stage.
+	 * Find the first published permalink in a stage, or existing BOFU page if configured.
 	 *
 	 * @param int    $campaign_id Campaign ID.
 	 * @param string $stage       Stage.
 	 * @return string
 	 */
 	private static function find_published_permalink( int $campaign_id, string $stage ): string {
+		if ( 'bofu' === $stage ) {
+			$campaign = ContentRepository::get_campaign( $campaign_id );
+			if ( 'existing' === (string) ( $campaign['bofu_mode'] ?? 'new' ) && ! empty( $campaign['bofu_existing_id'] ) ) {
+				$link = get_permalink( (int) $campaign['bofu_existing_id'] );
+				if ( ! empty( $link ) && false !== wp_http_validate_url( $link ) ) {
+					return $link;
+				}
+			}
+		}
 		foreach ( ContentRepository::items( $campaign_id, $stage ) as $item ) {
 			if ( 'published' === (string) $item['status'] && '' !== (string) $item['permalink'] ) {
 				return (string) $item['permalink'];
 			}
 		}
 		return '';
+	}
+
+	/**
+	 * Process one job in the queue (for real-time AJAX runner).
+	 *
+	 * @param int $campaign_id Optional campaign ID.
+	 * @return array{ok:bool,done:bool,remaining:int,message:string,job_kind?:string,busy?:bool}
+	 */
+	public static function process_one( int $campaign_id = 0 ): array {
+		if ( ! self::acquire_lock() ) {
+			return array(
+				'ok'        => false,
+				'done'      => false,
+				'busy'      => true,
+				'remaining' => Database::count_jobs( $campaign_id, 'queued' ),
+				'message'   => __( 'Worker sedang sibuk. Mencoba lagi...', 'lp-generator' ),
+			);
+		}
+
+		try {
+			$job = Database::get_next_job( $campaign_id > 0 ? $campaign_id : null );
+			if ( null === $job ) {
+				self::finalize_orphans();
+				return array(
+					'ok'        => true,
+					'done'      => true,
+					'remaining' => 0,
+					'message'   => __( 'Semua antrean konten telah selesai.', 'lp-generator' ),
+				);
+			}
+
+			if ( ! Database::claim_job( (int) $job['id'] ) ) {
+				return array(
+					'ok'        => false,
+					'done'      => false,
+					'busy'      => true,
+					'remaining' => Database::count_jobs( $campaign_id, 'queued' ),
+					'message'   => __( 'Job telah diambil oleh proses lain.', 'lp-generator' ),
+				);
+			}
+
+			$job_campaign = (int) $job['campaign_id'];
+			$job_id       = (int) $job['id'];
+			Database::log( 'info', sprintf( 'Job %s dimulai via runner (attempt %d)', $job['kind'], (int) ( $job['attempts'] ?? 0 ) ), $job_campaign, $job_id );
+
+			try {
+				self::dispatch( $job );
+				Database::update_job( $job_id, array( 'status' => 'done' ) );
+				Database::log( 'info', sprintf( 'Job %s selesai', $job['kind'] ), $job_campaign, $job_id );
+			} catch ( \Throwable $e ) {
+				$settings = get_option( 'lpgen_settings', array() );
+				$max      = max( 1, min( 5, (int) ( $settings['max_retries'] ?? 2 ) ) );
+				$attempts = (int) ( $job['attempts'] ?? 0 ) + 1;
+				$message  = sanitize_text_field( $e->getMessage() );
+				if ( $attempts <= $max ) {
+					Database::update_job(
+						$job_id,
+						array(
+							'status'     => 'queued',
+							'attempts'   => $attempts,
+							'run_at'     => gmdate( 'Y-m-d H:i:s', time() + ( 15 * $attempts ) ),
+							'last_error' => $message,
+						)
+					);
+				} else {
+					Database::update_job(
+						$job_id,
+						array(
+							'status'     => 'failed',
+							'attempts'   => $attempts,
+							'last_error' => $message,
+						)
+					);
+					if ( (int) ( $job['item_id'] ?? 0 ) > 0 ) {
+						ContentRepository::set_item_status( (int) $job['item_id'], 'failed' );
+						update_post_meta( (int) $job['item_id'], '_lpgen_error', $message );
+					}
+				}
+				Database::log( 'error', 'Job gagal: ' . $message, $job_campaign, $job_id );
+			}
+
+			$remaining = Database::count_jobs( $job_campaign, 'queued' );
+			if ( 0 === $remaining ) {
+				self::finalize_orphans();
+			}
+
+			return array(
+				'ok'        => true,
+				'done'      => 0 === $remaining,
+				'remaining' => $remaining,
+				'job_kind'  => (string) $job['kind'],
+				'message'   => sprintf( __( 'Job %s selesai. Sisa: %d.', 'lp-generator' ), $job['kind'], $remaining ),
+			);
+		} finally {
+			self::release_lock();
+		}
 	}
 
 	/**

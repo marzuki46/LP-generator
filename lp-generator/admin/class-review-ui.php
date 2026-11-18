@@ -84,7 +84,7 @@ final class ReviewUI {
 							<td>
 								<a class="button button-small" href="<?php echo esc_url( $review_url ); ?>"><?php echo esc_html__( 'Review', 'lp-generator' ); ?></a>
 								<button type="button" class="button button-small" data-lpgen-action="start-campaign" data-campaign="<?php echo esc_attr( (string) $id ); ?>"><?php echo esc_html__( 'Generate', 'lp-generator' ); ?></button>
-								<button type="button" class="button button-small" data-lpgen-action="run-now"><?php echo esc_html__( 'Run now', 'lp-generator' ); ?></button>
+								<button type="button" class="button button-small" data-lpgen-action="run-now" data-campaign="<?php echo esc_attr( (string) $id ); ?>"><?php echo esc_html__( 'Proses Antrean', 'lp-generator' ); ?></button>
 							</td>
 						</tr>
 					<?php endforeach; ?>
@@ -164,6 +164,9 @@ final class ReviewUI {
 				<p>
 					<?php echo esc_html__( 'Status campaign:', 'lp-generator' ); ?>
 					<strong><?php echo esc_html( $status ); ?></strong>
+					<button type="button" class="button" data-lpgen-action="run-now" data-campaign="<?php echo esc_attr( (string) $campaign_id ); ?>" style="margin-left:8px;">
+						<?php echo esc_html__( '⚡ Proses Antrean Sekarang', 'lp-generator' ); ?>
+					</button>
 					<?php if ( 'review' === $status || 'publishing' === $status ) : ?>
 						<button type="button" class="button button-primary" data-lpgen-action="publish-campaign" data-campaign="<?php echo esc_attr( (string) $campaign_id ); ?>">
 							<?php echo esc_html__( 'Publish & Index', 'lp-generator' ); ?>

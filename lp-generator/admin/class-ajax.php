@@ -24,6 +24,7 @@ final class Ajax {
 			'start-campaign',
 			'publish-campaign',
 			'run-now',
+			'process-queue',
 			'set-status',
 			'regenerate',
 			'generate-tag-content',
@@ -86,6 +87,10 @@ final class Ajax {
 					'message' => __( 'Satu job telah dijalankan. Muat ulang untuk melihat progres.', 'lp-generator' ),
 				);
 				break;
+			case 'process-queue':
+				$campaign_id = isset( $_POST['campaign'] ) ? absint( $_POST['campaign'] ) : 0;
+				$result      = Generator::process_one( $campaign_id );
+				break;
 			case 'set-status':
 				$item_id = isset( $_POST['item'] ) ? absint( $_POST['item'] ) : 0;
 				$status  = isset( $_POST['status'] ) ? sanitize_key( (string) wp_unslash( $_POST['status'] ) ) : '';
@@ -114,7 +119,11 @@ final class Ajax {
 				$result = Generator::queue_entities( isset( $_POST['campaign'] ) ? absint( $_POST['campaign'] ) : 0 );
 				break;
 			case 'generate-framework':
-				$result = Generator::generate_framework( isset( $_POST['campaign'] ) ? absint( $_POST['campaign'] ) : 0 );
+				$campaign_id = isset( $_POST['campaign'] ) ? absint( $_POST['campaign'] ) : 0;
+				$result      = Generator::generate_framework( $campaign_id );
+				if ( ! empty( $result['ok'] ) && $campaign_id > 0 ) {
+					update_post_meta( $campaign_id, '_lpgen_framework', 'ai' );
+				}
 				break;
 			case 'test-connection':
 				$result = AiClient::test_connection();

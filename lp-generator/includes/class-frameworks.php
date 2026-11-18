@@ -246,6 +246,15 @@ final class Frameworks {
 	 */
 	public static function get( string $key ): array {
 		$all = self::all();
+		$key = sanitize_key( $key );
+		if ( 'ai' === $key ) {
+			return array(
+				'label'        => __( 'Framework AI Khusus', 'lp-generator' ),
+				'steps'        => array( 'Attention', 'Interest', 'Desire', 'Action' ),
+				'section_hint' => array( 'hero', 'problem', 'benefits', 'cta' ),
+				'best_for'     => array( 'product', 'service', 'affiliate' ),
+			);
+		}
 		if ( isset( $all[ $key ] ) ) {
 			return $all[ $key ];
 		}
@@ -260,8 +269,14 @@ final class Frameworks {
 	public static function for_select(): array {
 		$options = array();
 		foreach ( self::all() as $key => $preset ) {
-			$options[ $key ] = $preset['label'];
+			$steps = ! empty( $preset['steps'] ) ? implode( ' → ', $preset['steps'] ) : '';
+			$label = (string) $preset['label'];
+			if ( '' !== $steps && false === strpos( $label, '→' ) && false === strpos( $label, '(' ) ) {
+				$label = sprintf( '%s (%s)', $label, $steps );
+			}
+			$options[ $key ] = $label;
 		}
+		$options['ai'] = __( 'Framework AI Khusus (Hasil Generate)', 'lp-generator' );
 		return $options;
 	}
 }

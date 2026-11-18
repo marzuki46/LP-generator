@@ -43,6 +43,11 @@ final class CampaignUI {
 		}
 		$defaults = array(
 			'offer_type'        => 'product',
+			'bofu_mode'         => 'new',
+			'bofu_existing_id'  => 0,
+			'topic_mode'        => 'auto',
+			'manual_mofu_topics' => '',
+			'manual_tofu_topics' => '',
 			'mofu_count'        => 2,
 			'tofu_count'        => 3,
 			'language'          => 'id',
@@ -83,288 +88,338 @@ final class CampaignUI {
 		);
 		$values = array_merge( $defaults, $values );
 		$status = (string) ContentRepository::get_meta( $post->ID, 'status', 'draft' );
+		$existing_pages = get_posts(
+			array(
+				'post_type'      => array( 'page', 'post' ),
+				'post_status'    => 'publish',
+				'posts_per_page' => 100,
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+			)
+		);
+		$all_frameworks = Frameworks::all();
 		?>
-		<table class="form-table lpgen-table">
-			<tbody>
-			<tr>
-				<th><label for="lpgen_offer_type"><?php echo esc_html__( 'Tipe offer', 'lp-generator' ); ?></label></th>
-				<td>
-					<select name="lpgen[offer_type]" id="lpgen_offer_type">
-						<?php foreach ( array( 'product' => __( 'Produk', 'lp-generator' ), 'service' => __( 'Jasa', 'lp-generator' ), 'affiliate' => __( 'Afiliasi', 'lp-generator' ) ) as $key => $label ) : ?>
-							<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $values['offer_type'], $key ); ?>><?php echo esc_html( $label ); ?></option>
-						<?php endforeach; ?>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_offer_name"><?php echo esc_html__( 'Nama offer', 'lp-generator' ); ?></label></th>
-				<td><input type="text" class="regular-text" name="lpgen[offer_name]" id="lpgen_offer_name" value="<?php echo esc_attr( (string) $values['offer_name'] ); ?>" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_offer_url"><?php echo esc_html__( 'URL offer / CTA', 'lp-generator' ); ?></label></th>
-				<td><input type="url" class="regular-text" name="lpgen[offer_url]" id="lpgen_offer_url" value="<?php echo esc_attr( (string) $values['offer_url'] ); ?>" placeholder="https://..." /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_audience"><?php echo esc_html__( 'Audiens', 'lp-generator' ); ?></label></th>
-				<td><textarea class="large-text" rows="2" name="lpgen[audience]" id="lpgen_audience"><?php echo esc_textarea( (string) $values['audience'] ); ?></textarea></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_problem"><?php echo esc_html__( 'Masalah utama', 'lp-generator' ); ?></label></th>
-				<td><textarea class="large-text" rows="2" name="lpgen[problem]" id="lpgen_problem"><?php echo esc_textarea( (string) $values['problem'] ); ?></textarea></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_promise"><?php echo esc_html__( 'Janji / hasil', 'lp-generator' ); ?></label></th>
-				<td><textarea class="large-text" rows="2" name="lpgen[promise]" id="lpgen_promise"><?php echo esc_textarea( (string) $values['promise'] ); ?></textarea></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_benefits"><?php echo esc_html__( 'Benefit (satu per baris)', 'lp-generator' ); ?></label></th>
-				<td><textarea class="large-text" rows="4" name="lpgen[benefits]" id="lpgen_benefits"><?php echo esc_textarea( (string) $values['benefits'] ); ?></textarea></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_price"><?php echo esc_html__( 'Harga / start from', 'lp-generator' ); ?></label></th>
-				<td><input type="text" class="regular-text" name="lpgen[price]" id="lpgen_price" value="<?php echo esc_attr( (string) $values['price'] ); ?>" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_bonus"><?php echo esc_html__( 'Bonus (satu per baris)', 'lp-generator' ); ?></label></th>
-				<td><textarea class="large-text" rows="3" name="lpgen[bonus]" id="lpgen_bonus"><?php echo esc_textarea( (string) $values['bonus'] ); ?></textarea></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_guarantee"><?php echo esc_html__( 'Garansi', 'lp-generator' ); ?></label></th>
-				<td><input type="text" class="regular-text" name="lpgen[guarantee]" id="lpgen_guarantee" value="<?php echo esc_attr( (string) $values['guarantee'] ); ?>" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_cta"><?php echo esc_html__( 'Teks tombol CTA', 'lp-generator' ); ?></label></th>
-				<td><input type="text" class="regular-text" name="lpgen[cta]" id="lpgen_cta" value="<?php echo esc_attr( (string) $values['cta'] ); ?>" placeholder="Coba Sekarang" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_voice"><?php echo esc_html__( 'Tone of voice', 'lp-generator' ); ?></label></th>
-				<td><input type="text" class="regular-text" name="lpgen[voice]" id="lpgen_voice" value="<?php echo esc_attr( (string) $values['voice'] ); ?>" placeholder="professional, ramah, tegas" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_language"><?php echo esc_html__( 'Bahasa', 'lp-generator' ); ?></label></th>
-				<td>
-					<select name="lpgen[language]" id="lpgen_language">
-						<option value="id" <?php selected( $values['language'], 'id' ); ?>><?php echo esc_html__( 'Bahasa Indonesia', 'lp-generator' ); ?></option>
-						<option value="en" <?php selected( $values['language'], 'en' ); ?>><?php echo esc_html__( 'English', 'lp-generator' ); ?></option>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_framework"><?php echo esc_html__( 'Framework', 'lp-generator' ); ?></label></th>
-				<td>
-					<select name="lpgen[framework]" id="lpgen_framework">
-						<?php foreach ( Frameworks::for_select() as $key => $label ) : ?>
-							<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $values['framework'], $key ); ?>><?php echo esc_html( $label ); ?></option>
-						<?php endforeach; ?>
-					</select>
-					<p>
-						<button type="button" class="button" data-lpgen-action="generate-framework" data-campaign="<?php echo esc_attr( (string) $post->ID ); ?>"><?php echo esc_html__( 'Generate framework AI (langkah + gambar per section)', 'lp-generator' ); ?></button>
-					</p>
-					<?php
-					$ai_framework = Frameworks::sanitize_generated( (string) ContentRepository::get_meta( $post->ID, 'ai_framework', '' ) );
-					if ( ! empty( $ai_framework['steps'] ) ) :
-						?>
-						<p class="description"><?php echo esc_html( sprintf( __( 'Framework AI aktif: %s', 'lp-generator' ), $ai_framework['label'] ) ); ?></p>
-						<ul class="lpgen-framework-steps">
-							<?php foreach ( $ai_framework['steps'] as $step ) : ?>
-								<li><strong><?php echo esc_html( $step['name'] ); ?></strong> — <?php echo esc_html( $step['section_hint'] ); ?> / <?php echo esc_html( $step['image_role'] ); ?></li>
-							<?php endforeach; ?>
-						</ul>
-					<?php endif; ?>
-				</td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_mofu_count"><?php echo esc_html__( 'Jumlah artikel MOFU', 'lp-generator' ); ?></label></th>
-				<td><input type="number" min="1" max="10" name="lpgen[mofu_count]" id="lpgen_mofu_count" value="<?php echo esc_attr( (string) $values['mofu_count'] ); ?>" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_tofu_count"><?php echo esc_html__( 'Jumlah artikel TOFU', 'lp-generator' ); ?></label></th>
-				<td><input type="number" min="1" max="10" name="lpgen[tofu_count]" id="lpgen_tofu_count" value="<?php echo esc_attr( (string) $values['tofu_count'] ); ?>" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_lp_post_type"><?php echo esc_html__( 'Post type LP', 'lp-generator' ); ?></label></th>
-				<td>
-					<select name="lpgen[lp_post_type]" id="lpgen_lp_post_type">
-						<option value="page" <?php selected( $values['lp_post_type'], 'page' ); ?>>Page</option>
-						<option value="post" <?php selected( $values['lp_post_type'], 'post' ); ?>>Post</option>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_article_post_type"><?php echo esc_html__( 'Post type artikel', 'lp-generator' ); ?></label></th>
-				<td>
-					<select name="lpgen[article_post_type]" id="lpgen_article_post_type">
-						<option value="post" <?php selected( $values['article_post_type'], 'post' ); ?>>Post</option>
-						<option value="page" <?php selected( $values['article_post_type'], 'page' ); ?>>Page</option>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_publish_status"><?php echo esc_html__( 'Status publish', 'lp-generator' ); ?></label></th>
-				<td>
-					<select name="lpgen[publish_status]" id="lpgen_publish_status">
-						<?php foreach ( array( 'publish', 'draft', 'pending' ) as $status_option ) : ?>
-							<option value="<?php echo esc_attr( $status_option ); ?>" <?php selected( $values['publish_status'], $status_option ); ?>><?php echo esc_html( ucfirst( $status_option ) ); ?></option>
-						<?php endforeach; ?>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_index_enabled"><?php echo esc_html__( 'Submit indexer', 'lp-generator' ); ?></label></th>
-				<td><label><input type="checkbox" name="lpgen[index_enabled]" value="1" id="lpgen_index_enabled" <?php checked( 1, (int) $values['index_enabled'] ); ?> /> <?php echo esc_html__( 'Aktif (jeda 10 detik setelah publish)', 'lp-generator' ); ?></label></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_index_delay"><?php echo esc_html__( 'Jeda index (detik)', 'lp-generator' ); ?></label></th>
-				<td><input type="number" min="0" max="300" name="lpgen[index_delay]" id="lpgen_index_delay" value="<?php echo esc_attr( (string) $values['index_delay'] ); ?>" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_content_push_enabled"><?php echo esc_html__( 'Push konten campaign', 'lp-generator' ); ?></label></th>
-				<td>
-					<input type="hidden" name="lpgen[content_push_enabled]" value="0" />
-					<label><input type="checkbox" name="lpgen[content_push_enabled]" value="1" id="lpgen_content_push_enabled" <?php checked( 1, (int) $values['content_push_enabled'] ); ?> /> <?php echo esc_html__( 'Izinkan TOFU/MOFU dipublish oleh antrean campaign', 'lp-generator' ); ?></label>
-					<p><label for="lpgen_content_push_until"><?php echo esc_html__( 'Berakhir pada (kosong = tanpa batas)', 'lp-generator' ); ?></label><br /><input type="date" name="lpgen[content_push_until]" id="lpgen_content_push_until" value="<?php echo esc_attr( (string) $values['content_push_until'] ); ?>" /></p>
-				</td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_internal_link_enabled"><?php echo esc_html__( 'Internal link ke BOFU', 'lp-generator' ); ?></label></th>
-				<td>
-					<input type="hidden" name="lpgen[internal_link_enabled]" value="0" />
-					<label><input type="checkbox" name="lpgen[internal_link_enabled]" value="1" id="lpgen_internal_link_enabled" <?php checked( 1, (int) $values['internal_link_enabled'] ); ?> /> <?php echo esc_html__( 'Semua artikel mengarahkan pembaca ke LP BOFU campaign', 'lp-generator' ); ?></label>
-					<p><label for="lpgen_internal_link_target"><?php echo esc_html__( 'Target link', 'lp-generator' ); ?></label><br /><select name="lpgen[internal_link_target]" id="lpgen_internal_link_target"><option value="bofu" <?php selected( $values['internal_link_target'], 'bofu' ); ?>><?php echo esc_html__( 'Selalu BOFU (disarankan)', 'lp-generator' ); ?></option><option value="next_stage" <?php selected( $values['internal_link_target'], 'next_stage' ); ?>><?php echo esc_html__( 'Tahap berikutnya', 'lp-generator' ); ?></option></select></p>
-					<p><label for="lpgen_internal_link_until"><?php echo esc_html__( 'Internal link aktif sampai (kosong = tanpa batas)', 'lp-generator' ); ?></label><br /><input type="date" name="lpgen[internal_link_until]" id="lpgen_internal_link_until" value="<?php echo esc_attr( (string) $values['internal_link_until'] ); ?>" /></p>
-				</td>
-			</tr>
-			<tr><th colspan="2"><h3><?php echo esc_html__( 'Data Campaign (placeholder SEO)', 'lp-generator' ); ?></h3></th></tr>
-			<tr>
-				<th><label for="lpgen_phone"><?php echo esc_html__( 'No HP / WhatsApp', 'lp-generator' ); ?></label></th>
-				<td><input type="text" class="regular-text" name="lpgen[phone]" id="lpgen_phone" value="<?php echo esc_attr( (string) $values['phone'] ); ?>" placeholder="0812..." /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_brand"><?php echo esc_html__( 'Brand / nama usaha', 'lp-generator' ); ?></label></th>
-				<td><input type="text" class="regular-text" name="lpgen[brand]" id="lpgen_brand" value="<?php echo esc_attr( (string) $values['brand'] ); ?>" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_city"><?php echo esc_html__( 'Kota / area layanan', 'lp-generator' ); ?></label></th>
-				<td><input type="text" class="regular-text" name="lpgen[city]" id="lpgen_city" value="<?php echo esc_attr( (string) $values['city'] ); ?>" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_target_areas"><?php echo esc_html__( 'Target area TOFU/MOFU', 'lp-generator' ); ?></label></th>
-				<td><textarea class="large-text" rows="3" name="lpgen[target_areas]" id="lpgen_target_areas" placeholder="Solo&#10;Sukoharjo&#10;Karanganyar"><?php echo esc_textarea( (string) $values['target_areas'] ); ?></textarea><p class="description"><?php echo esc_html__( 'Satu area per baris. AI akan membagi topik lokal secara alami dan semuanya tetap diarahkan ke BOFU campaign ini.', 'lp-generator' ); ?></p></td>
-			</tr>
-			<tr><th colspan="2"><h3><?php echo esc_html__( 'Entitas Keyword & Tag', 'lp-generator' ); ?></h3></th></tr>
-			<tr>
-				<th><label for="lpgen_entity_enabled"><?php echo esc_html__( 'Generate entitas keyword', 'lp-generator' ); ?></label></th>
-				<td><label><input type="checkbox" name="lpgen[entity_enabled]" value="1" id="lpgen_entity_enabled" <?php checked( 1, (int) $values['entity_enabled'] ); ?> /> <?php echo esc_html__( 'Aktif', 'lp-generator' ); ?></label></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_entity_count"><?php echo esc_html__( 'Jumlah entitas', 'lp-generator' ); ?></label></th>
-				<td><input type="number" min="3" max="15" name="lpgen[entity_count]" id="lpgen_entity_count" value="<?php echo esc_attr( (string) $values['entity_count'] ); ?>" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_tag_max"><?php echo esc_html__( 'Maksimal tag per konten', 'lp-generator' ); ?></label></th>
-				<td><input type="number" min="1" max="3" name="lpgen[tag_max]" id="lpgen_tag_max" value="<?php echo esc_attr( (string) $values['tag_max'] ); ?>" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_tag_content_enabled"><?php echo esc_html__( 'Artikel otomatis per tag', 'lp-generator' ); ?></label></th>
-				<td><label><input type="checkbox" name="lpgen[tag_content_enabled]" value="1" id="lpgen_tag_content_enabled" <?php checked( 1, (int) $values['tag_content_enabled'] ); ?> /> <?php echo esc_html__( 'Aktif', 'lp-generator' ); ?></label></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_tag_schedule_mode"><?php echo esc_html__( 'Jadwal artikel tag', 'lp-generator' ); ?></label></th>
-				<td>
-					<select name="lpgen[tag_schedule_mode]" id="lpgen_tag_schedule_mode">
-						<?php foreach ( array( 'after_publish' => __( 'Setelah publish', 'lp-generator' ), 'fixed' => __( 'Tanggal tertentu', 'lp-generator' ), 'daily' => __( 'Satu per hari', 'lp-generator' ) ) as $key => $label ) : ?>
-							<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $values['tag_schedule_mode'], $key ); ?>><?php echo esc_html( $label ); ?></option>
-						<?php endforeach; ?>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_tag_schedule_delay"><?php echo esc_html__( 'Delay / jeda tag (menit)', 'lp-generator' ); ?></label></th>
-				<td><input type="number" min="0" max="10080" name="lpgen[tag_schedule_delay]" id="lpgen_tag_schedule_delay" value="<?php echo esc_attr( (string) $values['tag_schedule_delay'] ); ?>" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_tag_schedule_time"><?php echo esc_html__( 'Jam artikel tag', 'lp-generator' ); ?></label></th>
-				<td><input type="time" name="lpgen[tag_schedule_time]" id="lpgen_tag_schedule_time" value="<?php echo esc_attr( Utils::clean_time( $values['tag_schedule_time'] ) ); ?>" /></td>
-			</tr>
-			<tr><th colspan="2"><h3><?php echo esc_html__( 'Publish & Schedule', 'lp-generator' ); ?></h3></th></tr>
-			<tr>
-				<th><label for="lpgen_auto_publish"><?php echo esc_html__( 'Auto publish', 'lp-generator' ); ?></label></th>
-				<td><label><input type="checkbox" name="lpgen[auto_publish]" value="1" id="lpgen_auto_publish" <?php checked( 1, (int) $values['auto_publish'] ); ?> /> <?php echo esc_html__( 'Lewati review (juga bisa diaktifkan global)', 'lp-generator' ); ?></label></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_schedule_mode"><?php echo esc_html__( 'Mode jadwal', 'lp-generator' ); ?></label></th>
-				<td>
-					<select name="lpgen[schedule_mode]" id="lpgen_schedule_mode">
-						<?php foreach ( array( 'immediate' => __( 'Secepatnya', 'lp-generator' ), 'interval' => __( 'Jeda antar post', 'lp-generator' ), 'fixed' => __( 'Tanggal tertentu', 'lp-generator' ), 'daily' => __( 'Satu per hari', 'lp-generator' ) ) as $key => $label ) : ?>
-							<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $values['schedule_mode'], $key ); ?>><?php echo esc_html( $label ); ?></option>
-						<?php endforeach; ?>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_schedule_interval"><?php echo esc_html__( 'Jeda antar post (menit)', 'lp-generator' ); ?></label></th>
-				<td><input type="number" min="0" max="10080" name="lpgen[schedule_interval]" id="lpgen_schedule_interval" value="<?php echo esc_attr( (string) $values['schedule_interval'] ); ?>" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_schedule_start"><?php echo esc_html__( 'Mulai (YYYY-MM-DDTHH:MM)', 'lp-generator' ); ?></label></th>
-				<td><input type="datetime-local" name="lpgen[schedule_start]" id="lpgen_schedule_start" value="<?php echo esc_attr( Utils::clean_datetime_local( $values['schedule_start'] ) ); ?>" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_schedule_time"><?php echo esc_html__( 'Jam publish harian', 'lp-generator' ); ?></label></th>
-				<td><input type="time" name="lpgen[schedule_time]" id="lpgen_schedule_time" value="<?php echo esc_attr( Utils::clean_time( $values['schedule_time'] ) ); ?>" /></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_schedule_jitter"><?php echo esc_html__( 'Jitter acak (menit)', 'lp-generator' ); ?></label></th>
-				<td><input type="number" min="0" max="60" name="lpgen[schedule_jitter]" id="lpgen_schedule_jitter" value="<?php echo esc_attr( (string) $values['schedule_jitter'] ); ?>" /></td>
-			</tr>
-			<tr><th colspan="2"><h3><?php echo esc_html__( 'Amazon Affiliate', 'lp-generator' ); ?></h3></th></tr>
-			<tr>
-				<th><label for="lpgen_amazon_enabled"><?php echo esc_html__( 'Pakai produk Amazon', 'lp-generator' ); ?></label></th>
-				<td><label><input type="checkbox" name="lpgen[amazon_enabled]" value="1" id="lpgen_amazon_enabled" <?php checked( 1, (int) $values['amazon_enabled'] ); ?> /> <?php echo esc_html__( 'Aktif untuk campaign ini', 'lp-generator' ); ?></label></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_amazon_keyword"><?php echo esc_html__( 'Keyword produk Amazon', 'lp-generator' ); ?></label></th>
-				<td><input type="text" class="regular-text" name="lpgen[amazon_keyword]" id="lpgen_amazon_keyword" value="<?php echo esc_attr( (string) $values['amazon_keyword'] ); ?>" placeholder="<?php echo esc_attr( (string) $values['offer_name'] ); ?>" /></td>
-			</tr>
-			<tr><th colspan="2"><h3><?php echo esc_html__( 'Gambar per Konten', 'lp-generator' ); ?></h3></th></tr>
-			<tr>
-				<th><label for="lpgen_image_enabled"><?php echo esc_html__( 'Sisipkan galeri gambar', 'lp-generator' ); ?></label></th>
-				<td><input type="hidden" name="lpgen[image_enabled]" value="0" /><label><input type="checkbox" name="lpgen[image_enabled]" value="1" id="lpgen_image_enabled" <?php checked( 1, (int) $values['image_enabled'] ); ?> /> <?php echo esc_html__( 'Aktif untuk LP dan semua artikel', 'lp-generator' ); ?></label></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_image_source"><?php echo esc_html__( 'Engine gambar', 'lp-generator' ); ?></label></th>
-				<td>
-					<select name="lpgen[image_source]" id="lpgen_image_source">
-						<?php foreach ( array( 'auto' => __( 'Otomatis: upload → AI → Bing', 'lp-generator' ), 'upload' => __( 'Upload saja', 'lp-generator' ), 'ai' => __( 'AI 9Router saja', 'lp-generator' ), 'bing' => __( 'Bing Images saja', 'lp-generator' ) ) as $key => $label ) : ?>
-							<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $values['image_source'], $key ); ?>><?php echo esc_html( $label ); ?></option>
-						<?php endforeach; ?>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_image_count"><?php echo esc_html__( 'Jumlah gambar per konten', 'lp-generator' ); ?></label></th>
-				<td><input type="number" min="0" max="6" name="lpgen[image_count]" id="lpgen_image_count" value="<?php echo esc_attr( (string) $values['image_count'] ); ?>" /> <span class="description"><?php echo esc_html__( '0 = ikut setting global.', 'lp-generator' ); ?></span></td>
-			</tr>
-			<tr>
-				<th><label for="lpgen_image_upload_ids"><?php echo esc_html__( 'Gambar upload', 'lp-generator' ); ?></label></th>
-				<td>
-					<input type="hidden" name="lpgen[image_upload_ids]" id="lpgen_image_upload_ids" value="<?php echo esc_attr( (string) $values['image_upload_ids'] ); ?>" />
-					<button type="button" class="button" data-lpgen-action="pick-images"><?php echo esc_html__( 'Pilih / upload dari Media Library', 'lp-generator' ); ?></button>
-					<p class="description" id="lpgen_image_upload_info"><?php echo esc_html( sprintf( _n( '%d gambar dipilih', '%d gambar dipilih', count( ImagePipeline::clean_upload_ids( $values['image_upload_ids'] ) ), 'lp-generator' ), count( ImagePipeline::clean_upload_ids( $values['image_upload_ids'] ) ) ) ); ?></p>
-				</td>
-			</tr>
-			</tbody>
-		</table>
-		<p class="lpgen-status-line">
-			<?php echo esc_html__( 'Status:', 'lp-generator' ); ?>
-			<strong><?php echo esc_html( $status ); ?></strong>
-		</p>
-		<p>
-			<button type="button" class="button button-primary" data-lpgen-action="start-campaign" data-campaign="<?php echo esc_attr( (string) $post->ID ); ?>">
-				<?php echo esc_html__( 'Start generation', 'lp-generator' ); ?>
-			</button>
-			<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=lp-generator' ) ); ?>"><?php echo esc_html__( 'Lihat progress', 'lp-generator' ); ?></a>
-		</p>
+		<div class="lpgen-campaign-form">
+			<!-- BAGIAN 1: DATA UTAMA -->
+			<div class="lpgen-form-section">
+				<h3><?php echo esc_html__( '1. Penawaran & Target BOFU', 'lp-generator' ); ?></h3>
+				<table class="form-table lpgen-table">
+					<tbody>
+					<tr>
+						<th><label for="lpgen_offer_name"><?php echo esc_html__( 'Nama Produk / Jasa / Offer', 'lp-generator' ); ?> *</label></th>
+						<td>
+							<input type="text" class="large-text" name="lpgen[offer_name]" id="lpgen_offer_name" value="<?php echo esc_attr( (string) $values['offer_name'] ); ?>" placeholder="Contoh: Jasa Pembuatan Website Solo / Kursus SEO / Hosting X" required />
+						</td>
+					</tr>
+					<tr>
+						<th><label for="lpgen_offer_type"><?php echo esc_html__( 'Tipe Penawaran', 'lp-generator' ); ?></label></th>
+						<td>
+							<select name="lpgen[offer_type]" id="lpgen_offer_type">
+								<?php foreach ( array( 'product' => __( 'Produk Fisik / Digital', 'lp-generator' ), 'service' => __( 'Jasa / Layanan', 'lp-generator' ), 'affiliate' => __( 'Afiliasi / Rekomendasi', 'lp-generator' ) ) as $key => $label ) : ?>
+									<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $values['offer_type'], $key ); ?>><?php echo esc_html( $label ); ?></option>
+								<?php endforeach; ?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<th><?php echo esc_html__( 'Target Landing Page BOFU', 'lp-generator' ); ?></th>
+						<td>
+							<fieldset>
+								<label style="display:block;margin-bottom:6px;">
+									<input type="radio" name="lpgen[bofu_mode]" value="new" <?php checked( 'new', $values['bofu_mode'] ); ?> class="lpgen-toggle-bofu" />
+									<strong><?php echo esc_html__( 'Buat Landing Page BOFU Baru', 'lp-generator' ); ?></strong>
+									<span class="description">— <?php echo esc_html__( 'AI akan membuat halaman sales landing page baru khusus untuk campaign ini.', 'lp-generator' ); ?></span>
+								</label>
+								<label style="display:block;margin-bottom:6px;">
+									<input type="radio" name="lpgen[bofu_mode]" value="existing" <?php checked( 'existing', $values['bofu_mode'] ); ?> class="lpgen-toggle-bofu" />
+									<strong><?php echo esc_html__( 'Pilih Halaman BOFU yang Sudah Ada (Rutin Update Konten)', 'lp-generator' ); ?></strong>
+									<span class="description">— <?php echo esc_html__( 'Semua artikel TOFU/MOFU akan mengarahkan pembaca ke halaman yang sudah Anda buat sebelumnya.', 'lp-generator' ); ?></span>
+								</label>
+								<div id="lpgen_bofu_existing_box" style="margin-top:8px;<?php echo 'existing' === $values['bofu_mode'] ? '' : 'display:none;'; ?>">
+									<label for="lpgen_bofu_existing_id"><strong><?php echo esc_html__( 'Pilih Halaman Target BOFU:', 'lp-generator' ); ?></strong></label><br />
+									<select name="lpgen[bofu_existing_id]" id="lpgen_bofu_existing_id" style="max-width:500px;width:100%;">
+										<option value="0"><?php echo esc_html__( '— Pilih Halaman / Post —', 'lp-generator' ); ?></option>
+										<?php foreach ( $existing_pages as $page ) : ?>
+											<option value="<?php echo esc_attr( (string) $page->ID ); ?>" <?php selected( (int) $values['bofu_existing_id'], (int) $page->ID ); ?>>
+												<?php echo esc_html( sprintf( '%s (%s - %s)', get_the_title( $page ), $page->post_type, get_permalink( $page ) ) ); ?>
+											</option>
+										<?php endforeach; ?>
+									</select>
+								</div>
+							</fieldset>
+						</td>
+					</tr>
+					<tr>
+						<th><label for="lpgen_offer_url"><?php echo esc_html__( 'URL CTA / WhatsApp / Checkout', 'lp-generator' ); ?></label></th>
+						<td>
+							<input type="url" class="regular-text" name="lpgen[offer_url]" id="lpgen_offer_url" value="<?php echo esc_attr( (string) $values['offer_url'] ); ?>" placeholder="https://wa.me/62812... atau https://domain.com/beli" />
+						</td>
+					</tr>
+					<tr>
+						<th><label for="lpgen_target_areas"><?php echo esc_html__( 'Target Area / Kota (Opsional)', 'lp-generator' ); ?></label></th>
+						<td>
+							<textarea class="large-text" rows="3" name="lpgen[target_areas]" id="lpgen_target_areas" placeholder="Solo&#10;Sukoharjo&#10;Karanganyar&#10;Klaten"><?php echo esc_textarea( (string) $values['target_areas'] ); ?></textarea>
+							<p class="description"><?php echo esc_html__( 'Satu area per baris. AI akan membagi topik lokal secara alami dan semuanya tetap diarahkan ke BOFU campaign ini.', 'lp-generator' ); ?></p>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- BAGIAN 2: FRAMEWORK COPYWRITING -->
+			<div class="lpgen-form-section" style="margin-top:20px;padding-top:16px;border-top:1px solid #dcdcde;">
+				<h3><?php echo esc_html__( '2. Copywriting Framework', 'lp-generator' ); ?></h3>
+				<table class="form-table lpgen-table">
+					<tbody>
+					<tr>
+						<th><label for="lpgen_framework"><?php echo esc_html__( 'Formula Copywriting', 'lp-generator' ); ?></label></th>
+						<td>
+							<select name="lpgen[framework]" id="lpgen_framework" style="max-width:540px;width:100%;">
+								<?php foreach ( Frameworks::for_select() as $key => $label ) : ?>
+									<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $values['framework'], $key ); ?>><?php echo esc_html( $label ); ?></option>
+								<?php endforeach; ?>
+							</select>
+							<button type="button" class="button" data-lpgen-action="generate-framework" data-campaign="<?php echo esc_attr( (string) $post->ID ); ?>" style="margin-left:6px;"><?php echo esc_html__( '⚡ Generate Framework AI', 'lp-generator' ); ?></button>
+							
+							<div id="lpgen_framework_steps_preview" style="margin-top:10px;">
+								<!-- Rendered via JS and PHP -->
+								<?php
+								$current_preset = Frameworks::get( (string) $values['framework'] );
+								$ai_framework = Frameworks::sanitize_generated( (string) ContentRepository::get_meta( $post->ID, 'ai_framework', '' ) );
+								$display_steps = ( 'ai' === $values['framework'] && ! empty( $ai_framework['steps'] ) )
+									? wp_list_pluck( $ai_framework['steps'], 'name' )
+									: $current_preset['steps'];
+								?>
+								<div class="lpgen-steps-badges" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+									<span style="font-weight:600;font-size:12px;color:#50575e;"><?php echo esc_html__( 'Langkah Copywriting:', 'lp-generator' ); ?></span>
+									<?php foreach ( $display_steps as $step_idx => $step_name ) : ?>
+										<span class="lpgen-badge lpgen-badge--done" style="font-size:12px;padding:3px 8px;">
+											<?php echo esc_html( sprintf( '%d. %s', $step_idx + 1, $step_name ) ); ?>
+										</span>
+									<?php endforeach; ?>
+								</div>
+							</div>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- BAGIAN 3: TOPIK KONTEN -->
+			<div class="lpgen-form-section" style="margin-top:20px;padding-top:16px;border-top:1px solid #dcdcde;">
+				<h3><?php echo esc_html__( '3. Topik Konten (TOFU & MOFU)', 'lp-generator' ); ?></h3>
+				<table class="form-table lpgen-table">
+					<tbody>
+					<tr>
+						<th><?php echo esc_html__( 'Cara Pembuatan Topik', 'lp-generator' ); ?></th>
+						<td>
+							<label style="margin-right:16px;">
+								<input type="radio" name="lpgen[topic_mode]" value="auto" <?php checked( 'auto', $values['topic_mode'] ); ?> class="lpgen-toggle-topic" />
+								<strong><?php echo esc_html__( 'Otomatis via AI', 'lp-generator' ); ?></strong>
+							</label>
+							<label>
+								<input type="radio" name="lpgen[topic_mode]" value="manual" <?php checked( 'manual', $values['topic_mode'] ); ?> class="lpgen-toggle-topic" />
+								<strong><?php echo esc_html__( 'Manual (Input Topik Sendiri)', 'lp-generator' ); ?></strong>
+							</label>
+						</td>
+					</tr>
+					<tr id="lpgen_topic_auto_row" style="<?php echo 'manual' === $values['topic_mode'] ? 'display:none;' : ''; ?>">
+						<th><?php echo esc_html__( 'Jumlah Artikel AI', 'lp-generator' ); ?></th>
+						<td>
+							<label for="lpgen_mofu_count"><?php echo esc_html__( 'MOFU:', 'lp-generator' ); ?></label>
+							<input type="number" min="1" max="10" name="lpgen[mofu_count]" id="lpgen_mofu_count" value="<?php echo esc_attr( (string) $values['mofu_count'] ); ?>" style="width:60px;" />
+							<span style="margin:0 12px;">|</span>
+							<label for="lpgen_tofu_count"><?php echo esc_html__( 'TOFU:', 'lp-generator' ); ?></label>
+							<input type="number" min="1" max="10" name="lpgen[tofu_count]" id="lpgen_tofu_count" value="<?php echo esc_attr( (string) $values['tofu_count'] ); ?>" style="width:60px;" />
+							<span class="description"><?php echo esc_html__( 'AI akan menentukan topik secara variatif sesuai area & persona.', 'lp-generator' ); ?></span>
+						</td>
+					</tr>
+					<tr id="lpgen_topic_manual_row_mofu" style="<?php echo 'manual' === $values['topic_mode'] ? '' : 'display:none;' ?>">
+						<th><label for="lpgen_manual_mofu_topics"><?php echo esc_html__( 'Topik / Judul MOFU (Manual)', 'lp-generator' ); ?></label></th>
+						<td>
+							<textarea class="large-text" rows="3" name="lpgen[manual_mofu_topics]" id="lpgen_manual_mofu_topics" placeholder="Perbandingan Jasa Pembuatan Website Terbaik di Solo&#10;5 Hal Wajib Diperhatikan Sebelum Beli Landing Page"><?php echo esc_textarea( (string) $values['manual_mofu_topics'] ); ?></textarea>
+							<p class="description"><?php echo esc_html__( 'Satu judul per baris. Konten perbandingan, evaluasi, dan solusi yang mengarah ke BOFU.', 'lp-generator' ); ?></p>
+						</td>
+					</tr>
+					<tr id="lpgen_topic_manual_row_tofu" style="<?php echo 'manual' === $values['topic_mode'] ? '' : 'display:none;' ?>">
+						<th><label for="lpgen_manual_tofu_topics"><?php echo esc_html__( 'Topik / Judul TOFU (Manual)', 'lp-generator' ); ?></label></th>
+						<td>
+							<textarea class="large-text" rows="3" name="lpgen[manual_tofu_topics]" id="lpgen_manual_tofu_topics" placeholder="Cara Meningkatkan Penjualan Bisnis Lokal di Era Digital&#10;Pentingnya Punya Website Resmi Bagi UMKM Solo"><?php echo esc_textarea( (string) $values['manual_tofu_topics'] ); ?></textarea>
+							<p class="description"><?php echo esc_html__( 'Satu judul per baris. Konten edukasi & kesadaran masalah yang relevan.', 'lp-generator' ); ?></p>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!-- BAGIAN 4: PENGATURAN LANJUTAN (COLLAPSIBLE) -->
+			<div class="lpgen-form-section" style="margin-top:20px;padding-top:16px;border-top:1px solid #dcdcde;">
+				<details style="background:#f6f7f7;padding:12px 16px;border:1px solid #c3c4c7;border-radius:6px;">
+					<summary style="font-weight:600;font-size:14px;cursor:pointer;color:#2271b1;">
+						⚙️ <?php echo esc_html__( 'Pengaturan Lanjutan (Persona, Jadwal, Internal Link, Gambar, Amazon)', 'lp-generator' ); ?>
+					</summary>
+					<div style="margin-top:14px;">
+						<table class="form-table lpgen-table">
+							<tbody>
+							<tr>
+								<th><label for="lpgen_audience"><?php echo esc_html__( 'Audiens Sasaran', 'lp-generator' ); ?></label></th>
+								<td><textarea class="large-text" rows="2" name="lpgen[audience]" id="lpgen_audience"><?php echo esc_textarea( (string) $values['audience'] ); ?></textarea></td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_problem"><?php echo esc_html__( 'Masalah Utama', 'lp-generator' ); ?></label></th>
+								<td><textarea class="large-text" rows="2" name="lpgen[problem]" id="lpgen_problem"><?php echo esc_textarea( (string) $values['problem'] ); ?></textarea></td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_promise"><?php echo esc_html__( 'Janji / Hasil', 'lp-generator' ); ?></label></th>
+								<td><textarea class="large-text" rows="2" name="lpgen[promise]" id="lpgen_promise"><?php echo esc_textarea( (string) $values['promise'] ); ?></textarea></td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_benefits"><?php echo esc_html__( 'Benefit (satu per baris)', 'lp-generator' ); ?></label></th>
+								<td><textarea class="large-text" rows="3" name="lpgen[benefits]" id="lpgen_benefits"><?php echo esc_textarea( (string) $values['benefits'] ); ?></textarea></td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_price"><?php echo esc_html__( 'Harga / Mulai Dari', 'lp-generator' ); ?></label></th>
+								<td><input type="text" class="regular-text" name="lpgen[price]" id="lpgen_price" value="<?php echo esc_attr( (string) $values['price'] ); ?>" /></td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_bonus"><?php echo esc_html__( 'Bonus (satu per baris)', 'lp-generator' ); ?></label></th>
+								<td><textarea class="large-text" rows="2" name="lpgen[bonus]" id="lpgen_bonus"><?php echo esc_textarea( (string) $values['bonus'] ); ?></textarea></td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_guarantee"><?php echo esc_html__( 'Garansi', 'lp-generator' ); ?></label></th>
+								<td><input type="text" class="regular-text" name="lpgen[guarantee]" id="lpgen_guarantee" value="<?php echo esc_attr( (string) $values['guarantee'] ); ?>" /></td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_cta"><?php echo esc_html__( 'Teks Tombol CTA', 'lp-generator' ); ?></label></th>
+								<td><input type="text" class="regular-text" name="lpgen[cta]" id="lpgen_cta" value="<?php echo esc_attr( (string) $values['cta'] ); ?>" placeholder="Pesan Sekarang" /></td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_voice"><?php echo esc_html__( 'Tone of Voice', 'lp-generator' ); ?></label></th>
+								<td><input type="text" class="regular-text" name="lpgen[voice]" id="lpgen_voice" value="<?php echo esc_attr( (string) $values['voice'] ); ?>" placeholder="profesional, ramah, persuasif" /></td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_language"><?php echo esc_html__( 'Bahasa', 'lp-generator' ); ?></label></th>
+								<td>
+									<select name="lpgen[language]" id="lpgen_language">
+										<option value="id" <?php selected( $values['language'], 'id' ); ?>><?php echo esc_html__( 'Bahasa Indonesia', 'lp-generator' ); ?></option>
+										<option value="en" <?php selected( $values['language'], 'en' ); ?>><?php echo esc_html__( 'English', 'lp-generator' ); ?></option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_lp_post_type"><?php echo esc_html__( 'Post type LP', 'lp-generator' ); ?></label></th>
+								<td>
+									<select name="lpgen[lp_post_type]" id="lpgen_lp_post_type">
+										<option value="page" <?php selected( $values['lp_post_type'], 'page' ); ?>>Page</option>
+										<option value="post" <?php selected( $values['lp_post_type'], 'post' ); ?>>Post</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_article_post_type"><?php echo esc_html__( 'Post type artikel', 'lp-generator' ); ?></label></th>
+								<td>
+									<select name="lpgen[article_post_type]" id="lpgen_article_post_type">
+										<option value="post" <?php selected( $values['article_post_type'], 'post' ); ?>>Post</option>
+										<option value="page" <?php selected( $values['article_post_type'], 'page' ); ?>>Page</option>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_publish_status"><?php echo esc_html__( 'Status Publish', 'lp-generator' ); ?></label></th>
+								<td>
+									<select name="lpgen[publish_status]" id="lpgen_publish_status">
+										<?php foreach ( array( 'publish', 'draft', 'pending' ) as $status_option ) : ?>
+											<option value="<?php echo esc_attr( $status_option ); ?>" <?php selected( $values['publish_status'], $status_option ); ?>><?php echo esc_html( ucfirst( $status_option ) ); ?></option>
+										<?php endforeach; ?>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_content_push_enabled"><?php echo esc_html__( 'Push Konten Campaign', 'lp-generator' ); ?></label></th>
+								<td>
+									<input type="hidden" name="lpgen[content_push_enabled]" value="0" />
+									<label><input type="checkbox" name="lpgen[content_push_enabled]" value="1" id="lpgen_content_push_enabled" <?php checked( 1, (int) $values['content_push_enabled'] ); ?> /> <?php echo esc_html__( 'Izinkan konten dipublish sesuai antrean', 'lp-generator' ); ?></label>
+									<p><label for="lpgen_content_push_until"><?php echo esc_html__( 'Batas akhir push (kosong = tanpa batas):', 'lp-generator' ); ?></label> <input type="date" name="lpgen[content_push_until]" id="lpgen_content_push_until" value="<?php echo esc_attr( (string) $values['content_push_until'] ); ?>" /></p>
+								</td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_internal_link_enabled"><?php echo esc_html__( 'Internal Link ke BOFU', 'lp-generator' ); ?></label></th>
+								<td>
+									<input type="hidden" name="lpgen[internal_link_enabled]" value="0" />
+									<label><input type="checkbox" name="lpgen[internal_link_enabled]" value="1" id="lpgen_internal_link_enabled" <?php checked( 1, (int) $values['internal_link_enabled'] ); ?> /> <?php echo esc_html__( 'Semua artikel mengarahkan pembaca ke Landing Page BOFU', 'lp-generator' ); ?></label>
+									<p>
+										<label for="lpgen_internal_link_target"><?php echo esc_html__( 'Target link:', 'lp-generator' ); ?></label>
+										<select name="lpgen[internal_link_target]" id="lpgen_internal_link_target">
+											<option value="bofu" <?php selected( $values['internal_link_target'], 'bofu' ); ?>><?php echo esc_html__( 'Selalu BOFU (disarankan)', 'lp-generator' ); ?></option>
+											<option value="next_stage" <?php selected( $values['internal_link_target'], 'next_stage' ); ?>><?php echo esc_html__( 'Tahap berikutnya (TOFU → MOFU → BOFU)', 'lp-generator' ); ?></option>
+										</select>
+									</p>
+									<p><label for="lpgen_internal_link_until"><?php echo esc_html__( 'Internal link aktif sampai (kosong = tanpa batas):', 'lp-generator' ); ?></label> <input type="date" name="lpgen[internal_link_until]" id="lpgen_internal_link_until" value="<?php echo esc_attr( (string) $values['internal_link_until'] ); ?>" /></p>
+								</td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_image_enabled"><?php echo esc_html__( 'Sisipkan Gambar', 'lp-generator' ); ?></label></th>
+								<td>
+									<input type="hidden" name="lpgen[image_enabled]" value="0" />
+									<label><input type="checkbox" name="lpgen[image_enabled]" value="1" id="lpgen_image_enabled" <?php checked( 1, (int) $values['image_enabled'] ); ?> /> <?php echo esc_html__( 'Aktifkan gambar di konten', 'lp-generator' ); ?></label>
+								</td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_image_source"><?php echo esc_html__( 'Engine Gambar', 'lp-generator' ); ?></label></th>
+								<td>
+									<select name="lpgen[image_source]" id="lpgen_image_source">
+										<?php foreach ( array( 'auto' => __( 'Otomatis: upload → AI → Bing', 'lp-generator' ), 'upload' => __( 'Upload saja', 'lp-generator' ), 'ai' => __( 'AI 9Router saja', 'lp-generator' ), 'bing' => __( 'Bing Images saja', 'lp-generator' ) ) as $key => $label ) : ?>
+											<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $values['image_source'], $key ); ?>><?php echo esc_html( $label ); ?></option>
+										<?php endforeach; ?>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<th><label for="lpgen_amazon_enabled"><?php echo esc_html__( 'Amazon Affiliate', 'lp-generator' ); ?></label></th>
+								<td>
+									<label><input type="checkbox" name="lpgen[amazon_enabled]" value="1" id="lpgen_amazon_enabled" <?php checked( 1, (int) $values['amazon_enabled'] ); ?> /> <?php echo esc_html__( 'Aktifkan produk Amazon', 'lp-generator' ); ?></label>
+									<input type="text" class="regular-text" name="lpgen[amazon_keyword]" id="lpgen_amazon_keyword" value="<?php echo esc_attr( (string) $values['amazon_keyword'] ); ?>" placeholder="Keyword Amazon (opsional)" style="margin-left:8px;" />
+								</td>
+							</tr>
+							</tbody>
+						</table>
+					</div>
+				</details>
+			</div>
+
+			<!-- ACTION BUTTONS -->
+			<div class="lpgen-action-bar" style="margin-top:24px;padding:16px;background:#fff;border:1px solid #c3c4c7;border-radius:6px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;">
+				<div style="display:flex;align-items:center;gap:10px;">
+					<button type="button" class="button button-primary button-large" data-lpgen-action="start-campaign" data-campaign="<?php echo esc_attr( (string) $post->ID ); ?>" style="font-weight:700;">
+						<?php echo esc_html__( '🚀 Mulai Generate Konten (Live)', 'lp-generator' ); ?>
+					</button>
+					<button type="button" class="button button-secondary" data-lpgen-action="run-now" data-campaign="<?php echo esc_attr( (string) $post->ID ); ?>">
+						<?php echo esc_html__( 'Proses Antrean Sekarang', 'lp-generator' ); ?>
+					</button>
+					<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=lpg-review&campaign_id=' . $post->ID ) ); ?>">
+						<?php echo esc_html__( 'Lihat Review Konten', 'lp-generator' ); ?>
+					</a>
+				</div>
+				<div>
+					<?php echo esc_html__( 'Status:', 'lp-generator' ); ?>
+					<span class="lpgen-badge lpgen-badge--<?php echo esc_attr( sanitize_key( $status ) ); ?>"><?php echo esc_html( $status ); ?></span>
+				</div>
+			</div>
+
+			<div id="lpgen-live-runner" style="display:none;margin-top:16px;padding:16px;background:#1d2327;color:#fff;border-radius:8px;">
+				<h4 style="margin:0 0 8px;color:#72aee6;"><?php echo esc_html__( 'Proses Pembuatan Konten Sedang Berjalan...', 'lp-generator' ); ?></h4>
+				<div class="lpgen-progress" style="width:100%;height:14px;background:rgba(255,255,255,0.2);border-radius:7px;overflow:hidden;margin-bottom:8px;">
+					<div class="lpgen-progress__bar" id="lpgen_runner_bar" style="width:5%;height:100%;background:#00a32a;transition:width 0.3s ease;"></div>
+				</div>
+				<div id="lpgen_runner_status" style="font-size:13px;color:#c3c4c7;"><?php echo esc_html__( 'Menyiapkan antrean job...', 'lp-generator' ); ?></div>
+			</div>
+
+			<div id="lpgen-action-result" aria-live="polite"></div>
+		</div>
+
+		<script>
+		window.lpgenFrameworkData = <?php echo wp_json_encode( $all_frameworks ); ?>;
+		</script>
 		<?php
 	}
 
@@ -438,6 +493,18 @@ final class CampaignUI {
 				case 'offer_url':
 					$data[ $key ] = Utils::clean_url( $value );
 					break;
+				case 'bofu_mode':
+					$data[ $key ] = in_array( $value, array( 'new', 'existing' ), true ) ? $value : 'new';
+					break;
+				case 'bofu_existing_id':
+					$data[ $key ] = absint( $value );
+					break;
+				case 'topic_mode':
+					$data[ $key ] = in_array( $value, array( 'auto', 'manual' ), true ) ? $value : 'auto';
+					break;
+				case 'manual_mofu_topics':
+				case 'manual_tofu_topics':
+				case 'target_areas':
 				case 'benefits':
 				case 'bonus':
 					$data[ $key ] = Utils::clean_textarea( $value );
@@ -477,7 +544,6 @@ final class CampaignUI {
 				case 'phone':
 				case 'brand':
 				case 'city':
-				case 'target_areas':
 				case 'amazon_keyword':
 					$data[ $key ] = Utils::clean_text( $value );
 					break;

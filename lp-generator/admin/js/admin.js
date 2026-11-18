@@ -84,10 +84,21 @@
 
 		var original = $button.text();
 		$button.prop('disabled', true).text(config.i18n.running);
+
+		if ('run-now' === action) {
+			$button.prop('disabled', false).text(original);
+			runQueueLoop(campaign);
+			return;
+		}
+
 		call(action.replace(/-/g, '_'), data)
 			.done(function (response) {
 				showResult(response && response.message ? response.message : '', !!(response && response.ok));
-				if (response && response.ok && ('start-campaign' === action || 'publish-campaign' === action || 'regenerate' === action || 'generate-entities' === action || 'generate-tag-content' === action)) {
+				if ('start-campaign' === action && response && response.ok) {
+					runQueueLoop(campaign, response.jobs || 6);
+					return;
+				}
+				if (response && response.ok && ('publish-campaign' === action || 'regenerate' === action || 'generate-entities' === action || 'generate-tag-content' === action || 'generate-framework' === action)) {
 					window.setTimeout(function () { window.location.reload(); }, 900);
 				}
 			})
@@ -95,8 +106,93 @@
 				showResult('AJAX error', false);
 			})
 			.always(function () {
-				$button.prop('disabled', false).text(original);
+				if ('start-campaign' !== action) {
+					$button.prop('disabled', false).text(original);
+				}
 			});
+	});
+
+	function runQueueLoop(campaign, totalJobs) {
+		var $runner = $('#lpgen-live-runner');
+		var $bar = $('#lpgen_runner_bar');
+		var $status = $('#lpgen_runner_status');
+		if ($runner.length) {
+			$runner.show();
+		} else {
+			showResult('Sedang memproses antrean konten...', true);
+		}
+
+		var total = totalJobs || 6;
+		function step() {
+			call('process_queue', { campaign: campaign })
+				.done(function (res) {
+					if (!res || !res.ok) {
+						if (res && res.busy) {
+							window.setTimeout(step, 1500);
+							return;
+						}
+						showResult(res && res.message ? res.message : 'Error processing queue', false);
+						if ($status.length) { $status.text(res && res.message ? res.message : 'Error'); }
+						return;
+					}
+					if (res.done || res.remaining === 0) {
+						if ($bar.length) { $bar.css('width', '100%'); }
+						if ($status.length) { $status.text('Selesai! Semua konten berhasil dibuat.'); }
+						showResult('Selesai! Semua konten berhasil dibuat.', true);
+						window.setTimeout(function () {
+							window.location.reload();
+						}, 1200);
+						return;
+					}
+					var rem = res.remaining;
+					if (rem > total) { total = rem; }
+					var pct = Math.max(10, Math.min(95, Math.round(((total - rem) / total) * 100)));
+					if ($bar.length) { $bar.css('width', pct + '%'); }
+					if ($status.length) {
+						$status.text('Sedang memproses... ' + (res.message || '') + ' (' + rem + ' tersisa)');
+					}
+					window.setTimeout(step, 300);
+				})
+				.fail(function () {
+					showResult('Koneksi terputus saat memproses queue. Coba klik "Proses Antrean Sekarang".', false);
+				});
+		}
+		step();
+	}
+
+	// Dynamic campaign form toggles and framework preview
+	$(document).on('change', '.lpgen-toggle-bofu', function () {
+		if ('existing' === $(this).val()) {
+			$('#lpgen_bofu_existing_box').slideDown(150);
+		} else {
+			$('#lpgen_bofu_existing_box').slideUp(150);
+		}
+	});
+
+	$(document).on('change', '.lpgen-toggle-topic', function () {
+		if ('manual' === $(this).val()) {
+			$('#lpgen_topic_auto_row').hide();
+			$('#lpgen_topic_manual_row_mofu, #lpgen_topic_manual_row_tofu').show();
+		} else {
+			$('#lpgen_topic_auto_row').show();
+			$('#lpgen_topic_manual_row_mofu, #lpgen_topic_manual_row_tofu').hide();
+		}
+	});
+
+	$(document).on('change', '#lpgen_framework', function () {
+		var key = $(this).val();
+		var data = window.lpgenFrameworkData || {};
+		var steps = (data[key] && data[key].steps) ? data[key].steps : ['Attention', 'Interest', 'Desire', 'Action'];
+		var $preview = $('#lpgen_framework_steps_preview');
+		if ($preview.length) {
+			var html = '<div class="lpgen-steps-badges" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">';
+			html += '<span style="font-weight:600;font-size:12px;color:#50575e;">Langkah Copywriting:</span>';
+			$.each(steps, function (idx, stepName) {
+				html += '<span class="lpgen-badge lpgen-badge--done" style="font-size:12px;padding:3px 8px;">' + (idx + 1) + '. ' + $('<div>').text(stepName).html() + '</span>';
+			});
+			html += '</div>';
+			$preview.html(html);
+		}
 	});
 
 	var $logTable = $('.lpgen-log-table');

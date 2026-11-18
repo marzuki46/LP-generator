@@ -1,9 +1,9 @@
 {
-  "version": "1.3.3",
-  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.3.3.zip",
+  "version": "1.3.4",
+  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.3.4.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>Improved GitHub updater detection with Update URI, transient compatibility, and shorter manifest cache.</li><li>Added BOFU hub controls: target areas, push end date, internal-link end date, and always-BOFU linking.</li><li>Fixed admin Campaigns redirect headers warning.</li></ul>"
+  "changelog": "<ul><li>Expanded RSS/WebSub providers to all free hubs and XML-RPC ping endpoints (Google, Superfeedr, WebSubHub, Ping-o-Matic, Weblogs, Blo.gs).</li><li>Streamlined Campaign UI: simple 3-step setup with collapsible advanced options.</li><li>Added existing BOFU selection for routine content updates to chosen landing pages.</li><li>Added manual topic entry alongside automatic AI topic generation.</li><li>Added visual copywriting step preview for all 12 frameworks.</li><li>Added interactive real-time AJAX queue runner with live progress bar.</li></ul>"
 }

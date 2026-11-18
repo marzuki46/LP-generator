@@ -18,6 +18,14 @@ lpg_assert_same(
 );
 lpg_assert_true( in_array( Indexer::PUSH_HUB, Indexer::RSS_ENDPOINTS, true ), 'Google WebSub tetap menjadi provider RSS' );
 lpg_assert_true( in_array( 'https://pubsubhubbub.superfeedr.com/', Indexer::RSS_ENDPOINTS, true ), 'Superfeedr ditambahkan sebagai provider RSS gratis' );
+lpg_assert_true( in_array( 'https://websubhub.com/hub', Indexer::RSS_ENDPOINTS, true ), 'WebSubHub ditambahkan' );
+lpg_assert_true( in_array( 'http://rpc.pingomatic.com/', Indexer::RSS_ENDPOINTS, true ), 'Ping-o-Matic ditambahkan' );
+lpg_assert_true( in_array( 'http://rpc.weblogs.com/RPC2', Indexer::RSS_ENDPOINTS, true ), 'Weblogs.com ditambahkan' );
+lpg_assert_true( in_array( 'http://ping.blo.gs/', Indexer::RSS_ENDPOINTS, true ), 'Blo.gs ditambahkan' );
+lpg_assert_true( in_array( 'http://blogsearch.google.com/ping/RPC2', Indexer::RSS_ENDPOINTS, true ), 'Google Blog Search Ping ditambahkan' );
+
+$invalid_ping = Indexer::ping_rss_endpoint( 'not-a-url', 'https://example.test/feed/' );
+lpg_assert_same( 'invalid', $invalid_ping['type'], 'ping menolak URL invalid' );
 
 $payload = Indexer::build_indexnow_payload(
 	'https://example.test/lp/',

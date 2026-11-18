@@ -71,6 +71,11 @@ final class ContentRepository {
 		'image_upload_ids',
 		'image_count',
 		'ai_framework',
+		'bofu_mode',
+		'bofu_existing_id',
+		'topic_mode',
+		'manual_mofu_topics',
+		'manual_tofu_topics',
 	);
 
 	/**
@@ -167,11 +172,20 @@ final class ContentRepository {
 		$context['internal_link_target'] = in_array( (string) $context['internal_link_target'], array( 'bofu', 'next_stage' ), true ) ? (string) $context['internal_link_target'] : 'bofu';
 		$context['target_areas'] = Utils::lines( (string) $context['target_areas'] );
 
-		$framework          = Frameworks::get( (string) $context['framework'] );
+		$context['bofu_mode'] = 'existing' === (string) $context['bofu_mode'] ? 'existing' : 'new';
+		$context['bofu_existing_id'] = absint( $context['bofu_existing_id'] );
+		$context['topic_mode'] = 'manual' === (string) $context['topic_mode'] ? 'manual' : 'auto';
+		$context['manual_mofu_topics'] = Utils::lines( (string) $context['manual_mofu_topics'] );
+		$context['manual_tofu_topics'] = Utils::lines( (string) $context['manual_tofu_topics'] );
+
+		$framework_slug     = sanitize_key( (string) $context['framework'] );
+		$framework          = Frameworks::get( $framework_slug );
+		$context['framework_slug']   = $framework_slug;
 		$context['framework']        = $framework['label'];
 		$context['framework_steps']  = $framework['steps'];
+
 		$generated = Frameworks::sanitize_generated( (string) ( $context['ai_framework'] ?? '' ) );
-		if ( ! empty( $generated['steps'] ) ) {
+		if ( 'ai' === $framework_slug && ! empty( $generated['steps'] ) ) {
 			$context['framework']               = $generated['label'];
 			$context['framework_steps']         = wp_list_pluck( $generated['steps'], 'name' );
 			$context['framework_hints']         = wp_list_pluck( $generated['steps'], 'section_hint' );

@@ -101,19 +101,32 @@ final class Database {
 	/**
 	 * Get the next runnable queued job, in strict creation order.
 	 *
+	 * @param int|null $campaign_id Optional campaign ID.
 	 * @return array|null
 	 */
-	public static function get_next_job(): ?array {
+	public static function get_next_job( ?int $campaign_id = null ): ?array {
 		global $wpdb;
 		$table = self::table( 'jobs' );
-		$row   = $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT * FROM {$table} WHERE status = %s AND run_at <= %s ORDER BY id ASC LIMIT 1",
-				'queued',
-				current_time( 'mysql', true )
-			),
-			ARRAY_A
-		);
+		if ( null !== $campaign_id && $campaign_id > 0 ) {
+			$row = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT * FROM {$table} WHERE campaign_id = %d AND status = %s AND run_at <= %s ORDER BY id ASC LIMIT 1",
+					$campaign_id,
+					'queued',
+					current_time( 'mysql', true )
+				),
+				ARRAY_A
+			);
+		} else {
+			$row = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT * FROM {$table} WHERE status = %s AND run_at <= %s ORDER BY id ASC LIMIT 1",
+					'queued',
+					current_time( 'mysql', true )
+				),
+				ARRAY_A
+			);
+		}
 		return is_array( $row ) ? $row : null;
 	}
 

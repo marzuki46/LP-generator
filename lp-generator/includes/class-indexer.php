@@ -27,13 +27,18 @@ final class Indexer {
 	public const INDEXNOW_ENDPOINT = 'https://api.indexnow.org/indexnow';
 
 	/**
-	 * Free WebSub hubs. They receive a ping and fetch the public RSS feed.
+	 * Free WebSub hubs and XML-RPC ping endpoints. They receive a ping/publish notification.
 	 *
 	 * @var string[]
 	 */
 	public const RSS_ENDPOINTS = array(
 		'https://pubsubhubbub.appspot.com/publish',
 		'https://pubsubhubbub.superfeedr.com/',
+		'https://websubhub.com/hub',
+		'http://rpc.pingomatic.com/',
+		'http://rpc.weblogs.com/RPC2',
+		'http://ping.blo.gs/',
+		'http://blogsearch.google.com/ping/RPC2',
 	);
 
 	/**
@@ -47,6 +52,59 @@ final class Indexer {
 			'hub.mode' => 'publish',
 			'hub.url'  => $feed_url,
 		);
+	}
+
+	/**
+	 * Ping a single RSS/WebSub/XML-RPC endpoint.
+	 *
+	 * @param string $endpoint Destination URL.
+	 * @param string $feed_url RSS feed URL.
+	 * @return array{ok:bool,code:int,type:string}
+	 */
+	public static function ping_rss_endpoint( string $endpoint, string $feed_url ): array {
+		if ( false === wp_http_validate_url( $endpoint ) ) {
+			return array( 'ok' => false, 'code' => 0, 'type' => 'invalid' );
+		}
+
+		$site_name = function_exists( 'get_bloginfo' ) ? (string) get_bloginfo( 'name' ) : 'WordPress';
+		$home_url  = function_exists( 'home_url' ) ? (string) home_url( '/' ) : 'https://example.test/';
+
+		// XML-RPC Ping (Ping-o-Matic, Weblogs.com, Blo.gs, Google Blogsearch).
+		if ( false !== stripos( $endpoint, 'rpc' ) || false !== stripos( $endpoint, 'blo.gs' ) ) {
+			$xml = '<?xml version="1.0"?>' . "\n" .
+				'<methodCall>' .
+				'<methodName>weblogUpdates.ping</methodName>' .
+				'<params>' .
+				'<param><value>' . esc_html( $site_name ) . '</value></param>' .
+				'<param><value>' . esc_url( $home_url ) . '</value></param>' .
+				'<param><value>' . esc_url( $feed_url ) . '</value></param>' .
+				'</params>' .
+				'</methodCall>';
+
+			$response = wp_remote_post(
+				$endpoint,
+				array(
+					'timeout' => 12,
+					'headers' => array( 'Content-Type' => 'text/xml; charset=utf-8' ),
+					'body'    => $xml,
+				)
+			);
+			$code = is_wp_error( $response ) ? 0 : (int) wp_remote_retrieve_response_code( $response );
+			$ok   = $code >= 200 && $code < 300;
+			return array( 'ok' => $ok, 'code' => $code, 'type' => 'xmlrpc' );
+		}
+
+		// WebSub Hub / PuSH (Google, Superfeedr, WebSubHub).
+		$response = wp_remote_post(
+			$endpoint,
+			array(
+				'timeout' => 12,
+				'body'    => self::build_push_body( $feed_url ),
+			)
+		);
+		$code = is_wp_error( $response ) ? 0 : (int) wp_remote_retrieve_response_code( $response );
+		$ok   = $code >= 200 && $code < 300;
+		return array( 'ok' => $ok, 'code' => $code, 'type' => 'websub' );
 	}
 
 	/**
@@ -138,26 +196,19 @@ final class Indexer {
 			if ( empty( $endpoints ) ) {
 				$endpoints = self::RSS_ENDPOINTS;
 			}
+			$feed_url = function_exists( 'get_feed_link' ) ? (string) get_feed_link( 'rss2' ) : ( home_url( '/feed/' ) );
 			$results['push']['providers'] = array();
 			foreach ( $endpoints as $endpoint ) {
 				if ( false === wp_http_validate_url( $endpoint ) ) {
 					continue;
 				}
-				$response = wp_remote_post(
-					$endpoint,
-					array(
-						'timeout' => 15,
-						'body'    => self::build_push_body( get_feed_link( 'rss2' ) ),
-					)
-				);
-				$code = is_wp_error( $response ) ? 0 : (int) wp_remote_retrieve_response_code( $response );
-				$ok   = $code >= 200 && $code < 300;
-				$results['push']['providers'][ $endpoint ] = array( 'ok' => $ok, 'code' => $code );
-				$results['push']['ok'] = $results['push']['ok'] || $ok;
-				$results['push']['code'] = $code;
+				$ping = self::ping_rss_endpoint( $endpoint, $feed_url );
+				$results['push']['providers'][ $endpoint ] = $ping;
+				$results['push']['ok'] = $results['push']['ok'] || $ping['ok'];
+				$results['push']['code'] = $ping['code'];
 				Database::log(
-					$ok ? 'info' : 'warning',
-					sprintf( 'RSS/WebSub %s returned HTTP %d', wp_parse_url( $endpoint, PHP_URL_HOST ), $code ),
+					$ping['ok'] ? 'info' : 'warning',
+					sprintf( 'RSS/Ping (%s) %s returned HTTP %d', $ping['type'], wp_parse_url( $endpoint, PHP_URL_HOST ), $ping['code'] ),
 					$campaign,
 					$job_id,
 					array( 'url' => $permalink, 'endpoint' => $endpoint )
