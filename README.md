@@ -2,7 +2,7 @@
 
 Plugin WordPress yang mengubah satu campaign offer menjadi funnel konten lengkap (TOFU → MOFU → BOFU) memakai 9Router AI, lalu mengirim URL baru ke Google PuSH + IndexNow **10 detik setelah publish**.
 
-Versi saat ini: **1.3.2**.
+Versi saat ini: **1.3.3**.
 
 ## Mulai dari mana
 
@@ -15,12 +15,12 @@ Versi saat ini: **1.3.2**.
 ## Implementasi
 
 - `lp-generator/` — source plugin, siap di-copy ke `wp-content/plugins/lp-generator/`.
-- `lp-generator-1.3.2.zip` — paket siap upload lewat **Plugins → Add New → Upload Plugin**.
+- `lp-generator-1.3.3.zip` — paket siap upload lewat **Plugins → Add New → Upload Plugin**.
 - `version.json` — manifest update untuk fitur *one-click update* dari Github.
 
 ## Instalasi & update
 
-1. Upload `lp-generator-1.3.2.zip` lewat **Plugins → Add New → Upload Plugin**, lalu aktifkan.
+1. Upload `lp-generator-1.3.3.zip` lewat **Plugins → Add New → Upload Plugin**, lalu aktifkan.
 2. Isi kredensial 9Router di **LP Generator → Settings → AI**.
 3. Saat ada rilis baru, WordPress akan menampilkan notifikasi **Update now** di halaman **Plugins** — tinggal klik. Manifest yang dibaca plugin terkunci ke `https://raw.githubusercontent.com/marzuki46/LP-generator/main/version.json`, dan paket update diambil dari file ZIP yang ada di repo yang sama. Tidak perlu upload manual lagi.
 
@@ -32,7 +32,7 @@ Untuk merilis versi baru:
 4. Build ulang ZIP dengan nama `lp-generator-<versi>.zip` di root repo.
 5. Commit, tag `v<versi>`, lalu `git push --follow-tags`.
 
-## Fitur v1.3.2
+## Fitur v1.3.3
 
 - Perbaikan string UI yang ter-encode dua kali (tanda hubung, panah, titik tengah) agar tidak muncul sebagai mojibake.
 - Settings bertab memakai gaya `nav-tab` WordPress: ikon, deskripsi tiap tab, active state, kartu responsif, sidebar alat bantu, dan fokus keyboard yang terlihat.
@@ -55,7 +55,7 @@ php tests\run.php
 php tests\smoke-bootstrap.php
 ```
 
-Terakhir dijalankan pada paket v1.3.2: **123 test passed, 0 failed**; seluruh file PHP lolos `php -l`; bootstrap & hook PASS (**28 group hook**, 2 callback aktivasi/deaktivasi). Test juga dijalankan ulang dari ZIP yang diekstrak.
+Terakhir dijalankan pada paket v1.3.3: **123 test passed, 0 failed**; seluruh file PHP lolos `php -l`; bootstrap & hook PASS (**28 group hook**, 2 callback aktivasi/deaktivasi). Test juga dijalankan ulang dari ZIP yang diekstrak.
 
 ## Alur singkat
 
@@ -70,4 +70,4 @@ Campaign (produk/jasa/afiliasi)
   → Activity Log mencatat setiap progres
 ```
 
-Sejak v1.2.0, setiap LP dan artikel juga mendapat galeri gambar dari engine pilihan (upload → AI 9Router → Bing Images), dikonversi ke WebP <100 KB dengan metadata keyword. Sejak v1.3.2, penempatan galeri mengikuti `section_hint` yang diputuskan AI.
+Sejak v1.2.0, setiap LP dan artikel juga mendapat galeri gambar dari engine pilihan (upload → AI 9Router → Bing Images), dikonversi ke WebP <100 KB dengan metadata keyword. Sejak v1.3.3, penempatan galeri mengikuti `section_hint` yang diputuskan AI.

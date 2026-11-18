@@ -34,6 +34,7 @@ final class Updater {
 	 * Register update hooks.
 	 */
 	public static function hook(): void {
+		add_filter( 'pre_set_site_transient_update_plugins', array( self::class, 'inject_update' ) );
 		add_filter( 'site_transient_update_plugins', array( self::class, 'inject_update' ) );
 		add_filter( 'plugins_api', array( self::class, 'plugin_information' ), 20, 3 );
 	}
@@ -85,11 +86,11 @@ final class Updater {
 			)
 		);
 		if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
-			set_site_transient( 'lpgen_update_manifest', array(), HOUR_IN_SECONDS );
+		set_site_transient( 'lpgen_update_manifest', array(), 5 * MINUTE_IN_SECONDS );
 			return array();
 		}
 		$manifest = self::sanitize_manifest( json_decode( wp_remote_retrieve_body( $response ), true ) );
-		set_site_transient( 'lpgen_update_manifest', $manifest, 6 * HOUR_IN_SECONDS );
+		set_site_transient( 'lpgen_update_manifest', $manifest, 5 * MINUTE_IN_SECONDS );
 		return $manifest;
 	}
 
@@ -100,14 +101,20 @@ final class Updater {
 	 * @return mixed
 	 */
 	public static function inject_update( $transient ) {
-		if ( ! is_object( $transient ) || ! isset( $transient->response ) || ! is_array( $transient->response ) ) {
+		if ( ! is_object( $transient ) ) {
 			return $transient;
+		}
+		if ( ! isset( $transient->response ) || ! is_array( $transient->response ) ) {
+			$transient->response = array();
 		}
 		$manifest = self::manifest();
 		if ( empty( $manifest['version'] ) || ! version_compare( $manifest['version'], LPG_VERSION, '>' ) ) {
 			return $transient;
 		}
 		$plugin = plugin_basename( LPG_FILE );
+		if ( isset( $transient->no_update ) && is_array( $transient->no_update ) ) {
+			unset( $transient->no_update[ $plugin ] );
+		}
 		$transient->response[ $plugin ] = (object) array(
 			'id'           => $plugin,
 			'slug'         => self::SLUG,
