@@ -1,9 +1,9 @@
 {
-  "version": "1.3.4",
-  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.3.4.zip",
+  "version": "1.3.5",
+  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.3.5.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>Expanded RSS/WebSub providers to all free hubs and XML-RPC ping endpoints (Google, Superfeedr, WebSubHub, Ping-o-Matic, Weblogs, Blo.gs).</li><li>Streamlined Campaign UI: simple 3-step setup with collapsible advanced options.</li><li>Added existing BOFU selection for routine content updates to chosen landing pages.</li><li>Added manual topic entry alongside automatic AI topic generation.</li><li>Added visual copywriting step preview for all 12 frameworks.</li><li>Added interactive real-time AJAX queue runner with live progress bar.</li></ul>"
+  "changelog": "<ul><li>Added direct 'Cek Update' and 'Perbarui Sekarang' buttons in Settings hero badges, sidebar tools, and Dashboard.</li><li>Fixed AI response parser for 9Router models (such as ag/gemini-3.8-flash) by handling SSE streams, explicit stream:false, reasoning formats, and extracting JSON from markdown fences.</li><li>Added detailed error logging for AI non-JSON and API error responses.</li><li>Normalized 9Router base URLs to prevent duplicated /v1 path prefixes.</li></ul>"
 }

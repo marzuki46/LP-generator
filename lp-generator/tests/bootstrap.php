@@ -138,3 +138,4 @@ require_once dirname( __DIR__ ) . '/includes/class-image.php';
 require_once dirname( __DIR__ ) . '/includes/class-indexer.php';
 require_once dirname( __DIR__ ) . '/includes/class-publisher.php';
 require_once dirname( __DIR__ ) . '/includes/class-updater.php';
+require_once dirname( __DIR__ ) . '/includes/class-ai-client.php';

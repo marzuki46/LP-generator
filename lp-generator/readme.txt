@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.3.4
+Stable tag: 1.3.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,12 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.3.5 =
+* Added in-plugin 'Cek Update' and 'Perbarui Sekarang' buttons in Settings hero, sidebar tools, and Dashboard.
+* Fixed AI client parsing for 9Router models (e.g. ag/gemini-3.8-flash) by handling SSE streams, explicit stream:false, reasoning output, and extracting JSON from markdown codeblocks.
+* Added detailed error logging for AI non-JSON and API error responses.
+* Normalized 9Router base URLs to prevent duplicated /v1 path prefixes.
 
 = 1.3.4 =
 * Fixed double-encoded UTF-8 UI strings (em dash, arrow, middot) that rendered as mojibake in the campaign picker and progress notes.

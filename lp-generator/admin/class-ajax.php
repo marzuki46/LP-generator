@@ -36,6 +36,7 @@ final class Ajax {
 			'delete-log',
 			'clear-logs',
 			'create-key-file',
+			'check-update',
 		);
 		foreach ( $actions as $action ) {
 			add_action( 'wp_ajax_lpgen_' . str_replace( '-', '_', $action ), array( self::class, 'handle' ) );
@@ -53,7 +54,7 @@ final class Ajax {
 			self::error( __( 'Nonce tidak valid.', 'lp-generator' ) );
 			return false;
 		}
-		$capability = in_array( $action, array( 'test-connection', 'test-amazon', 'generate-key', 'clear-logs', 'create-key-file' ), true )
+		$capability = in_array( $action, array( 'test-connection', 'test-amazon', 'generate-key', 'clear-logs', 'create-key-file', 'check-update' ), true )
 			? 'manage_options'
 			: 'lpgen_manage';
 		if ( ! current_user_can( $capability ) ) {
@@ -167,6 +168,9 @@ final class Ajax {
 			case 'create-key-file':
 				$settings = get_option( 'lpgen_settings', array() );
 				$result   = Indexer::create_key_file( (string) ( $settings['indexnow_key'] ?? '' ) );
+				break;
+			case 'check-update':
+				$result = Updater::check_for_updates();
 				break;
 			default:
 				self::error( __( 'Aksi tidak dikenal.', 'lp-generator' ) );

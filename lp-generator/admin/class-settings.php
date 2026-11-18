@@ -858,6 +858,10 @@ final class Settings {
 				</div>
 				<div class="lpgen-settings-hero__badges">
 					<span class="lpgen-version">v<?php echo esc_html( LPG_VERSION ); ?></span>
+					<button type="button" class="button button-secondary button-small lpgen-btn-check-update" data-lpgen-action="check-update" title="<?php echo esc_attr__( 'Periksa versi terbaru di GitHub', 'lp-generator' ); ?>">
+						<span class="dashicons dashicons-update" aria-hidden="true" style="vertical-align:text-bottom;font-size:16px;"></span>
+						<?php echo esc_html__( 'Cek Update', 'lp-generator' ); ?>
+					</button>
 					<span class="lpgen-hero-status"><span class="lpgen-hero-status__dot" aria-hidden="true"></span><?php echo esc_html__( 'Siap digunakan', 'lp-generator' ); ?></span>
 				</div>
 			</header>
@@ -911,6 +915,7 @@ final class Settings {
 						<h2><?php echo esc_html__( 'Alat bantu', 'lp-generator' ); ?></h2>
 						<p class="description"><?php echo esc_html__( 'Jalankan pengecekan cepat tanpa meninggalkan halaman ini.', 'lp-generator' ); ?></p>
 						<div class="lpgen-tool-list">
+							<button type="button" class="button" data-lpgen-action="check-update"><?php echo esc_html__( 'Periksa Pembaruan Plugin', 'lp-generator' ); ?></button>
 							<button type="button" class="button" data-lpgen-action="test-connection"><?php echo esc_html__( 'Test koneksi 9Router', 'lp-generator' ); ?></button>
 							<button type="button" class="button" data-lpgen-action="generate-key"><?php echo esc_html__( 'Regenerate IndexNow Key + file', 'lp-generator' ); ?></button>
 							<button type="button" class="button" data-lpgen-action="test-amazon"><?php echo esc_html__( 'Test ambil produk Amazon', 'lp-generator' ); ?></button>

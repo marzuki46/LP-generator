@@ -34,7 +34,17 @@ final class ReviewUI {
 		);
 		?>
 		<div class="wrap lpgen-wrap">
-			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+			<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+				<h1 style="margin:0;"><?php echo esc_html( get_admin_page_title() ); ?></h1>
+				<div style="display:flex;align-items:center;gap:8px;">
+					<span class="lpgen-badge" style="background:#e0f2fe;color:#0369a1;font-weight:600;">v<?php echo esc_html( LPG_VERSION ); ?></span>
+					<button type="button" class="button button-secondary" data-lpgen-action="check-update">
+						<span class="dashicons dashicons-update" aria-hidden="true" style="vertical-align:text-bottom;font-size:16px;"></span>
+						<?php echo esc_html__( 'Cek Update', 'lp-generator' ); ?>
+					</button>
+				</div>
+			</div>
+			<div id="lpgen-tool-result" aria-live="polite" style="margin-bottom:16px;"></div>
 			<p><?php echo esc_html__( 'Ringkasan campaign dan antrean job. Generate berjalan otomatis berurutan; review dilakukan di akhir.', 'lp-generator' ); ?></p>
 			<table class="widefat striped lpgen-table">
 				<thead>

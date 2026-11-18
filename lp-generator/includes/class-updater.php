@@ -37,6 +37,24 @@ final class Updater {
 		add_filter( 'pre_set_site_transient_update_plugins', array( self::class, 'inject_update' ) );
 		add_filter( 'site_transient_update_plugins', array( self::class, 'inject_update' ) );
 		add_filter( 'plugins_api', array( self::class, 'plugin_information' ), 20, 3 );
+		if ( defined( 'LPG_FILE' ) ) {
+			add_filter( 'plugin_action_links_' . plugin_basename( LPG_FILE ), array( self::class, 'plugin_action_links' ) );
+		}
+	}
+
+	/**
+	 * Add settings & check update action links to Plugins screen.
+	 *
+	 * @param string[] $links Existing links.
+	 * @return string[]
+	 */
+	public static function plugin_action_links( array $links ): array {
+		$settings_url = admin_url( 'admin.php?page=lpg-settings' );
+		$custom_links = array(
+			'<a href="' . esc_url( $settings_url ) . '">' . esc_html__( 'Settings', 'lp-generator' ) . '</a>',
+			'<a href="' . esc_url( add_query_arg( 'lpgen_check_update', '1', $settings_url ) ) . '">' . esc_html__( 'Cek Update', 'lp-generator' ) . '</a>',
+		);
+		return array_merge( $custom_links, $links );
 	}
 
 	/**
@@ -69,29 +87,90 @@ final class Updater {
 	}
 
 	/**
-	 * Fetch the cached manifest.
+	 * Fetch the manifest, optionally bypassing cache.
 	 *
+	 * @param bool $force Bypass cache.
 	 * @return array<string,string>
 	 */
-	public static function manifest(): array {
-		$cached = get_site_transient( 'lpgen_update_manifest' );
-		if ( is_array( $cached ) ) {
-			return $cached;
+	public static function manifest( bool $force = false ): array {
+		if ( ! $force ) {
+			$cached = get_site_transient( 'lpgen_update_manifest' );
+			if ( is_array( $cached ) && ! empty( $cached ) ) {
+				return $cached;
+			}
 		}
 		$response = wp_remote_get(
 			self::MANIFEST_URL,
 			array(
-				'timeout' => 10,
-				'headers' => array( 'Accept' => 'application/json' ),
+				'timeout' => 15,
+				'headers' => array(
+					'Accept'        => 'application/json',
+					'Cache-Control' => 'no-cache, no-store, must-revalidate',
+				),
 			)
 		);
 		if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
-		set_site_transient( 'lpgen_update_manifest', array(), 5 * MINUTE_IN_SECONDS );
+			set_site_transient( 'lpgen_update_manifest', array(), 5 * MINUTE_IN_SECONDS );
 			return array();
 		}
-		$manifest = self::sanitize_manifest( json_decode( wp_remote_retrieve_body( $response ), true ) );
-		set_site_transient( 'lpgen_update_manifest', $manifest, 5 * MINUTE_IN_SECONDS );
+		$manifest = self::sanitize_manifest( json_decode( (string) wp_remote_retrieve_body( $response ), true ) );
+		set_site_transient( 'lpgen_update_manifest', $manifest, 15 * MINUTE_IN_SECONDS );
 		return $manifest;
+	}
+
+	/**
+	 * Perform a forced update check and return status.
+	 *
+	 * @return array{ok:bool,message:string,current_version:string,latest_version:string,has_update:bool,update_url:string,package:string}
+	 */
+	public static function check_for_updates(): array {
+		delete_site_transient( 'lpgen_update_manifest' );
+		delete_site_transient( 'update_plugins' );
+		$manifest   = self::manifest( true );
+		$current    = defined( 'LPG_VERSION' ) ? LPG_VERSION : '1.0.0';
+		$latest     = (string) ( $manifest['version'] ?? '' );
+		$has_update = '' !== $latest && version_compare( $latest, $current, '>' );
+
+		$update_url = '';
+		if ( defined( 'LPG_FILE' ) ) {
+			$plugin_file = plugin_basename( LPG_FILE );
+			$update_url  = wp_nonce_url(
+				admin_url( 'update.php?action=upgrade-plugin&plugin=' . rawurlencode( $plugin_file ) ),
+				'upgrade-plugin_' . $plugin_file
+			);
+
+			// Prime the WordPress update cache immediately so plugins.php also displays it.
+			$current_updates = get_site_transient( 'update_plugins' );
+			if ( ! is_object( $current_updates ) ) {
+				$current_updates = new \stdClass();
+			}
+			$updated_transient = self::inject_update( $current_updates );
+			set_site_transient( 'update_plugins', $updated_transient );
+		}
+
+		if ( '' === $latest ) {
+			return array(
+				'ok'              => false,
+				'message'         => __( 'Gagal memeriksa pembaruan dari GitHub manifest. Periksa koneksi server Anda.', 'lp-generator' ),
+				'current_version' => $current,
+				'latest_version'  => $current,
+				'has_update'      => false,
+				'update_url'      => '',
+				'package'         => '',
+			);
+		}
+
+		return array(
+			'ok'              => true,
+			'message'         => $has_update
+				? sprintf( __( 'Versi baru v%s tersedia! (Versi terpasang: v%s)', 'lp-generator' ), $latest, $current )
+				: sprintf( __( 'Plugin sudah menggunakan versi terbaru (v%s).', 'lp-generator' ), $current ),
+			'current_version' => $current,
+			'latest_version'  => $latest,
+			'has_update'      => $has_update,
+			'update_url'      => $update_url,
+			'package'         => (string) ( $manifest['package'] ?? '' ),
+		);
 	}
 
 	/**

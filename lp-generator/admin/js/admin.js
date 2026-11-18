@@ -93,6 +93,27 @@
 
 		call(action.replace(/-/g, '_'), data)
 			.done(function (response) {
+				if ('check-update' === action && response && response.ok) {
+					var $target = $('#lpgen-action-result');
+					if (!$target.length) { $target = $('#lpgen-tool-result'); }
+					if (!$target.length) {
+						$target = $('<div id="lpgen-action-result" aria-live="polite"></div>');
+						$('.lpgen-wrap').prepend($target);
+					}
+					$target.removeClass('lpgen-result--ok lpgen-result--error').addClass('lpgen-result--ok');
+					if (response.has_update && response.update_url) {
+						$target.html(
+							'<strong>' + (response.message || 'Pembaruan tersedia!') + '</strong> ' +
+							'<a href="' + response.update_url + '" class="button button-primary" style="margin-left:10px;vertical-align:middle;">' +
+							'Perbarui Sekarang (v' + response.latest_version + ')' +
+							'</a>'
+						);
+					} else {
+						$target.text(response.message || 'Plugin sudah versi terbaru.');
+					}
+					return;
+				}
+
 				showResult(response && response.message ? response.message : '', !!(response && response.ok));
 				if ('start-campaign' === action && response && response.ok) {
 					runQueueLoop(campaign, response.jobs || 6);
