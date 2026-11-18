@@ -90,7 +90,7 @@ final class Admin {
 		if ( ! $is_plugin_screen ) {
 			return;
 		}
-		wp_enqueue_style( 'lpgen-admin', LPG_URL . 'admin/css/admin.css', array(), LPG_VERSION );
+		wp_enqueue_style( 'lpgen-admin', LPG_URL . 'admin/css/admin.css', array( 'dashicons' ), LPG_VERSION );
 		wp_enqueue_script( 'lpgen-admin', LPG_URL . 'admin/js/admin.js', array( 'jquery' ), LPG_VERSION, true );
 		wp_localize_script(
 			'lpgen-admin',

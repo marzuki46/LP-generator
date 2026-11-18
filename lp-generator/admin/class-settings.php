@@ -443,36 +443,52 @@ final class Settings {
 	private static function tabs(): array {
 		return array(
 			'ai'         => array(
-				'label'    => __( 'AI', 'lp-generator' ),
-				'sections' => array( 'ai' ),
+				'label'       => __( 'AI', 'lp-generator' ),
+				'description' => __( 'Koneksi, model, dan fallback 9Router.', 'lp-generator' ),
+				'icon'        => 'dashicons-format-chat',
+				'sections'    => array( 'ai' ),
 			),
 			'indexing'   => array(
-				'label'    => __( 'Indexing', 'lp-generator' ),
-				'sections' => array( 'indexing' ),
+				'label'       => __( 'Indexing', 'lp-generator' ),
+				'description' => __( 'WebSub, IndexNow, dan file key otomatis.', 'lp-generator' ),
+				'icon'        => 'dashicons-search',
+				'sections'    => array( 'indexing' ),
 			),
 			'frameworks' => array(
-				'label'    => __( 'Frameworks', 'lp-generator' ),
-				'sections' => array( 'frameworks' ),
+				'label'       => __( 'Frameworks', 'lp-generator' ),
+				'description' => __( 'Preset dan framework AI per campaign.', 'lp-generator' ),
+				'icon'        => 'dashicons-layout',
+				'sections'    => array( 'frameworks' ),
 			),
 			'content'    => array(
-				'label'    => __( 'Konten & SEO', 'lp-generator' ),
-				'sections' => array( 'content', 'seo' ),
+				'label'       => __( 'Konten & SEO', 'lp-generator' ),
+				'description' => __( 'Batas teks, tag, dan placeholder artikel.', 'lp-generator' ),
+				'icon'        => 'dashicons-edit',
+				'sections'    => array( 'content', 'seo' ),
 			),
 			'amazon'     => array(
-				'label'    => __( 'Amazon', 'lp-generator' ),
-				'sections' => array( 'amazon' ),
+				'label'       => __( 'Amazon', 'lp-generator' ),
+				'description' => __( 'Kredensial dan aturan produk afiliasi.', 'lp-generator' ),
+				'icon'        => 'dashicons-cart',
+				'sections'    => array( 'amazon' ),
 			),
 			'schedule'   => array(
-				'label'    => __( 'Jadwal', 'lp-generator' ),
-				'sections' => array( 'schedule' ),
+				'label'       => __( 'Jadwal', 'lp-generator' ),
+				'description' => __( 'Jeda artikel dan delay indeksasi.', 'lp-generator' ),
+				'icon'        => 'dashicons-calendar-alt',
+				'sections'    => array( 'schedule' ),
 			),
 			'images'     => array(
-				'label'    => __( 'Gambar', 'lp-generator' ),
-				'sections' => array( 'images' ),
+				'label'       => __( 'Gambar', 'lp-generator' ),
+				'description' => __( 'Sumber gambar, WebP, dan metadata.', 'lp-generator' ),
+				'icon'        => 'dashicons-images-alt2',
+				'sections'    => array( 'images' ),
 			),
 			'advanced'   => array(
-				'label'    => __( 'Advanced', 'lp-generator' ),
-				'sections' => array( 'advanced' ),
+				'label'       => __( 'Advanced', 'lp-generator' ),
+				'description' => __( 'Opsi teknis dan keamanan lanjutan.', 'lp-generator' ),
+				'icon'        => 'dashicons-admin-tools',
+				'sections'    => array( 'advanced' ),
 			),
 		);
 	}
@@ -823,41 +839,86 @@ final class Settings {
 			delete_transient( 'lpgen_indexnow_notice' );
 		}
 		?>
-		<div class="wrap lpgen-wrap">
-			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+		<div class="wrap lpgen-wrap lpgen-settings">
+			<header class="lpgen-settings-hero">
+				<div class="lpgen-settings-hero__content">
+					<span class="lpgen-eyebrow"><?php echo esc_html__( 'Campaign Automation', 'lp-generator' ); ?></span>
+					<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+					<p><?php echo esc_html__( 'Atur mesin konten, indeksasi, dan gambar untuk semua campaign Anda.', 'lp-generator' ); ?></p>
+				</div>
+				<div class="lpgen-settings-hero__badges">
+					<span class="lpgen-version">v<?php echo esc_html( LPG_VERSION ); ?></span>
+					<span class="lpgen-hero-status"><span class="lpgen-hero-status__dot" aria-hidden="true"></span><?php echo esc_html__( 'Siap digunakan', 'lp-generator' ); ?></span>
+				</div>
+			</header>
+
 			<?php settings_errors( self::OPTION ); ?>
 			<?php if ( false !== $notice ) : ?>
-				<p class="lpgen-panel"><?php echo esc_html( (string) $notice ); ?></p>
+				<p class="lpgen-panel lpgen-panel--notice"><?php echo esc_html( (string) $notice ); ?></p>
 			<?php endif; ?>
-			<nav class="lpgen-tabs" aria-label="<?php echo esc_attr__( 'Settings LP Generator', 'lp-generator' ); ?>">
+			<nav class="nav-tab-wrapper wp-clearfix lpgen-tabs" aria-label="<?php echo esc_attr__( 'Settings LP Generator', 'lp-generator' ); ?>">
 				<?php foreach ( $tabs as $slug => $definition ) : ?>
-					<a class="lpgen-tab <?php echo $slug === $tab ? 'is-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( array( 'page' => self::PAGE, 'tab' => $slug ), admin_url( 'admin.php' ) ) ); ?>" <?php echo $slug === $tab ? 'aria-current="page"' : ''; ?>>
-						<?php echo esc_html( (string) $definition['label'] ); ?>
+					<?php $is_active = $slug === $tab; ?>
+					<a class="nav-tab lpgen-tab <?php echo $is_active ? 'nav-tab-active is-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( array( 'page' => self::PAGE, 'tab' => $slug ), admin_url( 'admin.php' ) ) ); ?>" <?php echo $is_active ? 'aria-current="page"' : ''; ?>>
+						<span class="dashicons <?php echo esc_attr( (string) $definition['icon'] ); ?> lpgen-tab__icon" aria-hidden="true"></span>
+						<span class="lpgen-tab__text">
+							<span class="lpgen-tab__label"><?php echo esc_html( (string) $definition['label'] ); ?></span>
+							<span class="lpgen-tab__desc"><?php echo esc_html( (string) $definition['description'] ); ?></span>
+						</span>
 					</a>
 				<?php endforeach; ?>
 			</nav>
-			<?php if ( 'indexing' === $tab ) : ?>
-				<p class="lpgen-panel">
-					<?php echo esc_html( Indexer::key_file_ready( $key ) ? __( 'IndexNow key aktif dan file key sudah terpasang di root domain.', 'lp-generator' ) : __( 'IndexNow key belum aktif. Pastikan ABSPATH writable atau upload file key secara manual.', 'lp-generator' ) ); ?>
-				</p>
-			<?php endif; ?>
-			<form action="options.php" method="post">
-				<input type="hidden" name="tab" value="<?php echo esc_attr( $tab ); ?>" />
-				<?php
-				settings_fields( self::OPTION );
-				do_settings_sections( self::PAGE );
-				submit_button( __( 'Simpan Settings', 'lp-generator' ) );
-				?>
-			</form>
-			<hr />
-			<h2><?php echo esc_html__( 'Alat bantu', 'lp-generator' ); ?></h2>
-			<p>
-				<button type="button" class="button" data-lpgen-action="test-connection"><?php echo esc_html__( 'Test koneksi 9Router', 'lp-generator' ); ?></button>
-				<button type="button" class="button" data-lpgen-action="generate-key"><?php echo esc_html__( 'Regenerate IndexNow Key + file', 'lp-generator' ); ?></button>
-				<button type="button" class="button" data-lpgen-action="test-amazon"><?php echo esc_html__( 'Test ambil produk Amazon', 'lp-generator' ); ?></button>
-				<input type="text" id="lpgen_test_keyword" class="regular-text" value="wireless headphones" aria-label="<?php echo esc_attr__( 'Keyword uji Amazon', 'lp-generator' ); ?>" />
-			</p>
-			<div id="lpgen-tool-result" aria-live="polite"></div>
+
+			<div class="lpgen-settings-grid">
+				<div class="lpgen-settings-main">
+					<section class="lpgen-settings-card" aria-labelledby="lpgen-current-tab-title">
+						<header class="lpgen-settings-card__header">
+							<span class="dashicons <?php echo esc_attr( (string) $tabs[ $tab ]['icon'] ); ?> lpgen-settings-card__icon" aria-hidden="true"></span>
+							<div>
+								<h2 id="lpgen-current-tab-title"><?php echo esc_html( (string) $tabs[ $tab ]['label'] ); ?></h2>
+								<p><?php echo esc_html( (string) $tabs[ $tab ]['description'] ); ?></p>
+							</div>
+						</header>
+						<div class="lpgen-settings-card__body">
+							<?php if ( 'indexing' === $tab ) : ?>
+								<p class="lpgen-panel lpgen-panel--notice">
+									<?php echo esc_html( Indexer::key_file_ready( $key ) ? __( 'IndexNow key aktif dan file key sudah terpasang di root domain.', 'lp-generator' ) : __( 'IndexNow key belum aktif. Pastikan ABSPATH writable atau upload file key secara manual.', 'lp-generator' ) ); ?>
+								</p>
+							<?php endif; ?>
+							<form action="options.php" method="post">
+								<input type="hidden" name="tab" value="<?php echo esc_attr( $tab ); ?>" />
+								<?php
+								settings_fields( self::OPTION );
+								do_settings_sections( self::PAGE );
+								submit_button( __( 'Simpan Settings', 'lp-generator' ) );
+								?>
+							</form>
+						</div>
+					</section>
+				</div>
+				<aside class="lpgen-settings-side" aria-label="<?php echo esc_attr__( 'Alat bantu LP Generator', 'lp-generator' ); ?>">
+					<section class="lpgen-settings-card lpgen-settings-card--side">
+						<h2><?php echo esc_html__( 'Alat bantu', 'lp-generator' ); ?></h2>
+						<p class="description"><?php echo esc_html__( 'Jalankan pengecekan cepat tanpa meninggalkan halaman ini.', 'lp-generator' ); ?></p>
+						<div class="lpgen-tool-list">
+							<button type="button" class="button" data-lpgen-action="test-connection"><?php echo esc_html__( 'Test koneksi 9Router', 'lp-generator' ); ?></button>
+							<button type="button" class="button" data-lpgen-action="generate-key"><?php echo esc_html__( 'Regenerate IndexNow Key + file', 'lp-generator' ); ?></button>
+							<button type="button" class="button" data-lpgen-action="test-amazon"><?php echo esc_html__( 'Test ambil produk Amazon', 'lp-generator' ); ?></button>
+							<label class="screen-reader-text" for="lpgen_test_keyword"><?php echo esc_html__( 'Keyword uji Amazon', 'lp-generator' ); ?></label>
+							<input type="text" id="lpgen_test_keyword" class="regular-text" value="wireless headphones" />
+						</div>
+						<div id="lpgen-tool-result" aria-live="polite"></div>
+					</section>
+					<section class="lpgen-settings-card lpgen-settings-card--side">
+						<h2><?php echo esc_html__( 'Ringkasan', 'lp-generator' ); ?></h2>
+						<ul class="lpgen-summary">
+							<li><span><?php echo esc_html__( 'Tab aktif', 'lp-generator' ); ?></span><strong><?php echo esc_html( (string) $tabs[ $tab ]['label'] ); ?></strong></li>
+							<li><span><?php echo esc_html__( 'IndexNow key', 'lp-generator' ); ?></span><strong><?php echo $key ? esc_html__( 'Aktif', 'lp-generator' ) : esc_html__( 'Belum ada', 'lp-generator' ); ?></strong></li>
+							<li><span><?php echo esc_html__( 'WebSub', 'lp-generator' ); ?></span><strong><?php echo esc_html__( 'Terhubung', 'lp-generator' ); ?></strong></li>
+						</ul>
+					</section>
+				</aside>
+			</div>
 		</div>
 		<?php
 	}

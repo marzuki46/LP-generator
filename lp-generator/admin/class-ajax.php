@@ -97,7 +97,7 @@ final class Ajax {
 				ContentRepository::set_item_status( $item_id, $status );
 				$result = array(
 					'ok'      => true,
-					'message' => sprintf( __( 'Item #%d â†’ %s', 'lp-generator' ), $item_id, $status ),
+					'message' => sprintf( __( 'Item #%d → %s', 'lp-generator' ), $item_id, $status ),
 				);
 				break;
 			case 'regenerate':

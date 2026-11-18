@@ -204,7 +204,7 @@ final class Generator {
 	}
 
 	/**
-	 * Enqueue publish jobs for approved items, BOFU â†’ MOFU â†’ TOFU.
+	 * Enqueue publish jobs for approved items, BOFU → MOFU → TOFU.
 	 *
 	 * @param int $campaign_id Campaign ID.
 	 * @return array{ok:bool,message:string,jobs:int}
@@ -760,7 +760,7 @@ final class Generator {
 			$next   = 'generating' === $status ? 'review' : ( 'publishing' === $status ? 'published' : '' );
 			if ( '' !== $next ) {
 				update_post_meta( $id, '_lpgen_status', $next );
-				Database::log( 'info', 'Campaign status â†’ ' . $next, $id );
+				Database::log( 'info', 'Campaign status → ' . $next, $id );
 				if ( 'review' === $next ) {
 					$campaign = ContentRepository::get_campaign( $id );
 					if ( ! empty( $campaign ) && self::auto_publish_enabled( $campaign ) ) {

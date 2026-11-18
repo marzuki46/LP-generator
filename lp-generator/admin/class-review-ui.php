@@ -48,7 +48,7 @@ final class ReviewUI {
 				</thead>
 				<tbody>
 				<?php if ( empty( $campaigns ) ) : ?>
-					<tr><td colspan="5"><?php echo esc_html__( 'Belum ada campaign. Buat di menu Campaigns â†’ Add New.', 'lp-generator' ); ?></td></tr>
+					<tr><td colspan="5"><?php echo esc_html__( 'Belum ada campaign. Buat di menu Campaigns → Add New.', 'lp-generator' ); ?></td></tr>
 				<?php else : ?>
 					<?php foreach ( $campaigns as $campaign ) : ?>
 						<?php
@@ -68,7 +68,7 @@ final class ReviewUI {
 								<?php
 								printf(
 									/* translators: 1: done, 2: total, 3: failed */
-									esc_html__( '%1$d/%2$d selesai Â· %3$d gagal', 'lp-generator' ),
+									esc_html__( '%1$d/%2$d selesai · %3$d gagal', 'lp-generator' ),
 									(int) $done,
 									(int) $total,
 									(int) $failed
@@ -119,7 +119,7 @@ final class ReviewUI {
 			<form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
 				<input type="hidden" name="page" value="lpg-review" />
 				<select name="campaign_id" onchange="this.form.submit()">
-					<option value="0"><?php echo esc_html__( 'â€” pilih campaign â€”', 'lp-generator' ); ?></option>
+					<option value="0"><?php echo esc_html__( '— pilih campaign —', 'lp-generator' ); ?></option>
 					<?php foreach ( $campaigns as $campaign ) : ?>
 						<option value="<?php echo esc_attr( (string) $campaign->ID ); ?>" <?php selected( $campaign_id, (int) $campaign->ID ); ?>><?php echo esc_html( get_the_title( $campaign ) ); ?></option>
 					<?php endforeach; ?>
@@ -158,7 +158,7 @@ final class ReviewUI {
 					</p>
 					<p>
 						<strong><?php echo esc_html__( 'Jadwal publish:', 'lp-generator' ); ?></strong>
-						<?php echo esc_html( sprintf( '%s Â· interval %d menit Â· delay index %d detik', $mode, (int) ( $campaign['schedule_interval'] ?? 0 ), (int) ( $campaign['index_delay'] ?? 10 ) ) ); ?>
+						<?php echo esc_html( sprintf( '%s · interval %d menit · delay index %d detik', $mode, (int) ( $campaign['schedule_interval'] ?? 0 ), (int) ( $campaign['index_delay'] ?? 10 ) ) ); ?>
 					</p>
 				</div>
 				<p>
@@ -200,7 +200,7 @@ final class ReviewUI {
 								<td>
 									<a href="<?php echo esc_url( $edit_url ); ?>"><?php echo esc_html( (string) $item['title'] ); ?></a>
 									<?php if ( '' !== $permalink ) : ?>
-										<br /><a href="<?php echo esc_url( $permalink ); ?>" target="_blank" rel="noopener"><?php echo esc_html__( 'Lihat publish â†—', 'lp-generator' ); ?></a>
+										<br /><a href="<?php echo esc_url( $permalink ); ?>" target="_blank" rel="noopener"><?php echo esc_html__( 'Lihat publish →', 'lp-generator' ); ?></a>
 									<?php endif; ?>
 								</td>
 								<td>

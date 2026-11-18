@@ -23,7 +23,7 @@ defined( 'ABSPATH' ) || exit;
 final class ImagePipeline {
 
 	/**
-	 * Allowed image sources. `auto` uses upload â†’ AI â†’ Bing.
+	 * Allowed image sources. `auto` uses upload → AI → Bing.
 	 */
 	public const SOURCES = array( 'auto', 'upload', 'ai', 'bing' );
 
@@ -796,7 +796,7 @@ final class ImagePipeline {
 			'keyword'     => $keyword,
 			'title'       => $title,
 			'alt'         => $alt,
-			'caption'     => self::template( (string) ( $settings['image_caption_template'] ?? '{{keyword}} â€” {{offer}}' ), $data, 155 ),
+			'caption'     => self::template( (string) ( $settings['image_caption_template'] ?? '{{keyword}} — {{offer}}' ), $data, 155 ),
 			'description' => self::template( (string) ( $settings['image_description_template'] ?? '{{keyword}}: {{promise}} {{city}}' ), $data, 250 ),
 		);
 	}
@@ -864,7 +864,7 @@ final class ImagePipeline {
 	 */
 	private static function template( string $template, array $data, int $max ): string {
 		$out = Utils::render_template( $template, $data, $max );
-		return trim( $out, " \t\n\r\0\x0Bâ€”-|" );
+		return trim( $out, " \t\n\r\0\x0B—-|" );
 	}
 
 	/**

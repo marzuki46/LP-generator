@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,11 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.3.1 =
+* Fixed double-encoded UTF-8 UI strings (em dash, arrow, middot) that rendered as mojibake in the campaign picker and progress notes.
+* Redesigned the settings screen with WordPress nav-tab styling, icons, active states, responsive cards, a shortcuts sidebar, and visible keyboard focus.
+* Added regression tests for source encoding and settings tab structure.
 
 = 1.3.0 =
 * Added tabbed settings (AI, Indexing, Frameworks, Content, Amazon, Schedule, Images, Advanced) so options are no longer one long page.
