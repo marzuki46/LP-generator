@@ -1,9 +1,9 @@
 {
-  "version": "1.3.5",
-  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.3.5.zip",
+  "version": "1.3.6",
+  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.3.6.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>Added direct 'Cek Update' and 'Perbarui Sekarang' buttons in Settings hero badges, sidebar tools, and Dashboard.</li><li>Fixed AI response parser for 9Router models (such as ag/gemini-3.8-flash) by handling SSE streams, explicit stream:false, reasoning formats, and extracting JSON from markdown fences.</li><li>Added detailed error logging for AI non-JSON and API error responses.</li><li>Normalized 9Router base URLs to prevent duplicated /v1 path prefixes.</li></ul>"
+  "changelog": "<ul><li>Pilihan Bahasa Konten dipindah ke Step 1 (Penawaran) dan aturan bahasa diperketat 100% Bahasa Indonesia.</li><li>Fitur baru: Tombol 'Rekomendasi Ide AI' untuk mengisi otomatis ide audiens, masalah, solusi, dan topik dari keyword.</li><li>Auto-save form saat tombol 'Mulai Generate' diklik agar input tidak hilang/kosong.</li><li>Daftar RSS & XML-RPC ping diperluas ke 12 provider lengkap dengan auto-merge setting lama.</li><li>Tombol 'Cek Update' dan 'Perbarui Sekarang' langsung di admin plugin.</li></ul>"
 }

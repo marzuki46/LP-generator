@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.3.5
+Stable tag: 1.3.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,12 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.3.6 =
+* Moved language selector to Step 1 (Penawaran) and strictly enforced 100% natural Indonesian generation.
+* Added AI campaign idea generator button ('Rekomendasi Ide AI') to auto-suggest audience, pain points, promise, benefits, and topics.
+* Added automatic form serialization on start-campaign to ensure all typed fields save before queue processing.
+* Expanded RSS/WebSub/XML-RPC ping to 12 active endpoints with automatic database list migration.
 
 = 1.3.5 =
 * Added in-plugin 'Cek Update' and 'Perbarui Sekarang' buttons in Settings hero, sidebar tools, and Dashboard.
