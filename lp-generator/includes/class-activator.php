@@ -98,7 +98,7 @@ final class Activator {
 					'image_enabled'          => 1,
 					'image_source'           => 'auto',
 					'image_count'            => 2,
-					'image_max_kb'           => 95,
+					'image_max_kb'           => 180,
 					'image_max_width'        => 1280,
 					'image_ai_model'         => ImagePipeline::DEFAULT_AI_MODEL,
 					'image_ai_size'          => '1024x1024',

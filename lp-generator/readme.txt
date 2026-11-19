@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.7.1
+Stable tag: 1.7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,13 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.7.2 =
+* Fix images never generating: campaign image_enabled and image_count now inherit global settings when meta is empty.
+* Use the exact master visual prompt (Topic / Visual concept / Main subject) with locked palette, style, framing and negative rules.
+* Raise WebP size budget to 180 KB default / 300 KB hard cap to prevent conversion failures on 16:9 illustrations.
+* Label topic items as "Topik (brief)" and explain that the full article and its internal link appear after the next stage and publish.
+
 
 = 1.7.1 =
 * Normalise CTA URLs: accept wa.me/domain without https and WhatsApp numbers; keep invalid input visible with a warning instead of silently dropping it.

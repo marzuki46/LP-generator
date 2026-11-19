@@ -122,4 +122,11 @@ lpg_assert_true(str_contains(get_post($published)->post_content,'https://example
 funnel_fixture(32,'Artikel lain','Informasi layanan website Solo.','lpgen_item');
 foreach(array('kind'=>'article','stage'=>'mofu','entities'=>json_encode($entities),'structured'=>'{}') as $key=>$value) { update_post_meta(32,'_lpgen_'.$key,$value); }
 funnel_throws(static fn()=>Publisher::publish_item(32,array('publish_status'=>'publish','index_enabled'=>0),'https://example.test/lp'),'konten duplikat hasil edit diblokir sebelum publish');
+funnel_fixture( 501, 'Campaign image default', '', 'lpgen_campaign' );
+$GLOBALS['lpg_test_options']['lpgen_settings'] = array( 'image_enabled' => 1, 'image_count' => 2 );
+$image_campaign = ContentRepository::get_campaign( 501 );
+lpg_assert_same( 1, (int) $image_campaign['image_enabled'], 'gambar campaign aktif mengikuti setelan global bila meta kosong' );
+lpg_assert_same( 2, (int) $image_campaign['image_count'], 'jumlah gambar campaign mewarisi setelan global' );
+lpg_assert_true( \LPG\ImagePipeline::enabled( array( 'image_enabled' => 1 ), $image_campaign ), 'image pipeline aktif untuk campaign baru' );
+unset( $GLOBALS['lpg_test_options']['lpgen_settings'] );
 $GLOBALS['funnel_posts']=array(); $GLOBALS['funnel_meta']=array();

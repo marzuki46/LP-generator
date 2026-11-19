@@ -405,8 +405,8 @@ final class Settings {
 				'type'    => 'number',
 				'section' => 'images',
 				'min'     => 10,
-				'max'     => 99,
-				'desc'    => __( 'Hard limit di bawah 100 KB. Quality dan resolusi diturunkan otomatis.', 'lp-generator' ),
+				'max'     => 300,
+				'desc'    => __( 'Default 180 KB, maksimal 300 KB. Quality dan resolusi diturunkan otomatis bila melebihi batas.', 'lp-generator' ),
 			),
 			'image_max_width'       => array(
 				'label'   => __( 'Lebar maksimal gambar (px)', 'lp-generator' ),

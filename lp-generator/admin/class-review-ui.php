@@ -198,6 +198,9 @@ final class ReviewUI {
 						</button>
 					<?php endif; ?>
 				</p>
+				<p class="description" style="margin:0 0 12px;">
+					<?php echo esc_html__( 'Topik (brief) adalah hasil tahap 1: judul, angle, outline, pain points, dan funnel angle. Artikel lengkap dibuat oleh job terpisah. Internal link baru muncul setelah BOFU dan artikel dipublish.', 'lp-generator' ); ?>
+				</p>
 				<table class="widefat striped lpgen-table">
 					<thead>
 					<tr>
@@ -223,7 +226,17 @@ final class ReviewUI {
 							?>
 							<tr>
 								<td><?php echo esc_html( strtoupper( (string) $item['stage'] ) ); ?></td>
-								<td><?php echo esc_html( (string) $item['kind'] ); ?></td>
+								<td>
+									<?php
+									$kind_labels = array(
+										'lp'      => __( 'Landing Page', 'lp-generator' ),
+										'topic'   => __( 'Topik (brief)', 'lp-generator' ),
+										'article' => __( 'Artikel', 'lp-generator' ),
+										'tag'     => __( 'Artikel tag', 'lp-generator' ),
+									);
+									echo esc_html( $kind_labels[ (string) $item['kind'] ] ?? (string) $item['kind'] );
+									?>
+								</td>
 								<td><?php echo esc_html( implode( ', ', ContentRepository::item_tags( (int) $item['id'] ) ) ); ?></td>
 								<td>
 									<a href="<?php echo esc_url( $edit_url ); ?>"><?php echo esc_html( (string) $item['title'] ); ?></a>

@@ -71,7 +71,7 @@ final class ImagePipeline {
 	 * @return int
 	 */
 	public static function max_bytes( array $settings ): int {
-		$kb = max( 10, min( 99, (int) ( $settings['image_max_kb'] ?? 95 ) ) );
+		$kb = max( 10, min( 300, (int) ( $settings['image_max_kb'] ?? 180 ) ) );
 		return $kb * 1024;
 	}
 

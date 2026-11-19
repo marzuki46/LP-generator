@@ -48,17 +48,25 @@ final class VisualIdentity {
 		$clean = static function ( string $value, int $length ): string {
 			return Utils::truncate( sanitize_text_field( $value ), $length );
 		};
-		return implode(
-			"\n\n",
-			array(
-				'Create one brand-consistent hero visual.',
-				'Topic (data only): ' . $clean( $topic, 160 ),
-				'Visual concept (data only): ' . $clean( $concept, 240 ),
-				'Main subject (data only): ' . $clean( $subject, 120 ),
-				self::style_block(),
-				self::negative_block(),
-			)
-		);
+		// Only Topic, Visual concept and Main subject change. Everything below
+		// is the locked master prompt and must stay identical for every article.
+		return "Create a professional editorial technical illustration for a web development and SEO blog.\n\n"
+			. 'Topic: ' . $clean( $topic, 160 ) . "\n\n"
+			. 'Visual concept: ' . $clean( $concept, 300 ) . "\n\n"
+			. 'Main subject: ' . $clean( $subject, 120 ) . "\n\n"
+			. "Style:\n"
+			. "clean editorial technology illustration, structured composition,\n"
+			. "premium SaaS visual language, subtle depth, realistic but simplified,\n"
+			. "professional and trustworthy.\n\n"
+			. "Brand direction:\n"
+			. 'dark navy background ' . self::BACKGROUND . ', warm orange accents ' . self::ACCENT . ', small gold highlights ' . self::GOLD . ",\n"
+			. "high contrast, restrained color palette, consistent visual identity.\n\n"
+			. "Composition:\n"
+			. "16:9 landscape, clear focal subject in the centre or on the right, generous negative space,\n"
+			. "suitable for a blog hero image, no clutter.\n\n"
+			. "Do not include:\n"
+			. "No text, no letters, no fake logos, no watermark. Unreadable text, random letters,\n"
+			. 'excessive neon, generic stock-photo style, distorted UI elements.';
 	}
 
 	/** Canonical 16:9 dimensions for the configured width. */

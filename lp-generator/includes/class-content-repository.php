@@ -212,8 +212,15 @@ final class ContentRepository {
 		$context['amazon_products']  = self::get_amazon_products( $campaign_id );
 		$context['tag_max']          = max( 1, min( 3, (int) ( $context['tag_max'] ?: 3 ) ) );
 		$context['entity_count']     = max( 8, min( 12, (int) ( $context['entity_count'] ?: 8 ) ) );
+		$image_settings              = get_option( 'lpgen_settings', array() );
+		$image_settings              = is_array( $image_settings ) ? $image_settings : array();
+		$context['image_enabled']    = (int) self::get_meta( $campaign_id, 'image_enabled', (int) ( $image_settings['image_enabled'] ?? 1 ) );
 		$context['image_source']     = ImagePipeline::clean_source( $context['image_source'] ?? 'auto' );
-		$context['image_count']      = max( 0, min( 6, (int) ( $context['image_count'] ?? 0 ) ) );
+		$stored_count                = (int) ( $context['image_count'] ?? 0 );
+		if ( $stored_count <= 0 ) {
+			$stored_count = (int) ( $image_settings['image_count'] ?? 2 );
+		}
+		$context['image_count']      = max( 1, min( 6, $stored_count ) );
 		$context['image_upload_ids'] = implode( ',', ImagePipeline::clean_upload_ids( $context['image_upload_ids'] ?? '' ) );
 
 		$context['bofu_url'] = 'new' === $context['bofu_mode'] && '' !== (string) $context['bofu_path'] ? home_url( '/' . FunnelContent::clean_path( (string) $context['bofu_path'] ) . '/' ) : '';
@@ -287,7 +294,7 @@ final class ContentRepository {
 			'image_enabled'    => 1,
 			'image_source'     => 'auto',
 			'image_upload_ids' => '',
-			'image_count'      => 0,
+			'image_count'      => 2,
 			'ai_framework'     => '',
 			'content_push_enabled' => 1,
 			'internal_link_enabled' => 1,
