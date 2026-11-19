@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.5.3
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,12 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.6.0 =
+* Smart Cognitive Reasoning: temporal anchor 2026, long-term published-topic memory and two-stage outline planning before article writing.
+* One locked visual identity for all generated images: dark navy/orange/gold editorial technical illustration, 16:9 crop and descriptive WebP export names.
+* Image prompts now vary only topic, visual concept and main subject; palette, framing and negative rules stay fixed.
+
 
 = 1.5.3 =
 * Assign design_id, section_id, image_slot, hint and layout from the design contract on the server; AI no longer has to echo structural keys, removing common invalid_json_shape failures.

@@ -8,6 +8,7 @@
 declare(strict_types=1);
 
 use LPG\ImagePipeline;
+use LPG\VisualIdentity;
 
 lpg_assert_same( 'auto', ImagePipeline::clean_source( 'bogus' ), 'unknown image source falls back to auto' );
 lpg_assert_same( 'bing', ImagePipeline::clean_source( 'BING' ), 'image source is normalized' );
@@ -61,6 +62,17 @@ lpg_assert_true(
 	false !== strpos( ImagePipeline::build_ai_prompt( 'jasa ac', array( 'language' => 'id', 'offer_name' => 'AC Cepat' ) ), 'AC Cepat' ),
 	'AI prompt includes campaign offer as data'
 );
+
+$visual = ImagePipeline::build_ai_prompt( 'workflow automation', array( 'language' => 'id', 'offer_name' => 'n8n', 'topic_title' => 'n8n workflow automation for business processes' ) );
+lpg_assert_true( str_contains( $visual, VisualIdentity::BACKGROUND ) && str_contains( $visual, VisualIdentity::ACCENT ) && str_contains( $visual, VisualIdentity::GOLD ), 'AI prompt locks the brand palette' );
+lpg_assert_true( str_contains( $visual, '16:9' ) && str_contains( $visual, 'editorial technical illustration' ), 'AI prompt locks framing and style' );
+lpg_assert_true( str_contains( $visual, 'workflow automation' ) && str_contains( $visual, 'n8n workflow automation for business processes' ), 'only topic and subject vary in the master prompt' );
+lpg_assert_same( array( 1280, 720 ), VisualIdentity::dimensions( 1280 ), 'canonical image size is 16:9' );
+lpg_assert_same( 'content/n8n-workflow-automation-business-process', VisualIdentity::folder( 'n8n-workflow-automation-business-process' ), 'export folder follows article slug' );
+lpg_assert_same( 'content/n8n-workflow-automation-business-process/n8n-workflow-automation-business-process.webp', VisualIdentity::filename( 'n8n-workflow-automation-business-process' ), 'hero filename is descriptive WebP' );
+$crop = VisualIdentity::crop_size( 1000, 1000, 1280 );
+lpg_assert_same( 1000, $crop['width'], 'crop uses source width for a square source' );
+lpg_assert_true( abs( $crop['height'] - 563 ) <= 1, 'crop height follows 16:9 ratio' );
 
 lpg_assert_true( ImagePipeline::safe_image_url( 'https://images.example.com/pic.jpg' ), 'public https image URL is accepted' );
 lpg_assert_true( ! ImagePipeline::safe_image_url( 'ftp://images.example.com/pic.jpg' ), 'non-http scheme is rejected' );

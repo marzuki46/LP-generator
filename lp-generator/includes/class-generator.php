@@ -467,9 +467,11 @@ final class Generator {
 				throw new \RuntimeException( 'Topik belum berhasil dibuat/disetujui; artikel ditahan.' );
 			}
 			update_post_meta( $item_id, '_lpgen_source_topic_id', $topic_item_id );
-			$context['topic_title']  = (string) ( $topic['title'] ?? '' );
-			$context['topic_angle']  = (string) ( $topic_json['angle'] ?? '' );
-			$context['topic_outline'] = (array) ( $topic_json['outline'] ?? array() );
+			$context['topic_title']       = (string) ( $topic['title'] ?? '' );
+			$context['topic_angle']       = (string) ( $topic_json['angle'] ?? '' );
+			$context['topic_outline']     = (array) ( $topic_json['outline'] ?? array() );
+			$context['topic_pain_points'] = (array) ( $topic_json['pain_points'] ?? array() );
+			$context['topic_target_table'] = (array) ( $topic_json['target_table'] ?? array() );
 			$context = FunnelContent::prepare( $context, $item_id );
 			$prompt = Prompts::build_article( $context );
 		} elseif ( 'topic' === $kind ) {

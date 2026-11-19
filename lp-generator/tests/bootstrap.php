@@ -62,6 +62,11 @@ if ( ! function_exists( 'sanitize_title' ) ) {
 		return trim( preg_replace( '/[^a-z0-9]+/', '-', strtolower( (string) $text ) ), '-' );
 	}
 }
+if ( ! function_exists( 'sanitize_file_name' ) ) {
+	function sanitize_file_name( $name ) {
+		return trim( preg_replace( '/[^A-Za-z0-9._-]+/', '-', (string) $name ), '-' );
+	}
+}
 if ( ! function_exists( 'sanitize_key' ) ) {
 	function sanitize_key( $key ) {
 		return strtolower( preg_replace( '/[^a-z0-9_\-]/i', '', (string) $key ) );
@@ -139,6 +144,8 @@ require_once dirname( __DIR__ ) . '/includes/class-amazon.php';
 require_once dirname( __DIR__ ) . '/includes/class-image.php';
 require_once dirname( __DIR__ ) . '/includes/class-indexer.php';
 require_once dirname( __DIR__ ) . '/includes/class-funnel-content.php';
+require_once dirname( __DIR__ ) . '/includes/class-cognitive-engine.php';
+require_once dirname( __DIR__ ) . '/includes/class-visual-identity.php';
 require_once dirname( __DIR__ ) . '/includes/class-landing-page.php';
 require_once dirname( __DIR__ ) . '/includes/class-aida-layout.php';
 require_once dirname( __DIR__ ) . '/includes/class-seo-standards.php';

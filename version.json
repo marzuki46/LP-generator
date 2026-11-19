@@ -1,9 +1,9 @@
 {
-  "version": "1.5.3",
-  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.5.3.zip",
+  "version": "1.6.0",
+  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.6.0.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>ID desain, section dan slot gambar kini diisi server dari kontrak; AI hanya menulis isi, sehingga invalid_json_shape jauh lebih jarang.</li><li>Prompt artikel dipangkas: maksimal 20 judul lama dan tanpa rencana framework penuh; pemeriksaan duplikat tetap dijalankan PHP.</li><li>Rencana framework kedaluwarsa dibuat ulang otomatis sebelum LP dibuat.</li><li>Pesan kesalahan JSON menyebut kunci yang hilang atau penyebab decode gagal.</li></ul>"
+  "changelog": "<ul><li>Smart Cognitive Reasoning: anchor tahun 2026, memori topik terbit, dan perencanaan outline dua tahap sebelum penulisan penuh.</li><li>Identity visual tunggal untuk semua gambar: ilustrasi teknis editorial navy/orange/gold, crop 16:9, dan nama WebP deskriptif.</li><li>Prompt gambar hanya mengganti topik, konsep visual, dan subjek utama; palet, framing, dan aturan visual tetap.</li></ul>"
 }

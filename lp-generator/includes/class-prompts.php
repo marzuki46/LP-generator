@@ -314,7 +314,9 @@ final class Prompts {
 			'max_tokens' => 8192,
 			'user' => implode( "\n\n", array(
 				'Task: write the complete sales landing page (BOFU) for this offer. The plugin will render semantic, responsive WordPress HTML; return structured JSON only, never raw HTML, CSS, scripts or Markdown.',
-				self::format_context( $context, array( 'existing_titles', 'amazon_products' ) ), self::language_line( (string) ( $context['language'] ?? 'id' ) ),
+				self::format_context( $context, array( 'existing_titles', 'amazon_products' ) ),
+				CognitiveEngine::time_line(),
+				self::language_line( (string) ( $context['language'] ?? 'id' ) ),
 				self::offer_line( (string) ( $context['offer_type'] ?? 'product' ) ), self::entity_line( $context ), self::framework_line( $context ), $contract,
 				'Follow framework_plan.steps exactly. Return EXACTLY one section per step in the same order, with "step" numbered 1..N. Fulfil its heading_goal in reader-facing language. Do not show framework labels such as Attention or Agitate as public headings. Hero, FAQ and final CTA are rendered separately; do not add them as extra sections.',
 				'Return JSON keys: "title" (benefit-focused H1), "intro" (natural hero subheadline, 25–60 words), "seo_title" (<=60 chars), "meta_description" (<=155 chars), "sections" (array of {"step":integer,"heading":string,"body":string,"bullets":string[],"cards":[{"title":string,"body":string}],"table":{"columns":string[],"rows":string[][]},"quote":{"text":string,"source":string}}), "cta_text" (string), "cta_url" (copy offer_url), "faq" (4–6 {"q":string,"a":string}), "tags" (string[]), "anchor_suggestion" (descriptive keyword). Omit hint, layout, section_id, image_slot and design_id: the plugin fills them from the contract.',
@@ -333,19 +335,23 @@ final class Prompts {
 	 * @return array{system:string,user:string,required:string[]}
 	 */
 	public static function build_topic( array $context ): array {
-		$stage    = (string) ( $context['stage'] ?? 'tofu' );
-		$required = array( 'title', 'angle', 'intent', 'keywords', 'outline', 'funnel_link_angle' );
-		$user     = implode(
+		$stage      = (string) ( $context['stage'] ?? 'tofu' );
+		$required   = array( 'title', 'angle', 'intent', 'keywords', 'outline', 'pain_points', 'target_table', 'funnel_link_angle' );
+		$campaign_id = (int) ( $context['campaign_id'] ?? 0 );
+		$user       = implode(
 			"\n\n",
 			array(
-				sprintf( 'Task: invent ONE %s topic for a content funnel. This is a topic idea, not a full article.', strtoupper( $stage ) ),
+				sprintf( 'Task: invent ONE %s topic for a content funnel. This is stage 1 of a two-stage process: you plan the architecture now; a separate job writes the article later.', strtoupper( $stage ) ),
 				self::format_lean_context( $context ),
+				CognitiveEngine::time_line(),
+				CognitiveEngine::memory_line( $campaign_id ),
 				self::language_line( (string) ( $context['language'] ?? 'id' ) ),
 				'tofu topics = broad awareness/education ("what is", "common mistakes", "beginner guide"). mofu topics = comparison, review, case study, "how to choose".',
 				'Use content_area as the primary local context for THIS topic. Use only explicitly supplied areas, not unrelated cities; keep the main city and the campaign BOFU as the commercial destination. Give each topic a genuinely different audience need and angle, not just a different place name. Target areas: ' . implode( ', ', (array) ( $context['target_areas'] ?? array() ) ) . '.',
 				'Every TOFU and MOFU topic must support the campaign BOFU landing page and use the BOFU offer as the final commercial direction.',
 				sprintf( 'This is topic number %d of the %s stage.', (int) ( $context['item_index'] ?? 0 ) + 1, strtoupper( $stage ) ),
-				'Return JSON with exactly these keys: "title" (string, specific and click-worthy, <=70 chars), "angle" (string), "intent" (informational/commercial/transactional), "keywords" (array of 3–6 strings), "outline" (array of 4–6 heading strings), "funnel_link_angle" (string: the natural transition sentence that will lead the reader to the next funnel stage).',
+				'Sequential reasoning output: first design "outline" (4–6 headings), then "pain_points" (3–5 specific audience pains those headings answer), then "target_table". "target_table" must be {"columns":string[],"rows":string[][]} for a real comparison/specification, or null when no table is useful. Do not write the full article now.',
+				'Return JSON with exactly these keys: "title" (string, specific and click-worthy, <=70 chars), "angle" (string), "intent" (informational/commercial/transactional), "keywords" (array of 3–6 strings), "outline" (array of 4–6 heading strings), "pain_points" (array of strings), "target_table" (object or null), "funnel_link_angle" (string: the natural transition sentence that will lead the reader to the next funnel stage).',
 			)
 		);
 		return array(
@@ -362,19 +368,25 @@ final class Prompts {
 	 * @return array{system:string,user:string,required:string[]}
 	 */
 	public static function build_article( array $context ): array {
-		$required = array( 'title', 'seo_title', 'meta_description', 'intro', 'sections', 'cta_paragraph', 'anchor_suggestion', 'faq', 'tags' );
-		$target   = 'bofu';
-		$user     = implode(
+		$required    = array( 'title', 'seo_title', 'meta_description', 'intro', 'sections', 'cta_paragraph', 'anchor_suggestion', 'faq', 'tags' );
+		$target      = 'bofu';
+		$campaign_id = (int) ( $context['campaign_id'] ?? 0 );
+		$plan_line   = CognitiveEngine::plan_line( $context );
+		$user        = implode(
 			"\n\n",
 			array(
 				sprintf( 'Task: write ONE full %s article based on the given topic. It must funnel the reader toward the %s stage.', strtoupper( (string) ( $context['stage'] ?? 'tofu' ) ), strtoupper( $target ) ),
 				self::format_lean_context( $context ),
+				CognitiveEngine::time_line(),
+				CognitiveEngine::memory_line( $campaign_id ),
 				'<TOPIC>' . (string) ( $context['topic_title'] ?? '' ) . ' — ' . (string) ( $context['topic_angle'] ?? '' ) . ' — outline: ' . implode( ' | ', (array) ( $context['topic_outline'] ?? array() ) ) . '</TOPIC>',
+				$plan_line,
 				self::language_line( (string) ( $context['language'] ?? 'id' ) ),
 				self::entity_line( $context ),
 				self::framework_line( $context ),
 				sprintf( 'The final CTA paragraph MUST transition to the %s content. Suggest a short descriptive anchor (2–6 words), not "klik di sini".', $target ),
 				'Every supporting article must naturally lead to the campaign BOFU. TOFU educates without hard selling; MOFU compares options and addresses objections; BOFU converts. The final CTA paragraph must contain anchor_suggestion verbatim. AI chooses a descriptive keyword anchor relevant to the BOFU offer and city, varying it across articles. Do not include HTML links, checkout links, WhatsApp links or other offers; the publisher inserts the verified BOFU URL. Focus on content_area and its real relevance to the main city; do not simply replace city names in a reusable template.',
+				'Stage 2 rule: follow TOPIC_PAIN_POINTS and TOPIC_PLAN. Answer the planned pains in the planned order. When a target_table is supplied, include it in the most relevant section as a real comparison/specification table; do not invent extra rows or claims. Stage 1 architecture, not a generic template, must be visible in the finished article.',
 				'Return JSON with exactly these keys: "title" (string), "seo_title" (string <=60), "meta_description" (string <=155), "intro" (string 60–100 words), "sections" (array of {"heading":string,"hint":string,"body":string,"bullets":string[]}, 4–7 items), "cta_paragraph" (string 2–3 sentences ending with the suggested anchor as a natural phrase), "anchor_suggestion" (string), "faq" (array of {"q":string,"a":string}), "tags" (string[]).',
 				self::tags_line( $context ),
 			)
@@ -432,6 +444,8 @@ final class Prompts {
 			array(
 				sprintf( 'Task: write ONE complete SEO article dedicated to the keyword entity/tag "%s". It must naturally funnel readers toward the BOFU landing page.', $tag ),
 				self::format_lean_context( $context ),
+				CognitiveEngine::time_line(),
+				CognitiveEngine::memory_line( (int) ( $context['campaign_id'] ?? 0 ) ),
 				self::language_line( (string) ( $context['language'] ?? 'id' ) ),
 				self::entity_line( $context ),
 				self::framework_line( $context ),
