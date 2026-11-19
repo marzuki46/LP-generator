@@ -86,6 +86,8 @@ global.window = {
 	confirm: () => true,
 	setTimeout: () => 0,
 	clearTimeout: () => {},
+	setInterval: () => 1,
+	clearInterval: () => {},
 	location: { reload: () => {} },
 };
 global.jQuery = jq;

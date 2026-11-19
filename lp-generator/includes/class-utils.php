@@ -147,7 +147,19 @@ final class Utils {
 	 * @return string
 	 */
 	public static function clean_url( $raw ): string {
-		$url = esc_url_raw( is_string( $raw ) ? wp_unslash( $raw ) : '' );
+		$url = trim( is_string( $raw ) ? wp_unslash( $raw ) : '' );
+		if ( '' === $url ) {
+			return '';
+		}
+		// Common real-world input: https forgotten, or a WhatsApp phone number.
+		if ( ! preg_match( '#^https?://#i', $url ) ) {
+			if ( preg_match( '#^\d{8,15}$#', $url ) ) {
+				$url = 'https://wa.me/' . $url;
+			} elseif ( preg_match( '#^[a-z0-9][a-z0-9.\-]*\.[a-z]{2,}(/|$)#i', $url ) ) {
+				$url = 'https://' . $url;
+			}
+		}
+		$url = esc_url_raw( $url );
 		return false === wp_http_validate_url( $url ) ? '' : $url;
 	}
 

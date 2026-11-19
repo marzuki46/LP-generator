@@ -55,3 +55,13 @@ $product_blocks = Publisher::build_blocks(
 	array( 'offer_type' => 'product' )
 );
 lpg_assert_true( false === strpos( $product_blocks, 'Disclosure:' ), 'produk tanpa disclosure' );
+
+$image_record = array( array( 'id' => 7, 'url' => 'https://example.test/hero.webp', 'alt' => 'Ilustrasi', 'section_hint' => '' ) );
+$article_media = Publisher::build_blocks(
+	array( 'title' => 'Artikel', 'intro' => 'Pendahuluan.', 'sections' => array( array( 'heading' => 'Bagian', 'body' => 'Isi.' ) ), 'cta_paragraph' => 'Baca panduan kami sekarang.', 'anchor_suggestion' => 'panduan kami' ),
+	'article',
+	array( 'offer_type' => 'service' ),
+	$image_record
+);
+lpg_assert_true( false === strpos( $article_media, 'wp:gallery' ), 'gambar artikel tidak disisipkan di dalam konten' );
+lpg_assert_true( false === strpos( $article_media, 'hero.webp' ), 'URL gambar artikel tidak muncul di body' );

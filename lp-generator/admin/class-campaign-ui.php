@@ -440,6 +440,8 @@ final class CampaignUI {
 					<div class="lpgen-progress__bar" id="lpgen_runner_bar" style="width:5%;height:100%;background:#00a32a;transition:width 0.3s ease;"></div>
 				</div>
 				<div id="lpgen_runner_status" style="font-size:13px;color:#c3c4c7;"><?php echo esc_html__( 'Menyiapkan antrean job...', 'lp-generator' ); ?></div>
+				<div id="lpgen_runner_countdown" style="font-size:12px;color:#ffd166;margin-top:4px;"></div>
+				<ul id="lpgen_runner_details" style="margin:8px 0 0;padding-left:18px;font-size:12px;color:#c3c4c7;max-height:160px;overflow:auto;"></ul>
 			</div>
 
 			<div id="lpgen-action-result" aria-live="polite"></div>
@@ -532,7 +534,13 @@ final class CampaignUI {
 					$data[ $key ] = empty( $value ) ? 0 : 1;
 					break;
 				case 'offer_url':
-					$data[ $key ] = Utils::clean_url( $value );
+					$clean_url = Utils::clean_url( $value );
+					if ( '' === $clean_url && '' !== trim( (string) $value ) ) {
+						// Keep the user's text visible so it can be corrected; report why LP will stop.
+						$clean_url = Utils::clean_text( $value );
+						Database::log( 'warning', 'URL CTA tidak valid dan disimpan apa adanya: ' . Utils::truncate( $clean_url, 120 ), $post_id );
+					}
+					$data[ $key ] = $clean_url;
 					break;
 				case 'bofu_mode':
 					$data[ $key ] = in_array( $value, array( 'new', 'existing' ), true ) ? $value : 'new';

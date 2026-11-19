@@ -73,7 +73,11 @@ final class ReviewUI {
 						?>
 						<tr data-lpgen-campaign="<?php echo esc_attr( (string) $id ); ?>">
 							<td><a href="<?php echo esc_url( $edit_url ); ?>"><?php echo esc_html( get_the_title( $id ) ); ?></a></td>
-							<td data-lpgen-field="status"><span class="lpgen-badge lpgen-badge--<?php echo esc_attr( sanitize_key( $status ) ); ?>"><?php echo esc_html( 'draft' === $status ? __( 'Belum digenerate', 'lp-generator' ) : $status ); ?></span></td>
+							<td data-lpgen-field="status"><span class="lpgen-badge lpgen-badge--<?php echo esc_attr( sanitize_key( $status ) ); ?>"><?php echo esc_html( 'draft' === $status ? __( 'Belum digenerate', 'lp-generator' ) : $status ); ?></span>
+							<?php if ( '' === Utils::clean_url( (string) ContentRepository::get_meta( $id, 'offer_url', '' ) ) ) : ?>
+								<br><small style="color:#b32d2e;"><?php echo esc_html__( 'URL CTA belum valid — isi di edit campaign.', 'lp-generator' ); ?></small>
+							<?php endif; ?>
+						</td>
 							<td data-lpgen-field="queue">
 								<?php
 								printf(
@@ -94,6 +98,7 @@ final class ReviewUI {
 							<td>
 								<a class="button button-small" href="<?php echo esc_url( $review_url ); ?>"><?php echo esc_html__( 'Review', 'lp-generator' ); ?></a>
 								<button type="button" class="button button-small" data-lpgen-action="start-campaign" data-campaign="<?php echo esc_attr( (string) $id ); ?>"><?php echo esc_html__( 'Generate', 'lp-generator' ); ?></button>
+								<button type="button" class="button button-small" data-lpgen-action="restart-campaign" data-campaign="<?php echo esc_attr( (string) $id ); ?>"><?php echo esc_html__( 'Mulai dari Awal', 'lp-generator' ); ?></button>
 								<button type="button" class="button button-small" data-lpgen-action="run-now" data-campaign="<?php echo esc_attr( (string) $id ); ?>"><?php echo esc_html__( 'Proses Antrean', 'lp-generator' ); ?></button>
 							</td>
 						</tr>
@@ -101,6 +106,15 @@ final class ReviewUI {
 				<?php endif; ?>
 				</tbody>
 			</table>
+			<div id="lpgen-live-runner" style="display:none;margin-top:16px;padding:16px;background:#1d2327;color:#fff;border-radius:8px;">
+				<h4 style="margin:0 0 8px;color:#72aee6;"><?php echo esc_html__( 'Proses Pembuatan Konten Sedang Berjalan...', 'lp-generator' ); ?></h4>
+				<div class="lpgen-progress" style="width:100%;height:14px;background:rgba(255,255,255,0.2);border-radius:7px;overflow:hidden;margin-bottom:8px;">
+					<div class="lpgen-progress__bar" id="lpgen_runner_bar" style="width:5%;height:100%;background:#00a32a;transition:width 0.3s ease;"></div>
+				</div>
+				<div id="lpgen_runner_status" style="font-size:13px;color:#c3c4c7;"><?php echo esc_html__( 'Menyiapkan antrean job...', 'lp-generator' ); ?></div>
+				<div id="lpgen_runner_countdown" style="font-size:12px;color:#ffd166;margin-top:4px;"></div>
+				<ul id="lpgen_runner_details" style="margin:8px 0 0;padding-left:18px;font-size:12px;color:#c3c4c7;max-height:160px;overflow:auto;"></ul>
+			</div>
 			<div id="lpgen-action-result" aria-live="polite"></div>
 		</div>
 		<?php

@@ -1,9 +1,9 @@
 {
-  "version": "1.7.0",
-  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.7.0.zip",
+  "version": "1.7.1",
+  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.7.1.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>Waktu diambil dari pengaturan WordPress; tiap sumber punya checked_at dan klaim punya as_of, tanpa tahun dipaksa ke semua artikel.</li><li>Sumber riset diinput user dengan exact_quote terverifikasi; angka, harga, dan aturan tanpa sumber ditolak.</li><li>Validasi keluaran terstruktur dengan retry terbatas dan orchestration dua tahap bert checkpoint.</li><li>Memori topik lintas campaign ADD-only dengan embedding 9Router, fallback leksikal, dan penanda risiko duplikat.</li></ul>"
+  "changelog": "<ul><li>URL CTA dinormalisasi: wa.me/domain tanpa https dan nomor WhatsApp diterima; input invalid tetap terlihat dengan peringatan.</li><li>Tombol Mulai dari Awal di dashboard untuk membersihkan job lama dan generate ulang dari nol.</li><li>Jeda antar konten bisa diatur, dengan hitung mundur dan detail per item di dashboard.</li><li>Gambar artikel pendukung kini hanya sebagai featured thumbnail, bukan galeri di dalam konten.</li></ul>"
 }

@@ -99,6 +99,14 @@ final class Settings {
 				'section' => 'ai',
 				'desc'    => __( 'Menandai state outline sebagai review. Alur antrean tetap berjalan; gunakan Review UI untuk mengedit.', 'lp-generator' ),
 			),
+			'content_gap_minutes'   => array(
+				'label'   => __( 'Jeda antar konten (menit)', 'lp-generator' ),
+				'type'    => 'number',
+				'section' => 'ai',
+				'min'     => 0,
+				'max'     => 60,
+				'desc'    => __( 'Jeda sebelum job berikutnya dimulai. Dashboard menampilkan hitung mundur/detail per item.', 'lp-generator' ),
+			),
 			'index_enabled'         => array(
 				'label'   => __( 'Aktifkan indexing', 'lp-generator' ),
 				'type'    => 'checkbox',

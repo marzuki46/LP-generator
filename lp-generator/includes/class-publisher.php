@@ -162,6 +162,9 @@ final class Publisher {
 				$blocks[] = Amazon::products_block( $campaign['amazon_products'], $campaign );
 			}
 		}
+		// Supporting articles use the first image as the featured thumbnail only;
+		// galleries stay in generated content for LP/preview, not published articles.
+		$inline_images   = 'article' !== $kind;
 		$positioned      = array();
 		$fallback_images = array();
 		foreach ( $images as $image ) {
@@ -172,7 +175,7 @@ final class Publisher {
 				$fallback_images[] = $image;
 			}
 		}
-		if ( ! empty( $fallback_images ) ) {
+		if ( $inline_images && ! empty( $fallback_images ) ) {
 			$gallery = ImagePipeline::gallery_block( $fallback_images );
 			if ( '' !== $gallery ) {
 				$blocks[] = $gallery;
@@ -197,7 +200,7 @@ final class Publisher {
 			if ( '' === $hint ) {
 				$hint = sanitize_title( $heading );
 			}
-			if ( '' !== $hint && isset( $positioned[ $hint ] ) ) {
+			if ( $inline_images && '' !== $hint && isset( $positioned[ $hint ] ) ) {
 				$gallery = ImagePipeline::gallery_block( $positioned[ $hint ] );
 				if ( '' !== $gallery ) {
 					$blocks[] = $gallery;
@@ -205,7 +208,7 @@ final class Publisher {
 				unset( $positioned[ $hint ] );
 			}
 		}
-		foreach ( $positioned as $group ) {
+		foreach ( $inline_images ? $positioned : array() as $group ) {
 			$gallery = ImagePipeline::gallery_block( $group );
 			if ( '' !== $gallery ) {
 				$blocks[] = $gallery;
@@ -331,6 +334,17 @@ final class Publisher {
 			return 0;
 		}
 		$post_id   = (int) $post_id;
+		// Support articles: first verified image becomes the featured thumbnail,
+		// so the blog/LP listing shows it without an inline gallery in the body.
+		if ( 'article' === (string) ( $item['kind'] ?? '' ) && function_exists( 'set_post_thumbnail' ) ) {
+			foreach ( $images as $candidate ) {
+				$thumb_id = is_array( $candidate ) ? absint( $candidate['id'] ?? 0 ) : 0;
+				if ( $thumb_id > 0 ) {
+					set_post_thumbnail( $post_id, $thumb_id );
+					break;
+				}
+			}
+		}
 		$permalink = get_permalink( $post_id );
 
 		update_post_meta( $item_id, '_lpgen_post_id', $post_id );

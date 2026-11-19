@@ -113,3 +113,8 @@ $fixed_start = gmdate( 'Y-m-d\TH:i', time() + 2 * DAY_IN_SECONDS );
 $fixed_result = Utils::schedule_timestamp( array( 'schedule_mode' => 'fixed', 'schedule_start' => $fixed_start, 'schedule_time' => '01:00', 'schedule_interval' => 15 ), 2 );
 lpg_assert_same( strtotime( str_replace( 'T', ' ', $fixed_start ) . ':00 UTC' ) + 1800, $fixed_result, 'jadwal fixed memakai tanggal dan jam input tepat sekali beserta interval' );
 lpg_assert_true( $fixed_result > time() + DAY_IN_SECONDS, 'tanggal fixed masa depan tidak berubah menjadi publish secepatnya' );
+
+lpg_assert_same( 'https://wa.me/6281234567890?text=Halo', Utils::clean_url( 'https://wa.me/6281234567890?text=Halo' ), 'URL WhatsApp lengkap dipertahankan' );
+lpg_assert_same( 'https://wa.me/6281234567890', Utils::clean_url( 'wa.me/6281234567890' ), 'URL tanpa skema dinormalisasi' );
+lpg_assert_same( 'https://wa.me/6281234567890', Utils::clean_url( '6281234567890' ), 'nomor WhatsApp dinormalisasi' );
+lpg_assert_same( 'https://domain.test/beli', Utils::clean_url( 'domain.test/beli' ), 'domain tanpa skema dinormalisasi' );

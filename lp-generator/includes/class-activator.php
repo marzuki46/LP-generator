@@ -57,6 +57,7 @@ final class Activator {
 					'embedding_enabled'      => 0,
 					'embedding_model'        => '',
 					'outline_review_enabled' => 0,
+					'content_gap_minutes'    => 2,
 					'index_enabled'          => 1,
 					'indexnow_key'           => $index_key,
 					'indexnow_key_location'  => '',

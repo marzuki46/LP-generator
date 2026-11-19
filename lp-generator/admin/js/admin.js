@@ -64,7 +64,7 @@
 		}
 
 		if ('start-campaign' === action || 'generate-framework' === action) {
-			if ('start-campaign' === action && !window.confirm(config.i18n.confirmStart)) {
+			if (('start-campaign' === action || 'restart-campaign' === action) && !window.confirm(config.i18n.confirmStart)) {
 				return;
 			}
 			// Auto-serialize all campaign form inputs so user edits are saved even if draft wasn't published yet
@@ -189,9 +189,9 @@
 				}
 
 				showResult(response && response.message ? response.message : '', !!(response && response.ok));
-				if (('start-campaign' === action || 'publish-campaign' === action) && response && response.ok) {
+				if (('start-campaign' === action || 'restart-campaign' === action || 'publish-campaign' === action) && response && response.ok) {
 					queueStarted = true;
-					updateCampaignRow(campaign, {status: 'start-campaign' === action ? 'generating' : 'publishing', total: response.jobs, done_count: 0, failed: 0});
+					updateCampaignRow(campaign, {status: 'publish-campaign' === action ? 'publishing' : 'generating', total: response.jobs, done_count: 0, failed: 0});
 					runQueueLoop(campaign, response.jobs || 6, releaseButton);
 					return;
 				}
@@ -230,15 +230,40 @@
 	function runQueueLoop(campaign, totalJobs, onStop) {
 		if (activeRunners[campaign]) { if (onStop) { onStop(); } return; }
 		activeRunners[campaign] = true;
-		function stop() { delete activeRunners[campaign]; if (onStop) { onStop(); } }
+		function stop() { if (ticker) { window.clearInterval(ticker); ticker = 0; } if ($countdown.length) { $countdown.text(''); } delete activeRunners[campaign]; if (onStop) { onStop(); } }
 
 		var $runner = $('#lpgen-live-runner');
 		var $bar = $('#lpgen_runner_bar');
 		var $status = $('#lpgen_runner_status');
+		var $countdown = $('#lpgen_runner_countdown');
+		var $details = $('#lpgen_runner_details');
+		var nextAt = 0;
 		if ($runner.length) {
 			$runner.show();
 		} else {
 			showResult('Sedang memproses antrean konten...', true);
+		}
+
+		function renderCountdown() {
+			if (!$countdown.length) { return; }
+			if (!nextAt || Date.now() / 1000 >= nextAt) { $countdown.text(''); return; }
+			var s = Math.ceil(nextAt - Date.now() / 1000);
+			var m = Math.floor(s / 60);
+			var r = s % 60;
+			$countdown.text('Jeda berikutnya: ' + (m < 10 ? '0' : '') + m + ':' + (r < 10 ? '0' : '') + r);
+		}
+		var ticker = window.setInterval(renderCountdown, 1000);
+
+		function renderDetails(items) {
+			if (!$details.length || !$.isArray(items)) { return; }
+			$details.empty();
+			$.each(items, function (_, item) {
+				var mark = item.status === 'done' ? '✓' : (item.status === 'failed' ? '✕' : '…');
+				var label = (item.title || (item.kind + ' #' + item.item_id));
+				var line = mark + ' ' + label + ' — ' + item.kind + ' (' + item.status + ')';
+				if (item.error) { line += ' · ' + item.error; }
+				$('<li/>').text(line).appendTo($details);
+			});
 		}
 
 		var total = totalJobs || 6;
@@ -246,6 +271,9 @@
 			call('process_queue', { campaign: campaign })
 				.done(function (res) {
 					if (res) { updateCampaignRow(campaign, res); }
+					if (res && res.next_run_at) { nextAt = Number(res.next_run_at); } else { nextAt = 0; }
+					if (res && res.items) { renderDetails(res.items); }
+					renderCountdown();
 					if (!res || !res.ok) {
 						if (res && res.busy) {
 							showResult(res.message || 'Worker sedang memproses antrean.', true);
@@ -258,7 +286,11 @@
 						stop();
 						return;
 					}
-					if (res.waiting && res.next_run_at > Date.now() / 1000 + 30) { showResult(res.message || 'Antrean menunggu jadwal berikutnya.', true); stop(); return; }
+					if (res.waiting && res.next_run_at > Date.now() / 1000 + 1) {
+						if ($status.length) { $status.text(res.message || 'Menunggu jeda antar konten.'); }
+						window.setTimeout(step, 1000);
+						return;
+					}
 					if (res.done && !(res.running > 0)) {
 						stop();
 						if ($bar.length) { $bar.css('width', '100%'); }

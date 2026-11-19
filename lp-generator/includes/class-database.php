@@ -277,7 +277,51 @@ final class Database {
 		$total = self::count_jobs( $campaign_id );
 		$queued = self::count_jobs( $campaign_id, 'queued' );
 		$running = self::count_jobs( $campaign_id, 'running' );
-		return array( 'total' => $total, 'done_count' => self::count_jobs( $campaign_id, 'done' ), 'remaining' => $queued, 'running' => $running, 'failed' => self::count_jobs( $campaign_id, 'failed' ), 'done' => $total > 0 && 0 === $queued && 0 === $running, 'status' => (string) ContentRepository::get_meta( $campaign_id, 'status', 'draft' ), 'next_run_at' => self::next_queued_time( $campaign_id ) );
+		return array(
+			'total'       => $total,
+			'done_count'  => self::count_jobs( $campaign_id, 'done' ),
+			'remaining'   => $queued,
+			'running'     => $running,
+			'failed'      => self::count_jobs( $campaign_id, 'failed' ),
+			'done'        => $total > 0 && 0 === $queued && 0 === $running,
+			'status'      => (string) ContentRepository::get_meta( $campaign_id, 'status', 'draft' ),
+			'next_run_at' => self::next_queued_time( $campaign_id ),
+			'items'       => self::queue_details( $campaign_id ),
+		);
+	}
+
+	/** Per-item queue detail for the live dashboard countdown. */
+	public static function queue_details( int $campaign_id ): array {
+		global $wpdb;
+		if ( ! isset( $wpdb ) || ! is_object( $wpdb ) || ! method_exists( $wpdb, 'get_results' ) ) {
+			return array();
+		}
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT id, item_id, kind, status, run_at, attempts, last_error FROM ' . self::table( 'jobs' ) . ' WHERE campaign_id = %d ORDER BY id ASC LIMIT 60',
+				$campaign_id
+			),
+			ARRAY_A
+		);
+		if ( ! is_array( $rows ) ) {
+			return array();
+		}
+		$out = array();
+		foreach ( $rows as $row ) {
+			$row   = (array) $row;
+			$title = (int) ( $row['item_id'] ?? 0 ) > 0 ? (string) get_the_title( (int) $row['item_id'] ) : '';
+			$out[] = array(
+				'job_id'  => absint( $row['id'] ?? 0 ),
+				'item_id' => absint( $row['item_id'] ?? 0 ),
+				'kind'    => (string) ( $row['kind'] ?? '' ),
+				'status'  => (string) ( $row['status'] ?? '' ),
+				'run_at'  => (string) ( $row['run_at'] ?? '' ),
+				'attempts'=> absint( $row['attempts'] ?? 0 ),
+				'title'   => Utils::truncate( $title, 80 ),
+				'error'   => Utils::truncate( (string) ( $row['last_error'] ?? '' ), 120 ),
+			);
+		}
+		return $out;
 	}
 
 	/**

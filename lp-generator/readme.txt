@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.7.0
+Stable tag: 1.7.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,13 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.7.1 =
+* Normalise CTA URLs: accept wa.me/domain without https and WhatsApp numbers; keep invalid input visible with a warning instead of silently dropping it.
+* Add "Start over" action and button on the dashboard to clear stale jobs and restart generation from zero.
+* Add configurable gap between content jobs with a live countdown and per-item detail list in the dashboard runner.
+* Supporting-article images are now the featured thumbnail only; no inline gallery in the article body.
+
 
 = 1.7.0 =
 * Time anchor now comes from WordPress settings with per-source checked_at and as_of; no forced year in every article.

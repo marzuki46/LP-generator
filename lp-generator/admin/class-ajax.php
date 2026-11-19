@@ -22,6 +22,7 @@ final class Ajax {
 	public static function register(): void {
 		$actions = array(
 			'start-campaign',
+			'restart-campaign',
 			'publish-campaign',
 			'run-now',
 			'process-queue',
@@ -77,6 +78,7 @@ final class Ajax {
 		}
 		try {
 		switch ( $action ) {
+			case 'restart-campaign':
 			case 'start-campaign':
 				$campaign_id = isset( $_POST['campaign'] ) ? absint( $_POST['campaign'] ) : 0;
 				// Auto-save form payload if sent directly from the Campaign UI.
@@ -91,7 +93,7 @@ final class Ajax {
 						}
 					}
 				}
-				$result = Generator::start( $campaign_id );
+				$result = 'restart-campaign' === $action ? Generator::restart( $campaign_id ) : Generator::start( $campaign_id );
 				break;
 			case 'suggest-campaign':
 				$raw_kw   = isset( $_POST['keyword'] ) ? sanitize_text_field( (string) wp_unslash( $_POST['keyword'] ) ) : '';

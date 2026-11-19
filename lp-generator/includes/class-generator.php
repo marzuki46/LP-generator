@@ -166,7 +166,8 @@ final class Generator {
 			);
 		}
 
-		foreach ( $items as $job ) {
+		$gap_minutes = max( 0, min( 60, (int) ( $settings['content_gap_minutes'] ?? 2 ) ) );
+		foreach ( $items as $sequence => $job ) {
 			Database::insert_job(
 				array(
 					'campaign_id' => $campaign_id,
@@ -178,6 +179,7 @@ final class Generator {
 						'topic_item_id' => (int) ( $job['topic_item_id'] ?? 0 ),
 						'target_stage'  => (string) ( $job['target_stage'] ?? '' ),
 					),
+					'run_at'      => gmdate( 'Y-m-d H:i:s', time() + ( $sequence * $gap_minutes * MINUTE_IN_SECONDS ) ),
 				)
 			);
 		}
@@ -191,6 +193,24 @@ final class Generator {
 			'message' => sprintf( __( '%d job antrean dibuat.', 'lp-generator' ), count( $items ) ),
 			'jobs'    => count( $items ),
 		);
+	}
+
+	/** Clear every queued/running job and start one fresh generation run. */
+	public static function restart( int $campaign_id ): array {
+		if ( $campaign_id <= 0 ) {
+			return array( 'ok' => false, 'message' => __( 'Campaign tidak valid.', 'lp-generator' ), 'jobs' => 0 );
+		}
+		global $wpdb;
+		if ( isset( $wpdb ) && is_object( $wpdb ) && method_exists( $wpdb, 'query' ) ) {
+			$table = Database::table( 'jobs' );
+			$wpdb->query(
+				$wpdb->prepare(
+					"DELETE FROM {$table} WHERE campaign_id = %d AND status IN ('queued','running','failed')",
+					$campaign_id
+				)
+			);
+		}
+		return self::start( $campaign_id );
 	}
 
 	/**
