@@ -318,17 +318,19 @@ final class ReviewUI {
 			'success' => __( 'Success', 'lp-generator' ),
 			'warn'    => __( 'Warning', 'lp-generator' ),
 			'error'   => __( 'Error', 'lp-generator' ),
+			'debug'   => __( 'Debug (detail job)', 'lp-generator' ),
 		);
 		?>
 		<div class="wrap lpgen-wrap lpgen-logs">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			<p class="description"><?php echo esc_html__( 'Catatan progres campaign, generate, publish, gambar, dan indexing. Gunakan filter atau hapus log yang tidak diperlukan.', 'lp-generator' ); ?></p>
+			<p class="description"><?php echo esc_html( sprintf( __( 'Catatan progres campaign, generate, publish, gambar, dan indexing. Waktu ditampilkan dalam %s. Detail job per attempt ada di filter Debug dan disembunyikan secara default.', 'lp-generator' ), Utils::timezone_label() ) ); ?></p>
 			<div class="lpgen-log-stats">
 				<button type="button" class="lpgen-stat" data-level=""><strong><?php echo esc_html( (string) $stats['total'] ); ?></strong><span><?php echo esc_html__( 'Total log', 'lp-generator' ); ?></span></button>
 				<button type="button" class="lpgen-stat" data-level="info"><strong><?php echo esc_html( (string) $stats['info'] ); ?></strong><span><?php echo esc_html__( 'Info', 'lp-generator' ); ?></span></button>
 				<button type="button" class="lpgen-stat" data-level="success"><strong><?php echo esc_html( (string) $stats['success'] ); ?></strong><span><?php echo esc_html__( 'Success', 'lp-generator' ); ?></span></button>
 				<button type="button" class="lpgen-stat" data-level="warn"><strong><?php echo esc_html( (string) $stats['warning'] ); ?></strong><span><?php echo esc_html__( 'Warning', 'lp-generator' ); ?></span></button>
 				<button type="button" class="lpgen-stat" data-level="error"><strong><?php echo esc_html( (string) $stats['error'] ); ?></strong><span><?php echo esc_html__( 'Error', 'lp-generator' ); ?></span></button>
+				<button type="button" class="lpgen-stat" data-level="debug"><strong><?php echo esc_html( (string) ( $stats['debug'] ?? 0 ) ); ?></strong><span><?php echo esc_html__( 'Debug', 'lp-generator' ); ?></span></button>
 				<div class="lpgen-stat lpgen-stat--static"><strong><?php echo esc_html( (string) $stats['campaigns'] ); ?></strong><span><?php echo esc_html__( 'Campaign tercatat', 'lp-generator' ); ?></span></div>
 			</div>
 			<form method="get" action="" id="lpgen-log-filters" class="lpgen-log-filters">
@@ -374,7 +376,7 @@ final class ReviewUI {
 					<thead>
 					<tr>
 						<th class="lpgen-log-check"><input type="checkbox" id="lpgen-log-check-all" aria-label="<?php echo esc_attr__( 'Pilih semua log', 'lp-generator' ); ?>" /></th>
-						<th><?php echo esc_html__( 'Waktu (UTC)', 'lp-generator' ); ?></th>
+						<th><?php echo esc_html( sprintf( __( 'Waktu (%s)', 'lp-generator' ), Utils::timezone_label() ) ); ?></th>
 						<th><?php echo esc_html__( 'Level', 'lp-generator' ); ?></th>
 						<th><?php echo esc_html__( 'Campaign', 'lp-generator' ); ?></th>
 						<th><?php echo esc_html__( 'Job', 'lp-generator' ); ?></th>
@@ -396,7 +398,7 @@ final class ReviewUI {
 							?>
 							<tr>
 								<td class="lpgen-log-check"><input type="checkbox" name="log_ids[]" value="<?php echo esc_attr( (string) $log_id ); ?>" /></td>
-								<td><time datetime="<?php echo esc_attr( (string) $log['created_at'] ); ?>"><?php echo esc_html( (string) $log['created_at'] ); ?></time></td>
+								<td><time datetime="<?php echo esc_attr( (string) $log['created_at'] ); ?>"><?php echo esc_html( Utils::display_time( (string) $log['created_at'] ) ); ?></time></td>
 								<td><span class="lpgen-log-level lpgen-log-level--<?php echo esc_attr( $log_level ); ?>"><?php echo esc_html( $log_level ); ?></span></td>
 								<td><?php echo $log_campaign > 0 ? esc_html( $titles[ $log_campaign ] ?? ( '#' . $log_campaign ) ) : '—'; ?></td>
 								<td><?php echo esc_html( (string) ( $log['job_id'] ?? 0 ) ); ?></td>

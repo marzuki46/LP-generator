@@ -56,6 +56,20 @@ lpg_assert_same( 'pas-1', $bound['design_id'], 'bind_content menimpa kode desain
 lpg_assert_same( 'pas-problem', $bound['sections'][0]['section_id'], 'bind_content menimpa section ID salah' );
 LandingPage::validate( $bound, $fixture['campaign'] );
 
+$aida_fixture  = lpg_lp_fixture( 'aida' );
+$aida_wrong    = $aida_fixture['data'];
+$aida_wrong['sections'][0]['table'] = array( 'columns' => array( 'A' ), 'rows' => array( array( 'B' ) ) );
+$aida_wrong['sections'][0]['quote'] = array( 'text' => 'x', 'source' => 'y' );
+$aida_wrong['sections'][0]['cards'] = array( array( 'title' => 'x', 'body' => 'y' ) );
+$aida_bound = DesignContract::bind_content( $aida_wrong, $aida_fixture['campaign'] );
+lpg_assert_true( ! isset( $aida_bound['sections'][0]['table'] ) && ! isset( $aida_bound['sections'][0]['quote'] ), 'AIDA membuang table/quote dari AI' );
+lpg_assert_same( array(), $aida_bound['sections'][0]['cards'], 'AIDA hero mengosongkan kartu' );
+lpg_assert_same( $aida_wrong['title'], $aida_bound['sections'][0]['heading'], 'AIDA hero memakai title/intro root' );
+LandingPage::validate( $aida_bound, $aida_fixture['campaign'] );
+$aida_example = json_decode( Prompts::lp_example( $aida_fixture['campaign'] ), true );
+lpg_assert_same( 4, count( $aida_example['sections'] ), 'contoh JSON AIDA punya 4 section' );
+lpg_assert_true( null === $aida_example['sections'][0]['table'] && null === $aida_example['sections'][0]['quote'], 'contoh AIDA tanpa table/quote' );
+
 $bad = $fixture['data'];
 $bad['sections'][1]['section_id'] = 'pas-problem';
 funnel_throws( static fn() => LandingPage::validate( $bad, $fixture['campaign'] ), 'section ID yang tertukar ditolak' );

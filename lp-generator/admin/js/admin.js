@@ -238,6 +238,8 @@
 		var $countdown = $('#lpgen_runner_countdown');
 		var $details = $('#lpgen_runner_details');
 		var nextAt = 0;
+		var nextLocal = '';
+		var resTimezone = '';
 		if ($runner.length) {
 			$runner.show();
 		} else {
@@ -250,7 +252,7 @@
 			var s = Math.ceil(nextAt - Date.now() / 1000);
 			var m = Math.floor(s / 60);
 			var r = s % 60;
-			$countdown.text('Jeda berikutnya: ' + (m < 10 ? '0' : '') + m + ':' + (r < 10 ? '0' : '') + r);
+			$countdown.text('Jeda berikutnya: ' + (m < 10 ? '0' : '') + m + ':' + (r < 10 ? '0' : '') + r + (nextLocal ? ' · ' + nextLocal + ' ' + (resTimezone || '') : ''));
 		}
 		var ticker = window.setInterval(renderCountdown, 1000);
 
@@ -261,6 +263,7 @@
 				var mark = item.status === 'done' ? '✓' : (item.status === 'failed' ? '✕' : '…');
 				var label = (item.title || (item.kind + ' #' + item.item_id));
 				var line = mark + ' ' + label + ' — ' + item.kind + ' (' + item.status + ')';
+				if (item.run_at_local) { line += ' · ' + item.run_at_local; }
 				if (item.error) { line += ' · ' + item.error; }
 				$('<li/>').text(line).appendTo($details);
 			});
@@ -272,6 +275,8 @@
 				.done(function (res) {
 					if (res) { updateCampaignRow(campaign, res); }
 					if (res && res.next_run_at) { nextAt = Number(res.next_run_at); } else { nextAt = 0; }
+					nextLocal = res && res.next_run_local ? res.next_run_local : '';
+					resTimezone = res && res.timezone_label ? res.timezone_label : '';
 					if (res && res.items) { renderDetails(res.items); }
 					renderCountdown();
 					if (!res || !res.ok) {

@@ -1,9 +1,9 @@
 {
-  "version": "1.7.2",
-  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.7.2.zip",
+  "version": "1.7.3",
+  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.7.3.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>Gambar kini aktif secara default: pengaturan campaign mewarisi image_enabled/image_count global bila meta kosong.</li><li>Master prompt visual persis: Topic, Visual concept, Main subject; palet/style/framing/negative rules dikunci.</li><li>Budget WebP dinaikkan jadi 180 KB default dan 300 KB maksimal agar ilustrasi 16:9 tidak gagal dikonversi.</li><li>Item topik diberi label Topik (brief); artikel lengkap dan internal link muncul setelah tahap berikutnya dan publish.</li></ul>"
+  "changelog": "<ul><li>Waktu log dan jadwal konten ditampilkan dalam timezone WordPress (WIB), bukan UTC.</li><li>Prompt LP diberi contoh JSON copying per framework; blok table/quote AIDA dibersihkan server-side.</li><li>Log detail job dipindah ke filter Debug yang tersembunyi default; log cleanup tidak lagi menambah baris baru.</li><li>Pengiriman RSS/IndexNow yang berhasil dihitung sebagai success, bukan info.</li></ul>"
 }

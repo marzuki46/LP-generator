@@ -113,6 +113,17 @@ if ( ! function_exists( 'get_gmt_from_date' ) ) {
 		return gmdate( $format, false === $timestamp ? time() : $timestamp );
 	}
 }
+if ( ! function_exists( 'wp_timezone_string' ) ) {
+	function wp_timezone_string() {
+		return 'Asia/Jakarta';
+	}
+}
+if ( ! function_exists( 'get_date_from_gmt' ) ) {
+	function get_date_from_gmt( $string, $format = 'Y-m-d H:i:s' ) {
+		$timestamp = strtotime( (string) $string . ' UTC' );
+		return gmdate( $format, false === $timestamp ? time() : $timestamp + ( 7 * HOUR_IN_SECONDS ) );
+	}
+}
 if ( ! function_exists( 'wp_rand' ) ) {
 	function wp_rand( $min = 0, $max = 0 ) {
 		return random_int( $min, $max );

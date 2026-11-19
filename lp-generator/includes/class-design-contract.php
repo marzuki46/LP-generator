@@ -255,6 +255,19 @@ final class DesignContract {
 			$sections[ $index ]['image_slot'] = $slot['image_slot'];
 			$sections[ $index ]['hint']       = $slot['hint'];
 			$sections[ $index ]['layout']     = $slot['layout'];
+			// AIDA deliberately uses only text, bullets and cards. Strip richer
+			// blocks instead of failing the job when a model adds them.
+			if ( self::AIDA === $design_id ) {
+				unset( $sections[ $index ]['table'], $sections[ $index ]['quote'] );
+				if ( in_array( $slot['shape'], array( 'hero', 'offer' ), true ) ) {
+					$sections[ $index ]['cards']   = array();
+					$sections[ $index ]['bullets'] = array();
+				}
+				if ( 0 === $index ) {
+					$sections[ $index ]['heading'] = (string) ( $data['title'] ?? '' );
+					$sections[ $index ]['body']    = (string) ( $data['intro'] ?? '' );
+				}
+			}
 		}
 		$data['sections'] = $sections;
 		return $data;

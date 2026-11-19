@@ -178,7 +178,6 @@ final class Ajax {
 				if ( ! empty( $_POST['level'] ) ) { $args['level'] = sanitize_key( (string) wp_unslash( $_POST['level'] ) ); }
 				if ( ! empty( $_POST['older_than_days'] ) ) { $args['older_than_days'] = absint( $_POST['older_than_days'] ); }
 				$deleted = Database::delete_logs( $args );
-				Database::log( 'info', sprintf( 'Log dibersihkan: %d baris', $deleted ), 0, 0, array( 'by' => get_current_user_id(), 'filter' => $args ) );
 				$result = array(
 					'ok'      => true,
 					'message' => sprintf( __( '%d log dihapus.', 'lp-generator' ), $deleted ),

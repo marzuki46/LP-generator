@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 use LPG\CognitiveEngine;
 use LPG\Prompts;
+use LPG\Utils;
 use LPG\VisualIdentity;
 
 $context = array(
@@ -70,6 +71,8 @@ lpg_assert_true( ! str_contains( $lean, 'framework_plan' ), 'prompt pendukung ti
 lpg_assert_true( ! str_contains( $lean, 'Judul lama 149' ), 'prompt pendukung memotong daftar judul lama' );
 lpg_assert_true( str_contains( $lean, 'Judul lama 0' ), 'prompt pendukung tetap memberi contoh judul lama' );
 
+lpg_assert_same( 'WIB', Utils::timezone_label(), 'label timezone memakai WIB' );
+lpg_assert_same( '2026-11-19 16:19:21', Utils::display_time( '2026-11-19 09:19:21' ), 'waktu UTC ditampilkan sebagai WIB' );
 lpg_assert_same( 2026, CognitiveEngine::active_year(), 'tahun aktif terkunci 2026' );
 lpg_assert_true( str_contains( CognitiveEngine::time_line(), 'TIME ANCHOR (from WordPress settings)' ) && str_contains( CognitiveEngine::time_line(), 'Do not force the year into every article' ), 'anchor waktu berasal dari WP dan tidak dipaksakan' );
 

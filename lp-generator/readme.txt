@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.7.2
+Stable tag: 1.7.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,13 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.7.3 =
+* Log times and scheduled content times are displayed in the WordPress timezone (WIB), not UTC.
+* Add a concrete per-framework copy-only JSON example to the LP prompt and strip unsupported AIDA table/quote blocks server-side.
+* Demote per-job start/finish lines to a Debug filter hidden by default; stop writing a log after clearing logs.
+* Count successful RSS/IndexNow submissions as success instead of info.
+
 
 = 1.7.2 =
 * Fix images never generating: campaign image_enabled and image_count now inherit global settings when meta is empty.

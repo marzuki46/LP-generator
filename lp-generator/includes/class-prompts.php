@@ -293,6 +293,70 @@ final class Prompts {
 		);
 	}
 
+	/** Concrete copy-only JSON example for the selected framework. */
+	public static function lp_example( array $context ): string {
+		$slug      = sanitize_key( (string) ( $context['framework_slug'] ?? 'aida' ) );
+		$design_id = DesignContract::id_for( $slug );
+		$contract  = DesignContract::contract( $slug );
+		$sections  = array();
+		foreach ( $contract as $index => $slot ) {
+			$section = array(
+				'step'    => $index + 1,
+				'heading' => 'Judul section ' . ( $index + 1 ) . ' yang menjawab kebutuhan pembaca',
+				'body'    => 'Tulis 60–150 kata untuk peran ' . $slot['hint'] . '. Gunakan contoh konkret, bukan klaim rekaan.',
+				'bullets' => array(),
+				'cards'   => array(),
+				'table'   => null,
+				'quote'   => null,
+			);
+			if ( DesignContract::AIDA === $design_id ) {
+				if ( 0 === $index ) {
+					$section['heading'] = 'Headline utama (sama persis dengan "title")';
+					$section['body']    = 'Intro hero (sama persis dengan "intro", 25–60 kata)';
+				}
+				if ( 2 === $index ) {
+					$section['cards'] = array(
+						array( 'title' => 'Manfaat pertama', 'body' => 'Penjelasan singkat.' ),
+						array( 'title' => 'Manfaat kedua', 'body' => 'Penjelasan singkat.' ),
+						array( 'title' => 'Manfaat ketiga', 'body' => 'Penjelasan singkat.' ),
+					);
+				}
+			} elseif ( in_array( $slot['shape'], array( 'benefits', 'offer' ), true ) ) {
+				$section['cards'] = array(
+					array( 'title' => 'Pilihan pertama', 'body' => 'Penjelasan singkat.' ),
+					array( 'title' => 'Pilihan kedua', 'body' => 'Penjelasan singkat.' ),
+					array( 'title' => 'Pilihan ketiga', 'body' => 'Penjelasan singkat.' ),
+				);
+			} elseif ( 'comparison' === $slot['shape'] ) {
+				$section['table'] = array(
+					'columns' => array( 'Kebutuhan', 'Pilihan', 'Pertimbangan' ),
+					'rows'    => array( array( 'Contoh', 'Contoh', 'Contoh' ) ),
+				);
+			} elseif ( 'proof' === $slot['shape'] ) {
+				$section['quote'] = array( 'text' => 'Kutipan hanya bila sumber nyata tersedia.', 'source' => 'Nama sumber' );
+			} else {
+				$section['bullets'] = array( 'Poin pendukung pertama', 'Poin pendukung kedua' );
+			}
+			$sections[] = $section;
+		}
+		$example = array(
+			'title'            => 'Headline utama berbasis manfaat',
+			'intro'            => 'Subheadline hero 25–60 kata yang menjelaskan penawaran secara natural.',
+			'seo_title'        => 'Judul SEO maksimal 60 karakter',
+			'meta_description' => 'Deskripsi meta maksimal 155 karakter.',
+			'sections'         => $sections,
+			'cta_text'         => 'Teks tombol ajakan',
+			'cta_url'          => (string) ( $context['offer_url'] ?? 'https://example.test/cta' ),
+			'faq'              => array(
+				array( 'q' => 'Pertanyaan pertama?', 'a' => 'Jawaban singkat dan jujur.' ),
+				array( 'q' => 'Pertanyaan kedua?', 'a' => 'Jawaban singkat dan jujur.' ),
+			),
+			'tags'             => array( 'tag pertama', 'tag kedua' ),
+			'anchor_suggestion' => 'keyword deskriptif pendek',
+		);
+		return (string) wp_json_encode( $example, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+	}
+
 	/**
 	 * Build the landing page prompt.
 	 *
@@ -320,6 +384,7 @@ final class Prompts {
 				self::offer_line( (string) ( $context['offer_type'] ?? 'product' ) ), self::entity_line( $context ), self::framework_line( $context ), $contract,
 				'Follow framework_plan.steps exactly. Return EXACTLY one section per step in the same order, with "step" numbered 1..N. Fulfil its heading_goal in reader-facing language. Do not show framework labels such as Attention or Agitate as public headings. Hero, FAQ and final CTA are rendered separately; do not add them as extra sections.',
 				'Return JSON keys: "title" (benefit-focused H1), "intro" (natural hero subheadline, 25–60 words), "seo_title" (<=60 chars), "meta_description" (<=155 chars), "sections" (array of {"step":integer,"heading":string,"body":string,"bullets":string[],"cards":[{"title":string,"body":string}],"table":{"columns":string[],"rows":string[][]},"quote":{"text":string,"source":string}}), "cta_text" (string), "cta_url" (copy offer_url), "faq" (4–6 {"q":string,"a":string}), "tags" (string[]), "anchor_suggestion" (descriptive keyword). Omit hint, layout, section_id, image_slot and design_id: the plugin fills them from the contract.',
+				'COPY THIS SHAPE EXACTLY for ' . $design_id . ' (replace every placeholder value, keep the key names and the number of sections; set unused table/quote/cards/bullets to null or [] exactly as shown): ' . self::lp_example( $context ),
 				'Except for the Attention hero where the design contract requires 25–60 words, each section body should develop the idea in 60–150 words with short paragraphs separated by \n\n. Use cards for benefits/packages, bullets for supporting details, a table for real comparisons/specifications, and a numbered process only where sequence matters. Empty arrays/objects are valid when no relevant data exists. Do not repeat the same facts across every step.',
 				'Use only prices, guarantees and evidence explicitly supplied by the campaign. Never output testimonial placeholders, fake quotes, invented awards or unverified claims. Empty quote when no attributed evidence is provided. All content strings must be plain text.',
 				self::tags_line( $context ),

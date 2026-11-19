@@ -213,7 +213,7 @@ final class Indexer {
 				$results['push']['ok'] = $results['push']['ok'] || $ping['ok'];
 				$results['push']['code'] = $ping['code'];
 				Database::log(
-					$ping['ok'] ? 'info' : 'warning',
+					$ping['ok'] ? 'success' : 'warning',
 					sprintf( 'RSS/Ping (%s) %s returned HTTP %d', $ping['type'], wp_parse_url( $endpoint, PHP_URL_HOST ), $ping['code'] ),
 					$campaign,
 					$job_id,
@@ -254,7 +254,7 @@ final class Indexer {
 					'endpoint' => $endpoint,
 				);
 				Database::log(
-					$ok ? 'info' : 'warning',
+					$ok ? 'success' : 'warning',
 					sprintf( 'IndexNow %s returned HTTP %d', wp_parse_url( $endpoint, PHP_URL_HOST ), $code ),
 					$campaign,
 					$job_id,

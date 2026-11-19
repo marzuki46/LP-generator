@@ -352,6 +352,36 @@ final class Utils {
 		}
 	}
 
+	/** Human label for the site timezone (WIB for Asia/Jakarta). */
+	public static function timezone_label(): string {
+		$tz = function_exists( 'wp_timezone_string' ) ? (string) wp_timezone_string() : 'Asia/Jakarta';
+		if ( in_array( $tz, array( 'Asia/Jakarta', 'Asia/Pontianak', 'Asia/Makassar', 'Asia/Jayapura' ), true ) ) {
+			return array(
+				'Asia/Jakarta'   => 'WIB',
+				'Asia/Pontianak' => 'WIB',
+				'Asia/Makassar'  => 'WITA',
+				'Asia/Jayapura'  => 'WIT',
+			)[ $tz ];
+		}
+		return '' !== $tz ? $tz : 'UTC';
+	}
+
+	/** Format a UTC datetime from the database in the site's local timezone. */
+	public static function display_time( string $utc, string $format = 'Y-m-d H:i:s' ): string {
+		$utc = trim( $utc );
+		if ( '' === $utc ) {
+			return '';
+		}
+		if ( function_exists( 'get_date_from_gmt' ) ) {
+			return (string) get_date_from_gmt( $utc, $format );
+		}
+		$timestamp = (int) strtotime( $utc . ' UTC' );
+		if ( 'Asia/Jakarta' === ( function_exists( 'wp_timezone_string' ) ? wp_timezone_string() : 'Asia/Jakarta' ) ) {
+			$timestamp += 7 * HOUR_IN_SECONDS;
+		}
+		return gmdate( $format, $timestamp );
+	}
+
 	/**
 	 * Convert a site-local date string to a UTC timestamp.
 	 *

@@ -371,12 +371,12 @@ final class Generator {
 
 			$campaign_id = (int) $job['campaign_id'];
 			$job_id      = (int) $job['id'];
-			Database::log( 'info', sprintf( 'Job %s dimulai (attempt %d)', $job['kind'], (int) ( $job['attempts'] ?? 0 ) ), $campaign_id, $job_id );
+			Database::log( 'debug', sprintf( 'Job %s dimulai (attempt %d)', $job['kind'], (int) ( $job['attempts'] ?? 0 ) ), $campaign_id, $job_id );
 
 			try {
 				self::dispatch( $job );
 				Database::update_job( $job_id, array( 'status' => 'done' ) );
-				Database::log( 'info', sprintf( 'Job %s selesai', $job['kind'] ), $campaign_id, $job_id );
+				Database::log( 'debug', sprintf( 'Job %s selesai', $job['kind'] ), $campaign_id, $job_id );
 			} catch ( \Throwable $e ) {
 				$settings = get_option( 'lpgen_settings', array() );
 				$max      = max( 1, min( 5, (int) ( $settings['max_retries'] ?? 2 ) ) );
@@ -935,13 +935,13 @@ final class Generator {
 
 			$job_campaign = (int) $job['campaign_id'];
 			$job_id       = (int) $job['id'];
-			Database::log( 'info', sprintf( 'Job %s dimulai via runner (attempt %d)', $job['kind'], (int) ( $job['attempts'] ?? 0 ) ), $job_campaign, $job_id );
+			Database::log( 'debug', sprintf( 'Job %s dimulai via runner (attempt %d)', $job['kind'], (int) ( $job['attempts'] ?? 0 ) ), $job_campaign, $job_id );
 
 			$outcome = 'done';
 			try {
 				self::dispatch( $job );
 				Database::update_job( $job_id, array( 'status' => 'done' ) );
-				Database::log( 'info', sprintf( 'Job %s selesai', $job['kind'] ), $job_campaign, $job_id );
+				Database::log( 'debug', sprintf( 'Job %s selesai', $job['kind'] ), $job_campaign, $job_id );
 			} catch ( \Throwable $e ) {
 				$outcome = 'retry';
 				$settings = get_option( 'lpgen_settings', array() );

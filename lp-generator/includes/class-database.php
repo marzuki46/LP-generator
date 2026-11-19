@@ -285,8 +285,10 @@ final class Database {
 			'failed'      => self::count_jobs( $campaign_id, 'failed' ),
 			'done'        => $total > 0 && 0 === $queued && 0 === $running,
 			'status'      => (string) ContentRepository::get_meta( $campaign_id, 'status', 'draft' ),
-			'next_run_at' => self::next_queued_time( $campaign_id ),
-			'items'       => self::queue_details( $campaign_id ),
+			'next_run_at'     => self::next_queued_time( $campaign_id ),
+			'next_run_local'  => Utils::display_time( gmdate( 'Y-m-d H:i:s', self::next_queued_time( $campaign_id ) ) ),
+			'timezone_label'  => Utils::timezone_label(),
+			'items'           => self::queue_details( $campaign_id ),
 		);
 	}
 
@@ -315,7 +317,8 @@ final class Database {
 				'item_id' => absint( $row['item_id'] ?? 0 ),
 				'kind'    => (string) ( $row['kind'] ?? '' ),
 				'status'  => (string) ( $row['status'] ?? '' ),
-				'run_at'  => (string) ( $row['run_at'] ?? '' ),
+				'run_at'      => (string) ( $row['run_at'] ?? '' ),
+				'run_at_local'=> Utils::display_time( (string) ( $row['run_at'] ?? '' ) ),
 				'attempts'=> absint( $row['attempts'] ?? 0 ),
 				'title'   => Utils::truncate( $title, 80 ),
 				'error'   => Utils::truncate( (string) ( $row['last_error'] ?? '' ), 120 ),
@@ -431,6 +434,7 @@ final class Database {
 			'success'   => 0,
 			'warning'   => 0,
 			'error'     => 0,
+			'debug'     => 0,
 			'campaigns' => 0,
 		);
 		$rows = $wpdb->get_results( "SELECT level, COUNT(*) AS total FROM {$table} GROUP BY level", ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -472,6 +476,10 @@ final class Database {
 		if ( in_array( $level, $allowed_levels, true ) ) {
 			$where[]  = 'level = %s';
 			$params[] = 'warn' === $level ? 'warn' : $level;
+		} else {
+			// Default view hides per-job debug noise unless explicitly requested.
+			$where[]  = 'level <> %s';
+			$params[] = 'debug';
 		}
 		$search = trim( sanitize_text_field( $search ) );
 		if ( '' !== $search ) {
