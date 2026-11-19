@@ -81,6 +81,7 @@ final class ContentRepository {
 		'topic_mode',
 		'manual_mofu_topics',
 		'manual_tofu_topics',
+		'research_sources',
 	);
 
 	/**
@@ -204,6 +205,9 @@ final class ContentRepository {
 			$context['framework_image_roles']   = wp_list_pluck( $generated['steps'], 'image_role' );
 			$context['framework_image_keywords'] = wp_list_pluck( $generated['steps'], 'image_keyword' );
 		}
+		$parsed_sources               = ResearchSource::parse( $context['research_sources'] ?? '' );
+		$context['research_sources']  = $parsed_sources['sources'];
+		$context['research_errors']   = $parsed_sources['errors'];
 		$context['entities']         = self::get_entities( $campaign_id );
 		$context['amazon_products']  = self::get_amazon_products( $campaign_id );
 		$context['tag_max']          = max( 1, min( 3, (int) ( $context['tag_max'] ?: 3 ) ) );

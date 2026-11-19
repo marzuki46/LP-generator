@@ -21,6 +21,7 @@ final class Plugin {
 	 */
 	public function run(): void {
 		add_action( 'init', array( ContentRepository::class, 'register_post_types' ) );
+		add_action( 'admin_init', array( Database::class, 'maybe_upgrade' ) );
 		add_action( 'lpgen_run_job', array( Generator::class, 'run_next' ) );
 		add_action( 'lpgen_daily_cleanup', array( Database::class, 'prune_logs' ) );
 

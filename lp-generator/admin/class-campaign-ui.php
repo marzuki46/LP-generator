@@ -272,6 +272,13 @@ final class CampaignUI {
 							<p class="description"><?php echo esc_html__( 'Satu judul per baris. Konten edukasi & kesadaran masalah yang relevan.', 'lp-generator' ); ?></p>
 						</td>
 					</tr>
+					<tr>
+						<th><label for="lpgen_research_sources"><?php echo esc_html__( 'Sumber Riset (JSON)', 'lp-generator' ); ?></label></th>
+						<td>
+							<textarea class="large-text" rows="6" name="lpgen[research_sources]" id="lpgen_research_sources" placeholder='{"sources":[{"url":"https://contoh.com/a","title":"Judul sumber","claims":[{"type":"price","text":"Kisaran biaya","as_of":"2026-10-12","exact_quote":"Kutipan persis dari sumber."}]}]}'><?php echo esc_textarea( (string) ( $values['research_sources'] ?? '' ) ); ?></textarea>
+							<p class="description"><?php echo esc_html__( 'JSON berisi sumber dan klaim yang boleh dipakai AI. Plugin tidak mencari web otomatis; tanggal pemeriksaan diisi dari pengaturan WordPress.', 'lp-generator' ); ?></p>
+						</td>
+					</tr>
 					</tbody>
 				</table>
 			</div>
@@ -541,6 +548,7 @@ final class CampaignUI {
 					break;
 				case 'manual_mofu_topics':
 				case 'manual_tofu_topics':
+				case 'research_sources':
 				case 'target_areas':
 				case 'benefits':
 				case 'bonus':

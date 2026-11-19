@@ -68,6 +68,12 @@ final class FunnelContent {
 	}
 
 	public static function assert_unique( string $title, string $content, array $exclude = array(), bool $topic = false ): void {
+		foreach ( TopicMemory::search( $title, 3 ) as $match ) {
+			$memory_id = (int) ( $match['item_id'] ?? 0 );
+			if ( ! empty( $match['duplicate_risk'] ) && ! in_array( $memory_id, $exclude, true ) ) {
+				throw new \RuntimeException( sprintf( 'Topik terlalu mirip dengan memori #%d (%s). Pilih sudut pembahasan baru.', $memory_id, (string) $match['keyword'] ) );
+			}
+		}
 		foreach ( self::corpus() as $post ) {
 			if ( in_array( (int) $post->ID, $exclude, true ) || '' === trim( $post->post_content ) ) { continue; }
 			$same_title = self::normalize( $title ) === self::normalize( $post->post_title );

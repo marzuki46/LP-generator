@@ -71,12 +71,12 @@ lpg_assert_true( ! str_contains( $lean, 'Judul lama 149' ), 'prompt pendukung me
 lpg_assert_true( str_contains( $lean, 'Judul lama 0' ), 'prompt pendukung tetap memberi contoh judul lama' );
 
 lpg_assert_same( 2026, CognitiveEngine::active_year(), 'tahun aktif terkunci 2026' );
-lpg_assert_true( str_contains( CognitiveEngine::time_line(), 'current year is 2026' ), 'anchor waktu menyebut tahun berjalan' );
+lpg_assert_true( str_contains( CognitiveEngine::time_line(), 'TIME ANCHOR (from WordPress settings)' ) && str_contains( CognitiveEngine::time_line(), 'Do not force the year into every article' ), 'anchor waktu berasal dari WP dan tidak dipaksakan' );
 
 $topic_plan_prompt = Prompts::build_topic( array_merge( $context, array( 'campaign_id' => 77, 'stage' => 'tofu' ) ) );
 lpg_assert_true( in_array( 'pain_points', $topic_plan_prompt['required'], true ), 'tahap 1 merencanakan pain points' );
 lpg_assert_true( in_array( 'target_table', $topic_plan_prompt['required'], true ), 'tahap 1 merencanakan tabel' );
-lpg_assert_true( str_contains( $topic_plan_prompt['user'], 'current year is 2026' ), 'prompt topik memuat anchor waktu' );
+lpg_assert_true( str_contains( $topic_plan_prompt['user'], 'TIME ANCHOR (from WordPress settings)' ), 'prompt topik memuat anchor waktu' );
 
 $plan_context = array(
 	'topic_pain_points' => array( 'Biaya tidak jelas', 'Proses lama' ),
@@ -103,3 +103,66 @@ lpg_assert_true( str_contains( $article_with_memory['user'], 'TOPIC MEMORY' ), '
 lpg_assert_true( str_contains( $article_with_memory['user'], 'TOPIC_PLAN' ), 'prompt artikel memuat rencana tahap 1' );
 $GLOBALS['funnel_posts'] = $saved_posts;
 $GLOBALS['funnel_meta']  = $saved_meta;
+
+$source_json = wp_json_encode(
+	array(
+		'sources' => array(
+			array(
+				'url' => 'https://contoh.test/harga',
+				'title' => 'Panduan Harga',
+				'claims' => array(
+					array( 'type' => 'price', 'text' => 'Kisaran biaya', 'as_of' => '2025-01-01', 'exact_quote' => 'Kisaran biaya Rp 3 juta.' ),
+				),
+			),
+		),
+	)
+);
+$missing_asof = json_decode( $source_json, true );
+unset( $missing_asof['sources'][0]['claims'][0]['as_of'] );
+$parsed = LPG\ResearchSource::parse( $missing_asof );
+lpg_assert_true( count( $parsed['errors'] ) > 0, 'klaim price tanpa as_of ditolak' );
+$valid_json = str_replace( '2025-01-01', '2026-10-12', $source_json );
+$parsed     = LPG\ResearchSource::parse( $valid_json );
+lpg_assert_same( 1, count( $parsed['sources'] ), 'sumber valid diterima' );
+lpg_assert_same( LPG\ResearchSource::anchor()['date'], $parsed['sources'][0]['checked_at'], 'checked_at diisi dari WP' );
+lpg_assert_true( LPG\ResearchSource::is_stale( array( 'as_of' => '2025-01-01' ) ), 'klaim tahun lampau ditandai basi' );
+lpg_assert_true( ! LPG\ResearchSource::is_stale( array( 'as_of' => '2026-10-12' ) ), 'klaim tahun berjalan tidak basi' );
+$source_line = LPG\ResearchSource::prompt_line( $parsed['sources'] );
+lpg_assert_true( str_contains( $source_line, '[1]' ) && str_contains( $source_line, 'Do not invent' ), 'prompt menyisipkan klaim bersumber' );
+lpg_assert_true( LPG\ResearchSource::quote_exists( 'Kisaran biaya Rp 3 juta.', $parsed['sources'] ), 'kutipan persis dikenali' );
+lpg_assert_true( ! LPG\ResearchSource::quote_exists( 'Harga pasti Rp 1 juta.', $parsed['sources'] ), 'kutipan rekaan ditolak' );
+
+$valid_outline = array(
+	'title' => 'Cara memilih jasa website di Solo',
+	'angle' => 'Panduan praktis untuk UMKM yang ingin website pertama.',
+	'intent' => 'informational',
+	'keywords' => array( 'website solo', 'jasa website', 'UMKM' ),
+	'outline' => array( 'Kebutuhan', 'Struktur', 'Biaya', 'Kontak' ),
+	'pain_points' => array( 'Biaya tidak jelas', 'Proses lama', 'Takut salah pilih' ),
+	'target_table' => null,
+	'funnel_link_angle' => 'Lanjutkan ke konsultasi untuk kebutuhan website Anda.',
+);
+lpg_assert_same( array(), LPG\StructuredOutput::validate( $valid_outline, LPG\StructuredOutput::topic_schema() ), 'outline valid lolos schema' );
+$invalid = $valid_outline; unset( $invalid['pain_points'] );
+lpg_assert_true( count( LPG\StructuredOutput::validate( $invalid, LPG\StructuredOutput::topic_schema() ) ) > 0, 'outline tanpa pain points ditolak' );
+$quoted = $valid_outline;
+$quoted['source_proof'] = array( 'exact_quote' => 'Kutipan yang tidak ada di sumber.' );
+lpg_assert_true( count( LPG\StructuredOutput::verify_quotes( $quoted, $parsed['sources'] ) ) > 0, 'kutipan tanpa sumber ditolak validator' );
+lpg_assert_same( 'write', LPG\Orchestrator::route_after_validate( true ), 'valid outline routing ke write' );
+lpg_assert_same( 'retry_outline', LPG\Orchestrator::route_after_validate( false, 0 ), 'outline gagal di-retry' );
+lpg_assert_same( 'stop', LPG\Orchestrator::route_after_validate( false, 2 ), 'retry dibatasi' );
+
+funnel_fixture( 9101, 'Item state', 'isi', 'lpgen_item' );
+lpg_assert_true( LPG\Orchestrator::transition( 9101, 'new', 'research' ), 'transisi new→research diterima' );
+lpg_assert_true( LPG\Orchestrator::transition( 9101, 'new', 'research' ), 'transisi yang sama idempoten' );
+lpg_assert_true( ! LPG\Orchestrator::transition( 9101, 'new', 'review' ), 'transisi ilegal ditolak' );
+
+$saved_memory = $GLOBALS['lpg_topic_memory_rows'] ?? null;
+$GLOBALS['lpg_topic_memory_rows'] = array();
+LPG\TopicMemory::add( array( 'item_id' => 1, 'keyword' => 'jasa website Solo terbaik', 'summary' => 'Perbandingan jasa website di Solo.', 'outline' => array( 'Biaya', 'Proses' ), 'entities' => array( 'website', 'Solo' ), 'embedding' => array( 1, 0 ), 'checked_at' => gmdate( 'Y-m-d H:i:s' ) ) );
+LPG\TopicMemory::add( array( 'item_id' => 2, 'keyword' => 'jasa website Solo terbaik', 'summary' => 'Perbandingan jasa website di Solo.', 'outline' => array( 'Biaya', 'Proses' ), 'entities' => array( 'website', 'Solo' ), 'embedding' => array( 1, 0 ), 'checked_at' => gmdate( 'Y-m-d H:i:s' ) ) );
+$found = LPG\TopicMemory::search( 'jasa website Solo terbaik', 2 );
+lpg_assert_same( 2, count( $found ), 'memori menyimpan dua entri ADD-only' );
+lpg_assert_true( $found[0]['duplicate_risk'], 'kemiripan tinggi ditandai duplikat' );
+lpg_assert_true( str_contains( LPG\TopicMemory::prompt_line( 'jasa website Solo terbaik' ), 'SEMANTIC MEMORY' ), 'peringatan memori masuk prompt' );
+if ( null === $saved_memory ) { unset( $GLOBALS['lpg_topic_memory_rows'] ); } else { $GLOBALS['lpg_topic_memory_rows'] = $saved_memory; }

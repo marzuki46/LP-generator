@@ -43,6 +43,7 @@ final class Activator {
 		update_option( 'lpgen_db_version', LPG_DB_VERSION );
 
 		if ( false === get_option( 'lpgen_settings' ) ) {
+			$index_key = Utils::generate_index_key();
 			add_option(
 				'lpgen_settings',
 				array(
@@ -53,6 +54,9 @@ final class Activator {
 					'timeout'                => 120,
 					'max_retries'            => 2,
 					'temperature'            => 0.7,
+					'embedding_enabled'      => 0,
+					'embedding_model'        => '',
+					'outline_review_enabled' => 0,
 					'index_enabled'          => 1,
 					'indexnow_key'           => $index_key,
 					'indexnow_key_location'  => '',

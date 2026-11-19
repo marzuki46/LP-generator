@@ -81,6 +81,24 @@ final class Settings {
 				'min'     => 0,
 				'max'     => 1,
 			),
+			'embedding_enabled'     => array(
+				'label'   => __( 'Aktifkan embedding 9Router', 'lp-generator' ),
+				'type'    => 'checkbox',
+				'section' => 'ai',
+				'desc'    => __( 'Memakai /v1/embeddings untuk kemiripan makna. Matikan untuk fallback leksikal tanpa biaya tambahan.', 'lp-generator' ),
+			),
+			'embedding_model'       => array(
+				'label'   => __( 'Model embedding', 'lp-generator' ),
+				'type'    => 'text',
+				'section' => 'ai',
+				'desc'    => __( 'ID model yang tersedia di 9Router, mis. text-embedding-3-small.', 'lp-generator' ),
+			),
+			'outline_review_enabled' => array(
+				'label'   => __( 'Tinjau outline sebelum artikel', 'lp-generator' ),
+				'type'    => 'checkbox',
+				'section' => 'ai',
+				'desc'    => __( 'Menandai state outline sebagai review. Alur antrean tetap berjalan; gunakan Review UI untuk mengedit.', 'lp-generator' ),
+			),
 			'index_enabled'         => array(
 				'label'   => __( 'Aktifkan indexing', 'lp-generator' ),
 				'type'    => 'checkbox',

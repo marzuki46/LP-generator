@@ -78,6 +78,56 @@ final class AiClient {
 		throw new \RuntimeException( 'AI generation failed: ' . $last_error );
 	}
 
+	/** Embed texts via 9Router /v1/embeddings; empty result means caller uses lexical fallback. */
+	public static function embed( array $texts ): array {
+		$settings = get_option( 'lpgen_settings', array() );
+		if ( empty( $settings['embedding_enabled'] ) || '' === trim( (string) ( $settings['embedding_model'] ?? '' ) ) ) {
+			return array();
+		}
+		$texts = array_values( array_filter( array_map( 'strval', $texts ) ) );
+		if ( ! $texts ) {
+			return array();
+		}
+		$base = rtrim( (string) ( $settings['ninerouter_url'] ?? '' ), '/' );
+		$base = (string) preg_replace( '#/v1/?$#i', '', $base );
+		$key  = trim( (string) ( $settings['ninerouter_key'] ?? '' ) );
+		if ( '' === $base || false === wp_http_validate_url( $base ) ) {
+			return array();
+		}
+		$headers = array( 'Content-Type' => 'application/json' );
+		if ( '' !== $key ) {
+			$headers['Authorization'] = 'Bearer ' . $key;
+		}
+		$response = wp_remote_post(
+			$base . '/v1/embeddings',
+			array(
+				'timeout' => max( 10, min( 120, (int) ( $settings['timeout'] ?? 60 ) ) ),
+				'headers' => $headers,
+				'body'    => wp_json_encode(
+					array(
+						'model' => (string) $settings['embedding_model'],
+						'input' => $texts,
+					)
+				),
+			)
+		);
+		if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
+			Database::log( 'warning', 'Embedding 9Router gagal; memakai fallback leksikal.' );
+			return array();
+		}
+		$data = json_decode( (string) wp_remote_retrieve_body( $response ), true );
+		if ( ! is_array( $data ) || ! isset( $data['data'] ) || ! is_array( $data['data'] ) ) {
+			return array();
+		}
+		$vectors = array();
+		foreach ( $data['data'] as $row ) {
+			if ( is_array( $row ) && isset( $row['embedding'] ) && is_array( $row['embedding'] ) ) {
+				$vectors[] = array_map( 'floatval', $row['embedding'] );
+			}
+		}
+		return count( $vectors ) === count( $texts ) ? $vectors : array();
+	}
+
 	/**
 	 * Perform one HTTP request to 9Router.
 	 *

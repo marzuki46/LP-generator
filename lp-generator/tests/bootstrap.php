@@ -137,14 +137,18 @@ if ( ! function_exists( 'wp_http_validate_url' ) ) {
 }
 
 require_once dirname( __DIR__ ) . '/includes/class-utils.php';
+require_once dirname( __DIR__ ) . '/includes/class-research-source.php';
 require_once dirname( __DIR__ ) . '/includes/class-frameworks.php';
 require_once dirname( __DIR__ ) . '/includes/class-design-contract.php';
 require_once dirname( __DIR__ ) . '/includes/class-prompts.php';
 require_once dirname( __DIR__ ) . '/includes/class-amazon.php';
 require_once dirname( __DIR__ ) . '/includes/class-image.php';
 require_once dirname( __DIR__ ) . '/includes/class-indexer.php';
+require_once dirname( __DIR__ ) . '/includes/class-topic-memory.php';
 require_once dirname( __DIR__ ) . '/includes/class-funnel-content.php';
 require_once dirname( __DIR__ ) . '/includes/class-cognitive-engine.php';
+require_once dirname( __DIR__ ) . '/includes/class-structured-output.php';
+require_once dirname( __DIR__ ) . '/includes/class-orchestrator.php';
 require_once dirname( __DIR__ ) . '/includes/class-visual-identity.php';
 require_once dirname( __DIR__ ) . '/includes/class-landing-page.php';
 require_once dirname( __DIR__ ) . '/includes/class-aida-layout.php';

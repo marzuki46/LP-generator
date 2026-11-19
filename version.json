@@ -1,9 +1,9 @@
 {
-  "version": "1.6.0",
-  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.6.0.zip",
+  "version": "1.7.0",
+  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.7.0.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>Smart Cognitive Reasoning: anchor tahun 2026, memori topik terbit, dan perencanaan outline dua tahap sebelum penulisan penuh.</li><li>Identity visual tunggal untuk semua gambar: ilustrasi teknis editorial navy/orange/gold, crop 16:9, dan nama WebP deskriptif.</li><li>Prompt gambar hanya mengganti topik, konsep visual, dan subjek utama; palet, framing, dan aturan visual tetap.</li></ul>"
+  "changelog": "<ul><li>Waktu diambil dari pengaturan WordPress; tiap sumber punya checked_at dan klaim punya as_of, tanpa tahun dipaksa ke semua artikel.</li><li>Sumber riset diinput user dengan exact_quote terverifikasi; angka, harga, dan aturan tanpa sumber ditolak.</li><li>Validasi keluaran terstruktur dengan retry terbatas dan orchestration dua tahap bert checkpoint.</li><li>Memori topik lintas campaign ADD-only dengan embedding 9Router, fallback leksikal, dan penanda risiko duplikat.</li></ul>"
 }

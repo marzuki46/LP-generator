@@ -2,7 +2,19 @@
 
 Plugin WordPress yang mengubah satu campaign offer menjadi funnel konten lengkap (TOFU → MOFU → BOFU) memakai 9Router AI, lalu mengirim URL baru ke Google PuSH + IndexNow **10 detik setelah publish**.
 
-Versi saat ini: **1.6.0**.
+Versi saat ini: **1.7.0**.
+
+## Pembaruan v1.7.0 — Riset bersumber, memori, dan orkestrasi kognitif
+
+Mengadaptasi pola dari STORM, mem0, Sentence Transformers, LangGraph, dan Instructor tanpa dependency Python:
+
+- Waktu diambil dari pengaturan WordPress. Setiap sumber punya `checked_at`, setiap klaim punya `as_of`; tahun tidak dipaksa masuk ke semua artikel.
+- Sumber riset diinput user sebagai JSON berisi URL, judul, tanggal, dan klaim dengan `exact_quote`. Plugin menolak klaim price/stat/rule tanpa `as_of` dan kutipan yang tidak cocok.
+- Keluaran AI divalidasi dengan schema + retry terbatas dan pesan error (Instructor-style).
+- Alur `research → outline → validate → write` punya state, checkpoint, dan conditional retry (LangGraph-style).
+- Memori topik lintas campaign disimpan ADD-only di tabel `wp_lpg_topic_memory`, dengan embedding 9Router `/v1/embeddings`, fallback leksikal, dan penanda risiko duplikat.
+
+Riset sumber primer: [`docs/12-riset-repo-pendukung.md`](docs/12-riset-repo-pendukung.md). Detail implementasi: [`docs/13-kognitif-v1.7.0.md`](docs/13-kognitif-v1.7.0.md).
 
 ## Pembaruan v1.6.0 — Smart Cognitive Reasoning & Anti-Halusinasi
 
@@ -62,12 +74,12 @@ Lihat [`docs/05-funnel-lokal.md`](docs/05-funnel-lokal.md) untuk contoh campaign
 ## Implementasi
 
 - `lp-generator/` — source plugin, siap di-copy ke `wp-content/plugins/lp-generator/`.
-- `lp-generator-1.6.0.zip` — paket siap upload lewat **Plugins → Add New → Upload Plugin**.
+- `lp-generator-1.7.0.zip` — paket siap upload lewat **Plugins → Add New → Upload Plugin**.
 - `version.json` — manifest update untuk fitur *one-click update* dari Github.
 
 ## Instalasi & update
 
-1. Upload `lp-generator-1.6.0.zip` lewat **Plugins → Add New → Upload Plugin**, lalu aktifkan.
+1. Upload `lp-generator-1.7.0.zip` lewat **Plugins → Add New → Upload Plugin**, lalu aktifkan.
 2. Isi kredensial 9Router di **LP Generator → Settings → AI**.
 3. Saat ada rilis baru, WordPress akan menampilkan notifikasi **Update now** di halaman **Plugins** — tinggal klik. Manifest yang dibaca plugin terkunci ke `https://raw.githubusercontent.com/marzuki46/LP-generator/main/version.json`, dan paket update diambil dari file ZIP yang ada di repo yang sama. Tidak perlu upload manual lagi.
 
@@ -102,7 +114,7 @@ php tests\run.php
 php tests\smoke-bootstrap.php
 ```
 
-Terakhir dijalankan pada paket v1.6.0: **843 test passed, 0 failed**; `php -l` untuk file yang diubah lolos; bootstrap & hook PASS. Pengujian browser untuk tombol Generate juga PASS. Generate/publish langsung ke WordPress dan 9Router produksi belum diuji pada sesi ini.
+Terakhir dijalankan pada paket v1.7.0: **863 test passed, 0 failed**; `php -l` untuk file yang diubah lolos; bootstrap & hook PASS. Pengujian browser untuk tombol Generate juga PASS. Generate/publish langsung ke WordPress dan 9Router produksi belum diuji pada sesi ini.
 
 ## Alur singkat
 

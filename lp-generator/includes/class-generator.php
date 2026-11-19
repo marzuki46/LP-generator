@@ -445,6 +445,8 @@ final class Generator {
 		if ( empty( $campaign ) || empty( $item ) ) {
 			throw new \RuntimeException( 'campaign_or_item_missing' );
 		}
+		$settings = get_option( 'lpgen_settings', array() );
+		$settings = is_array( $settings ) ? $settings : array();
 
 		$payload = json_decode( (string) ( $job['payload'] ?? '{}' ), true );
 		$payload = is_array( $payload ) ? $payload : array();
@@ -475,6 +477,9 @@ final class Generator {
 			$context = FunnelContent::prepare( $context, $item_id );
 			$prompt = Prompts::build_article( $context );
 		} elseif ( 'topic' === $kind ) {
+			if ( 'new' === (string) ( Orchestrator::state( $item_id )['stage'] ?? '' ) ) {
+				Orchestrator::transition( $item_id, 'new', 'research', array( 'topic' => $context['topic_title'] ?? '' ) );
+			}
 			$prompt = Prompts::build_topic( $context );
 		} else {
 			if ( empty( $campaign['framework_plan'] ) ) {
@@ -492,10 +497,29 @@ final class Generator {
 			$prompt = Prompts::build_lp( $context );
 		}
 
-		$result = AiClient::generate( $prompt );
+		$schema = 'topic' === $kind ? StructuredOutput::topic_schema() : ( 'article' === $kind ? StructuredOutput::article_schema() : array() );
+		if ( $schema ) {
+			$result = StructuredOutput::generate_validated( $prompt, $schema, (array) ( $campaign['research_sources'] ?? array() ), 1 );
+			if ( ! empty( $result['validation_errors'] ) ) {
+				throw new \RuntimeException( 'Rencana AI tidak lolos validasi: ' . implode( '; ', $result['validation_errors'] ) );
+			}
+		} else {
+			$result = AiClient::generate( $prompt );
+		}
 		if ( 'topic' !== $kind ) { $result['structured']['entities'] = $context['entities']; }
 		if ( 'lp' === $kind ) { $result['structured'] = DesignContract::bind_content( $result['structured'], $campaign ); }
 		FunnelContent::validate_content( $result['structured'], $kind );
+		if ( 'topic' === $kind ) {
+			if ( 'research' === (string) ( Orchestrator::state( $item_id )['stage'] ?? '' ) ) {
+				Orchestrator::transition( $item_id, 'research', 'outline' );
+			}
+			Orchestrator::checkpoint( $item_id, 'outline', array_merge( $result['structured'], array( 'review_requested' => ! empty( $settings['outline_review_enabled'] ) ) ) );
+			Orchestrator::transition( $item_id, 'outline', 'validated', array( 'attempts' => (int) ( $result['attempts'] ?? 1 ), 'review' => ! empty( $settings['outline_review_enabled'] ) ) );
+			Database::log( 'info', sprintf( 'Outline #%d lolos validasi (%d attempt)', $item_id, (int) ( $result['attempts'] ?? 1 ) ), $campaign_id );
+		}
+		if ( 'article' === $kind && 'validated' === (string) ( Orchestrator::state( $item_id )['stage'] ?? '' ) ) {
+			Orchestrator::transition( $item_id, 'validated', 'writing' );
+		}
 		if ( 'lp' === $kind ) { LandingPage::validate( $result['structured'], $campaign ); $result['structured']['framework_fingerprint'] = Frameworks::fingerprint( $campaign ); }
 		$preview = Publisher::build_blocks( $result['structured'], $kind, $campaign );
 		FunnelContent::assert_unique( (string) ( $result['structured']['title'] ?? '' ), $preview, FunnelContent::exclusions( $item_id ), 'topic' === $kind );
@@ -509,6 +533,10 @@ final class Generator {
 			: ImagePipeline::prepare_for_item( $campaign_id, $item_id, $context );
 		$blocks = Publisher::build_blocks( $result['structured'], $kind, $campaign, $images );
 		ContentRepository::save_item_result( $item_id, $result['structured'], $result['model'], $result['tokens'], $blocks );
+		if ( 'topic' === $kind ) { TopicMemory::add_from_item( $item_id ); }
+		if ( 'writing' === (string) ( Orchestrator::state( $item_id )['stage'] ?? '' ) ) {
+			Orchestrator::transition( $item_id, 'writing', 'review' );
+		}
 		Database::log(
 			'info',
 			sprintf( 'Item %d generated with %s (%d tokens)', $item_id, $result['model'], $result['tokens'] ),
@@ -550,6 +578,7 @@ final class Generator {
 		}
 		$permalink = (string) get_permalink( $post_id );
 		Database::log( 'success', sprintf( 'Item %d published as post %d: %s', $item_id, $post_id, $permalink ), $campaign_id );
+		if ( 'article' === (string) ( $item['kind'] ?? '' ) ) { TopicMemory::add_from_item( $item_id ); }
 	}
 
 	/**

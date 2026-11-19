@@ -3,7 +3,7 @@
  * Plugin Name:       LP Generator
  * Plugin URI:        https://example.com/lp-generator
  * Description:       Generates a complete TOFU/MOFU/BOFU funnel — landing page plus supporting articles — from a single offer campaign using 9Router AI, then submits new URLs to PuSH and IndexNow 10 seconds after publishing.
- * Version:           1.6.0
+ * Version:           1.7.0
  * Update URI:        https://github.com/marzuki46/LP-generator
  * Requires at least: 6.4
  * Requires PHP:      8.1
@@ -22,14 +22,15 @@ namespace LPG;
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'LPG_VERSION', '1.6.0' );
+define( 'LPG_VERSION', '1.7.0' );
 define( 'LPG_FILE', __FILE__ );
 define( 'LPG_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LPG_URL', plugin_dir_url( __FILE__ ) );
-define( 'LPG_DB_VERSION', '1' );
+define( 'LPG_DB_VERSION', '2' );
 define( 'LPG_TEXT_DOMAIN', 'lp-generator' );
 
 require_once LPG_PATH . 'includes/class-utils.php';
+require_once LPG_PATH . 'includes/class-research-source.php';
 require_once LPG_PATH . 'includes/class-frameworks.php';
 require_once LPG_PATH . 'includes/class-design-contract.php';
 require_once LPG_PATH . 'includes/class-prompts.php';
@@ -39,8 +40,11 @@ require_once LPG_PATH . 'includes/class-ai-client.php';
 require_once LPG_PATH . 'includes/class-amazon.php';
 require_once LPG_PATH . 'includes/class-image.php';
 require_once LPG_PATH . 'includes/class-indexer.php';
+require_once LPG_PATH . 'includes/class-topic-memory.php';
 require_once LPG_PATH . 'includes/class-funnel-content.php';
 require_once LPG_PATH . 'includes/class-cognitive-engine.php';
+require_once LPG_PATH . 'includes/class-structured-output.php';
+require_once LPG_PATH . 'includes/class-orchestrator.php';
 require_once LPG_PATH . 'includes/class-visual-identity.php';
 require_once LPG_PATH . 'includes/class-landing-page.php';
 require_once LPG_PATH . 'includes/class-aida-layout.php';

@@ -29,11 +29,11 @@ final class CognitiveEngine {
 
 	/** Temporal anchor injected into every content prompt. */
 	public static function time_line(): string {
-		$year = self::active_year();
+		$anchor = class_exists( ResearchSource::class ) ? ResearchSource::anchor() : array( 'year' => self::active_year(), 'datetime' => gmdate( 'Y-m-d H:i:s' ), 'timezone' => 'UTC' );
 		return sprintf(
-			'TEMPORAL ANCHOR: The current year is %d. Never describe %d or earlier as "this year", "today" or "currently". Only mention earlier years when explicitly discussing history. Do not invent dates, "latest" claims, statistics or trends that require real-time verification.',
-			$year,
-			$year - 1
+			'TIME ANCHOR (from WordPress settings): %s (%s). Use this only to interpret checked_at, as_of and dates inside supplied sources. Do not force the year into every article. Never describe an earlier year as "this year" or "currently". Do not invent dates, "latest" claims, statistics or trends that require real-time verification.',
+			(string) $anchor['datetime'],
+			(string) $anchor['timezone']
 		);
 	}
 

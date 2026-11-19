@@ -67,8 +67,41 @@ final class Database {
 			KEY job_id (job_id)
 		) {$charset};";
 
+		$memory = self::table( 'topic_memory' );
+		$sql   .= "
+
+		CREATE TABLE {$memory} (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			campaign_id bigint(20) unsigned NOT NULL DEFAULT 0,
+			item_id bigint(20) unsigned NOT NULL DEFAULT 0,
+			keyword varchar(255) NOT NULL DEFAULT '',
+			intent varchar(40) NOT NULL DEFAULT '',
+			summary text NOT NULL,
+			outline longtext NOT NULL,
+			angle text NOT NULL,
+			entities longtext NOT NULL,
+			url varchar(500) NOT NULL DEFAULT '',
+			embedding longtext NOT NULL,
+			created_at datetime NOT NULL,
+			checked_at datetime NOT NULL,
+			PRIMARY KEY  (id),
+			KEY campaign_id (campaign_id),
+			KEY item_id (item_id),
+			KEY keyword_idx (keyword(191)),
+			KEY checked_at (checked_at)
+		) {$charset};";
+
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		dbDelta( $sql );
+	}
+
+	/** Run schema upgrades after a plugin update without waiting for reactivation. */
+	public static function maybe_upgrade(): void {
+		$version = (string) get_option( 'lpgen_db_version', '1' );
+		if ( version_compare( $version, (string) LPG_DB_VERSION, '<' ) ) {
+			self::create_tables();
+			update_option( 'lpgen_db_version', LPG_DB_VERSION );
+		}
 	}
 
 	/**

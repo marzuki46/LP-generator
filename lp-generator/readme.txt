@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.6.0
+Stable tag: 1.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,14 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.7.0 =
+* Time anchor now comes from WordPress settings with per-source checked_at and as_of; no forced year in every article.
+* User-supplied research sources with verified exact quotes; uncited prices, statistics and rules are rejected.
+* Structured output schema with bounded re-ask and quote verification (Instructor-style).
+* Stateful two-stage orchestration with checkpoints and conditional retry (LangGraph-style).
+* ADD-only cross-campaign topic memory table with 9Router embeddings, lexical fallback and semantic duplicate risk.
+
 
 = 1.6.0 =
 * Smart Cognitive Reasoning: temporal anchor 2026, long-term published-topic memory and two-stage outline planning before article writing.
