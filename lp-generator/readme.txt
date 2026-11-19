@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.5.2
+Stable tag: 1.5.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,13 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.5.3 =
+* Assign design_id, section_id, image_slot, hint and layout from the design contract on the server; AI no longer has to echo structural keys, removing common invalid_json_shape failures.
+* Slim supporting-content prompts: at most 20 sample titles, no full framework plan or entity notes. Hard duplicate checks still run in PHP.
+* Regenerate an expired framework plan automatically before an LP job instead of failing three times.
+* Report which required JSON keys are missing or why decoding failed.
+
 
 = 1.5.2 =
 * Fix Generate/Prepare Framework failing before AJAX because request data was initialized too late.

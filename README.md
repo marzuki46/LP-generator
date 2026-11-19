@@ -2,7 +2,15 @@
 
 Plugin WordPress yang mengubah satu campaign offer menjadi funnel konten lengkap (TOFU → MOFU → BOFU) memakai 9Router AI, lalu mengirim URL baru ke Google PuSH + IndexNow **10 detik setelah publish**.
 
-Versi saat ini: **1.5.2**.
+Versi saat ini: **1.5.3**.
+
+## Pembaruan v1.5.3 — Token lebih hemat dan LP tidak gagal karena struktur JSON
+
+Kontrak desain sekarang diterapkan server: AI hanya menulis isi, sedangkan `design_id`, `section_id`, `image_slot`, `hint` dan `layout` diisi otomatis dari kontrak. Ini menghilangkan kegagalan `invalid_json_shape` karena AI lupa atau salah mengetik kunci struktural.
+
+Prompt artikel juga dipangkas (maksimal 20 judul lama, tanpa rencana framework penuh dan catatan entitas). Rencana framework yang kedaluwarsa dibuat ulang otomatis sebelum LP dibuat. Internal link tetap dipasang saat publish, setelah permalink BOFU tersedia.
+
+Lihat [`docs/10-token-dan-lp-1.5.3.md`](docs/10-token-dan-lp-1.5.3.md) untuk analisis log, angka prompt sebelum/sesudah, dan batas pengujian.
 
 ## Pembaruan v1.5.2 — Generate + kontrak desain 12 framework
 
@@ -42,12 +50,12 @@ Lihat [`docs/05-funnel-lokal.md`](docs/05-funnel-lokal.md) untuk contoh campaign
 ## Implementasi
 
 - `lp-generator/` — source plugin, siap di-copy ke `wp-content/plugins/lp-generator/`.
-- `lp-generator-1.5.2.zip` — paket siap upload lewat **Plugins → Add New → Upload Plugin**.
+- `lp-generator-1.5.3.zip` — paket siap upload lewat **Plugins → Add New → Upload Plugin**.
 - `version.json` — manifest update untuk fitur *one-click update* dari Github.
 
 ## Instalasi & update
 
-1. Upload `lp-generator-1.5.2.zip` lewat **Plugins → Add New → Upload Plugin**, lalu aktifkan.
+1. Upload `lp-generator-1.5.3.zip` lewat **Plugins → Add New → Upload Plugin**, lalu aktifkan.
 2. Isi kredensial 9Router di **LP Generator → Settings → AI**.
 3. Saat ada rilis baru, WordPress akan menampilkan notifikasi **Update now** di halaman **Plugins** — tinggal klik. Manifest yang dibaca plugin terkunci ke `https://raw.githubusercontent.com/marzuki46/LP-generator/main/version.json`, dan paket update diambil dari file ZIP yang ada di repo yang sama. Tidak perlu upload manual lagi.
 
@@ -82,7 +90,7 @@ php tests\run.php
 php tests\smoke-bootstrap.php
 ```
 
-Terakhir dijalankan pada paket v1.5.2: **815 test passed, 0 failed**; `php -l` untuk file yang diubah lolos; bootstrap & hook PASS. Pengujian browser untuk tombol Generate juga PASS. Generate/publish langsung ke WordPress dan 9Router produksi belum diuji pada sesi ini.
+Terakhir dijalankan pada paket v1.5.3: **825 test passed, 0 failed**; `php -l` untuk file yang diubah lolos; bootstrap & hook PASS. Pengujian browser untuk tombol Generate juga PASS. Generate/publish langsung ke WordPress dan 9Router produksi belum diuji pada sesi ini.
 
 ## Alur singkat
 

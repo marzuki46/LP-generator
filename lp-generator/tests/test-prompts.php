@@ -55,3 +55,15 @@ lpg_assert_true( in_array( 'problem', $suggest['required'], true ), 'suggestion 
 lpg_assert_true( in_array( 'promise', $suggest['required'], true ), 'suggestion required promise' );
 lpg_assert_true( false !== strpos( $suggest['user'], 'Jasa Website Solo' ), 'suggestion memuat keyword user' );
 lpg_assert_true( false !== strpos( $suggest['user'], 'Bahasa Indonesia' ), 'suggestion meminta Bahasa Indonesia' );
+
+$heavy                    = $context;
+$heavy['framework_plan']  = array( 'design_id' => 'pas-1', 'steps' => array( array( 'name' => 'Problem', 'heading_goal' => str_repeat( 'tujuan panjang ', 40 ) ) ) );
+$heavy['entities']        = array( array( 'term' => 'entitas', 'notes' => str_repeat( 'catatan panjang ', 40 ) ) );
+$heavy['existing_titles'] = array();
+for ( $i = 0; $i < 150; $i++ ) { $heavy['existing_titles'][] = 'Judul lama ' . $i; }
+$full = Prompts::format_context( $heavy );
+$lean = Prompts::format_lean_context( $heavy );
+lpg_assert_true( strlen( $lean ) < strlen( $full ) / 2, 'prompt pendukung jauh lebih ringkas' );
+lpg_assert_true( ! str_contains( $lean, 'framework_plan' ), 'prompt pendukung tidak mengirim rencana penuh' );
+lpg_assert_true( ! str_contains( $lean, 'Judul lama 149' ), 'prompt pendukung memotong daftar judul lama' );
+lpg_assert_true( str_contains( $lean, 'Judul lama 0' ), 'prompt pendukung tetap memberi contoh judul lama' );

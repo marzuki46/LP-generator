@@ -13,13 +13,14 @@ DesignContract (12 preset, data statis)
   → prompt perencana framework: AI mengusulkan tujuan copy + image keyword
   → bind_plan(): server menimpa hint, layout, role, section_id, image_slot
   → fingerprint campaign ikut menyimpan design_id
-  → prompt penulis LP: STRICT DESIGN CONTRACT dikirim lagi ke AI
+  → prompt penulis LP: kontrak dikirim sebagai konteks, bukan kunci wajib AI
+  → bind_content(): server menetapkan design_id, section_id, image_slot, hint, layout
   → LandingPage::validate(): design_id + urutan + section_id + image_slot diperiksa
   → ImagePipeline: upload/AI/Bing mengikuti slot & upload_key kontrak
   → renderer: AIDA memakai AidaLayout, 11 preset lain memakai renderer slot-aware
 ```
 
-Jika AI mengirim `section_id` tertukar, `image_slot` asing, `design_id` campaign lain, atau URL gambar sendiri, hasil ditolak dan masuk mekanisme retry. Plugin tidak diam-diam memindahkan konten ke section lain.
+Sejak 1.5.3, AI tidak perlu mengirim kunci struktural sama sekali; `bind_content()` menulisnya dari kontrak sebelum validasi. Jika AI tetap menyisipkan URL gambar sendiri, hasil ditolak dan masuk mekanisme retry. Plugin tidak diam-diam memindahkan konten ke section lain. Lihat [`10-token-dan-lp-1.5.3.md`](10-token-dan-lp-1.5.3.md).
 
 ## Daftar kontrak
 

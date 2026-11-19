@@ -228,6 +228,38 @@ final class DesignContract {
 		return $plan;
 	}
 
+	/**
+	 * Apply structural IDs to AI copy. The AI writes copy only; section IDs,
+	 * image slots, hints and layouts are deterministic contract data. This keeps
+	 * the required AI JSON small and removes a whole class of invalid_shape
+	 * failures where a model omitted or mistyped a structural key.
+	 */
+	public static function bind_content( array $data, array $campaign ): array {
+		if ( ! self::active( $campaign ) ) {
+			return $data;
+		}
+		$slug      = sanitize_key( (string) ( $campaign['framework_slug'] ?? '' ) );
+		$design_id = self::id_for( $slug );
+		$contract  = self::contract( $slug );
+		if ( '' === $design_id || ! $contract ) {
+			return $data;
+		}
+		$data['design_id'] = $design_id;
+		$sections = isset( $data['sections'] ) && is_array( $data['sections'] ) ? array_values( $data['sections'] ) : array();
+		foreach ( $contract as $index => $slot ) {
+			if ( ! isset( $sections[ $index ] ) || ! is_array( $sections[ $index ] ) ) {
+				continue;
+			}
+			$sections[ $index ]['step']       = $index + 1;
+			$sections[ $index ]['section_id'] = $slot['id'];
+			$sections[ $index ]['image_slot'] = $slot['image_slot'];
+			$sections[ $index ]['hint']       = $slot['hint'];
+			$sections[ $index ]['layout']     = $slot['layout'];
+		}
+		$data['sections'] = $sections;
+		return $data;
+	}
+
 	/** Reject AI output that tries to move content or invent image addresses. */
 	public static function validate( array $data, array $campaign ): void {
 		$slug       = sanitize_key( (string) ( $campaign['framework_slug'] ?? '' ) );

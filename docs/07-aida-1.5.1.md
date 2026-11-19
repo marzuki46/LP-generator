@@ -36,7 +36,7 @@ Kode desain AIDA: `aida-1` (tetap). Preset lain memakai `${slug}-1`, misalnya `p
 | 3 | `aida-desire` | Manfaat, dengan 3–6 kartu | `aida-desire-visual` |
 | 4 | `aida-action` | Ajakan dan langkah berikutnya | Tidak ada |
 
-Server memberi ID ini pada rencana campaign. AI penulis wajib mengembalikan `design_id`, `section_id`, `image_slot`, urutan, hint dan layout yang cocok. Headline dan isi Attention harus sama dengan title/intro hero. Pada AIDA ini, tabel dan quote terpisah tidak diterima; hero dan Action tidak menerima kartu/bullets tambahan. Konten salah kontrak ditahan dan menggunakan mekanisme retry, bukan diam-diam dipindahkan ke section lain.
+Server memberi ID ini pada rencana campaign. Pada 1.5.1 AI penulis diminta mengembalikan `design_id`, `section_id`, `image_slot`, urutan, hint dan layout yang cocok; sejak 1.5.3 kunci struktural tersebut diisi server dari kontrak, jadi AI hanya menulis isi. Headline dan isi Attention harus sama dengan title/intro hero. Pada AIDA ini, tabel dan quote terpisah tidak diterima; hero dan Action tidak menerima kartu/bullets tambahan. Konten salah kontrak ditahan dan menggunakan mekanisme retry, bukan diam-diam dipindahkan ke section lain.
 
 Sejak 1.5.2 pemeriksaan struktur (`design_id`, jumlah section, `section_id`, `image_slot`, larangan URL gambar dari AI) berlaku untuk semua kontrak aktif. Aturan AIDA di atas tetap menjadi pembatas tambahan khusus AIDA.
 

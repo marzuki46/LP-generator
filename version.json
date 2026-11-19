@@ -1,9 +1,9 @@
 {
-  "version": "1.5.2",
-  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.5.2.zip",
+  "version": "1.5.3",
+  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.5.3.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>Perbaikan tombol Generate yang berhenti sebelum mengirim permintaan.</li><li>Progres antrean dan pesan gagal terlihat, tombol dapat dicoba ulang.</li><li>Perbaikan antrean publish, auto-publish dan status job berjalan/terjadwal.</li><li>Kontrak desain 12 framework: AI wajib mengembalikan design_id, section_id dan image_slot sesuai desain; regenerate framework campaign setelah update.</li></ul>"
+  "changelog": "<ul><li>ID desain, section dan slot gambar kini diisi server dari kontrak; AI hanya menulis isi, sehingga invalid_json_shape jauh lebih jarang.</li><li>Prompt artikel dipangkas: maksimal 20 judul lama dan tanpa rencana framework penuh; pemeriksaan duplikat tetap dijalankan PHP.</li><li>Rencana framework kedaluwarsa dibuat ulang otomatis sebelum LP dibuat.</li><li>Pesan kesalahan JSON menyebut kunci yang hilang atau penyebab decode gagal.</li></ul>"
 }

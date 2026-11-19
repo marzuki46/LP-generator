@@ -42,8 +42,16 @@ final class AiClient {
 					if ( ! is_array( $decoded ) && preg_match( '/(\{[\s\S]*\}|\[[\s\S]*\])/', $clean, $m ) ) {
 						$decoded = json_decode( $m[1], true );
 					}
-					if ( ! is_array( $decoded ) || ! self::has_required_keys( $decoded, (array) ( $prompt['required'] ?? array() ) ) ) {
-						throw new \RuntimeException( 'invalid_json_shape: ' . Utils::truncate( $clean, 80 ) );
+					if ( ! is_array( $decoded ) ) {
+						throw new \RuntimeException( 'invalid_json_shape: ' . ( function_exists( 'json_last_error_msg' ) ? json_last_error_msg() : 'decode_failed' ) . ' — ' . Utils::truncate( $clean, 80 ) );
+					}
+					$required = (array) ( $prompt['required'] ?? array() );
+					$missing  = array();
+					foreach ( $required as $key ) {
+						if ( ! array_key_exists( $key, $decoded ) ) { $missing[] = $key; }
+					}
+					if ( $missing ) {
+						throw new \RuntimeException( 'invalid_json_shape missing=' . implode( ',', $missing ) . ': ' . Utils::truncate( $clean, 80 ) );
 					}
 					return array(
 						'content'    => $clean,

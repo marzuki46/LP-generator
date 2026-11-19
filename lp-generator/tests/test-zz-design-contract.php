@@ -41,7 +41,20 @@ lpg_assert_true( str_contains( $prompt['user'], 'pas-1' ) && str_contains( $prom
 $fixture  = lpg_lp_fixture( 'pas' );
 $prompt   = Prompts::build_lp( $fixture['campaign'] );
 lpg_assert_true( str_contains( $prompt['user'], 'pas-1' ) && str_contains( $prompt['user'], 'pas-solution' ), 'prompt penulis LP menyuntik kontrak PAS' );
-lpg_assert_true( in_array( 'design_id', $prompt['required'], true ), 'penulis LP wajib mengembalikan design_id' );
+lpg_assert_true( ! in_array( 'design_id', $prompt['required'], true ), 'AI tidak perlu mengirim design_id struktural' );
+lpg_assert_true( str_contains( $prompt['user'], 'do NOT return those keys' ), 'prompt menjelaskan ID diisi plugin' );
+
+$bound = DesignContract::bind_content( $fixture['data'], $fixture['campaign'] );
+lpg_assert_same( 'pas-1', $bound['design_id'], 'bind_content menetapkan kode desain' );
+lpg_assert_same( 'pas-solution', $bound['sections'][2]['section_id'], 'bind_content menetapkan section ID' );
+lpg_assert_same( 'pas-solution-visual', $bound['sections'][2]['image_slot'], 'bind_content menetapkan slot gambar' );
+$wrong            = $fixture['data'];
+$wrong['design_id'] = 'aida-1';
+$wrong['sections'][0]['section_id'] = 'aida-attention';
+$bound = DesignContract::bind_content( $wrong, $fixture['campaign'] );
+lpg_assert_same( 'pas-1', $bound['design_id'], 'bind_content menimpa kode desain salah' );
+lpg_assert_same( 'pas-problem', $bound['sections'][0]['section_id'], 'bind_content menimpa section ID salah' );
+LandingPage::validate( $bound, $fixture['campaign'] );
 
 $bad = $fixture['data'];
 $bad['sections'][1]['section_id'] = 'pas-problem';

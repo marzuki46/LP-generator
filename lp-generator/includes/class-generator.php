@@ -475,13 +475,24 @@ final class Generator {
 		} elseif ( 'topic' === $kind ) {
 			$prompt = Prompts::build_topic( $context );
 		} else {
-			if ( empty( $campaign['framework_plan'] ) ) { throw new \RuntimeException( 'Framework campaign belum siap atau data offer berubah. Generate ulang framework terlebih dahulu.' ); }
+			if ( empty( $campaign['framework_plan'] ) ) {
+				Database::log( 'warning', 'Rencana framework tidak cocok dengan data campaign; regenerate otomatis sebelum LP.', $campaign_id );
+				$regenerated = self::generate_framework( $campaign_id );
+				$campaign    = ContentRepository::get_campaign( $campaign_id );
+				foreach ( array( 'ai_framework', 'framework_plan', 'framework_slug', 'framework', 'framework_steps', 'framework_hints', 'framework_image_roles', 'framework_image_keywords' ) as $framework_key ) {
+					$context[ $framework_key ] = $campaign[ $framework_key ] ?? '';
+				}
+				if ( empty( $campaign['framework_plan'] ) ) {
+					throw new \RuntimeException( 'Framework campaign gagal disiapkan ulang: ' . ( $regenerated['message'] ?? 'data offer berubah' ) );
+				}
+			}
 			$context = FunnelContent::prepare( $context, $item_id );
 			$prompt = Prompts::build_lp( $context );
 		}
 
 		$result = AiClient::generate( $prompt );
 		if ( 'topic' !== $kind ) { $result['structured']['entities'] = $context['entities']; }
+		if ( 'lp' === $kind ) { $result['structured'] = DesignContract::bind_content( $result['structured'], $campaign ); }
 		FunnelContent::validate_content( $result['structured'], $kind );
 		if ( 'lp' === $kind ) { LandingPage::validate( $result['structured'], $campaign ); $result['structured']['framework_fingerprint'] = Frameworks::fingerprint( $campaign ); }
 		$preview = Publisher::build_blocks( $result['structured'], $kind, $campaign );
