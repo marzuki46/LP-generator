@@ -69,10 +69,15 @@ final class ContentRepository {
 		'image_enabled',
 		'image_source',
 		'image_upload_ids',
+		'aida_hero_image_id',
+		'aida_interest_image_id',
+		'aida_desire_image_id',
 		'image_count',
 		'ai_framework',
 		'bofu_mode',
 		'bofu_existing_id',
+		'bofu_path',
+		'lp_layout',
 		'topic_mode',
 		'manual_mofu_topics',
 		'manual_tofu_topics',
@@ -102,6 +107,9 @@ final class ContentRepository {
 		'tags',
 		'tag',
 		'images',
+		'entities',
+		'lp_plan_fingerprint',
+		'source_topic_id',
 	);
 
 	/**
@@ -135,6 +143,7 @@ final class ContentRepository {
 				),
 				'public'       => false,
 				'show_ui'      => true,
+				'show_in_rest' => true,
 				'show_in_menu' => false,
 				'supports'     => array( 'title', 'editor', 'excerpt' ),
 				'capability_type' => 'post',
@@ -167,25 +176,28 @@ final class ContentRepository {
 		$context['bonus']    = Utils::lines( (string) $context['bonus'] );
 		$context['mofu_count'] = Utils::clamp_count( $context['mofu_count'] ?: 2 );
 		$context['tofu_count'] = Utils::clamp_count( $context['tofu_count'] ?: 3 );
-		$context['content_push_enabled'] = empty( $context['content_push_enabled'] ) ? 0 : 1;
-		$context['internal_link_enabled'] = empty( $context['internal_link_enabled'] ) ? 0 : 1;
+		$context['content_push_enabled'] = (int) self::get_meta( $campaign_id, 'content_push_enabled', 1 );
+		$context['internal_link_enabled'] = (int) self::get_meta( $campaign_id, 'internal_link_enabled', 1 );
 		$context['internal_link_target'] = in_array( (string) $context['internal_link_target'], array( 'bofu', 'next_stage' ), true ) ? (string) $context['internal_link_target'] : 'bofu';
 		$context['target_areas'] = Utils::lines( (string) $context['target_areas'] );
 
+		$context['lp_layout'] = 'theme' === (string) $context['lp_layout'] ? 'theme' : 'canvas';
 		$context['bofu_mode'] = 'existing' === (string) $context['bofu_mode'] ? 'existing' : 'new';
 		$context['bofu_existing_id'] = absint( $context['bofu_existing_id'] );
 		$context['topic_mode'] = 'manual' === (string) $context['topic_mode'] ? 'manual' : 'auto';
 		$context['manual_mofu_topics'] = Utils::lines( (string) $context['manual_mofu_topics'] );
 		$context['manual_tofu_topics'] = Utils::lines( (string) $context['manual_tofu_topics'] );
 
-		$framework_slug     = sanitize_key( (string) $context['framework'] );
+		$framework_slug     = sanitize_key( (string) $context['framework'] ) ?: 'aida';
 		$framework          = Frameworks::get( $framework_slug );
 		$context['framework_slug']   = $framework_slug;
 		$context['framework']        = $framework['label'];
 		$context['framework_steps']  = $framework['steps'];
 
-		$generated = Frameworks::sanitize_generated( (string) ( $context['ai_framework'] ?? '' ) );
-		if ( 'ai' === $framework_slug && ! empty( $generated['steps'] ) ) {
+		$context['framework_hints'] = $framework['section_hint'] ?? array();
+		$generated = Frameworks::campaign_plan( $context );
+		$context['framework_plan'] = $generated;
+		if ( ! empty( $generated['steps'] ) ) {
 			$context['framework']               = $generated['label'];
 			$context['framework_steps']         = wp_list_pluck( $generated['steps'], 'name' );
 			$context['framework_hints']         = wp_list_pluck( $generated['steps'], 'section_hint' );
@@ -195,11 +207,15 @@ final class ContentRepository {
 		$context['entities']         = self::get_entities( $campaign_id );
 		$context['amazon_products']  = self::get_amazon_products( $campaign_id );
 		$context['tag_max']          = max( 1, min( 3, (int) ( $context['tag_max'] ?: 3 ) ) );
-		$context['entity_count']     = max( 3, min( 15, (int) ( $context['entity_count'] ?: 8 ) ) );
+		$context['entity_count']     = max( 8, min( 12, (int) ( $context['entity_count'] ?: 8 ) ) );
 		$context['image_source']     = ImagePipeline::clean_source( $context['image_source'] ?? 'auto' );
 		$context['image_count']      = max( 0, min( 6, (int) ( $context['image_count'] ?? 0 ) ) );
 		$context['image_upload_ids'] = implode( ',', ImagePipeline::clean_upload_ids( $context['image_upload_ids'] ?? '' ) );
 
+		$context['bofu_url'] = 'new' === $context['bofu_mode'] && '' !== (string) $context['bofu_path'] ? home_url( '/' . FunnelContent::clean_path( (string) $context['bofu_path'] ) . '/' ) : '';
+		if ( 'existing' === $context['bofu_mode'] && 'publish' === get_post_status( $context['bofu_existing_id'] ) ) {
+			$context['bofu_url'] = (string) get_permalink( $context['bofu_existing_id'] );
+		}
 		return $context;
 	}
 
@@ -269,8 +285,17 @@ final class ContentRepository {
 			'image_upload_ids' => '',
 			'image_count'      => 0,
 			'ai_framework'     => '',
+			'content_push_enabled' => 1,
+			'internal_link_enabled' => 1,
+			'internal_link_target' => 'bofu',
+			'bofu_mode' => 'new',
 		);
-		$values = array_merge( $defaults, array_intersect_key( $input, $defaults ) );
+		// Preserve fields on partial updates (e.g. framework generation).
+		$values = array();
+		foreach ( self::CAMPAIGN_KEYS as $key ) {
+			$values[ $key ] = self::get_meta( $post_id, $key, $defaults[ $key ] ?? '' );
+		}
+		$values = array_merge( $values, array_intersect_key( $input, array_flip( self::CAMPAIGN_KEYS ) ) );
 
 		foreach ( $values as $key => $value ) {
 			update_post_meta( $post_id, '_lpgen_' . $key, $value );
@@ -367,6 +392,8 @@ final class ContentRepository {
 			true
 		);
 		update_post_meta( $item_id, '_lpgen_structured', wp_json_encode( $structured ) );
+		if ( isset( $structured['framework_fingerprint'] ) ) { update_post_meta( $item_id, '_lpgen_lp_plan_fingerprint', sanitize_text_field( (string) $structured['framework_fingerprint'] ) ); }
+		if ( isset( $structured['entities'] ) ) { update_post_meta( $item_id, '_lpgen_entities', wp_json_encode( FunnelContent::entities( $structured['entities'] ) ) ); }
 		update_post_meta( $item_id, '_lpgen_seo_title', sanitize_text_field( (string) ( $structured['seo_title'] ?? '' ) ) );
 		update_post_meta( $item_id, '_lpgen_meta_description', sanitize_text_field( (string) ( $structured['meta_description'] ?? '' ) ) );
 		update_post_meta( $item_id, '_lpgen_anchor', sanitize_text_field( (string) ( $structured['anchor_suggestion'] ?? '' ) ) );
@@ -678,6 +705,13 @@ final class ContentRepository {
 				'url'          => $url,
 				'alt'          => sanitize_text_field( (string) ( $image['alt'] ?? '' ) ),
 				'keyword'      => sanitize_text_field( (string) ( $image['keyword'] ?? '' ) ),
+				'slot_id' => sanitize_key( (string) ( $image['slot_id'] ?? '' ) ),
+				'section_id' => sanitize_key( (string) ( $image['section_id'] ?? '' ) ),
+				'design_id' => sanitize_key( (string) ( $image['design_id'] ?? '' ) ),
+				'campaign_id' => absint( $image['campaign_id'] ?? 0 ),
+				'campaign_fingerprint' => sanitize_text_field( (string) ( $image['campaign_fingerprint'] ?? '' ) ),
+				'width' => absint( $image['width'] ?? 0 ),
+				'height' => absint( $image['height'] ?? 0 ),
 				'role'         => sanitize_key( (string) ( $image['role'] ?? '' ) ),
 				'section_hint' => sanitize_key( (string) ( $image['section_hint'] ?? '' ) ),
 			);
@@ -702,6 +736,13 @@ final class ContentRepository {
 				'url'          => esc_url_raw( (string) ( $image['url'] ?? '' ) ),
 				'alt'          => sanitize_text_field( (string) ( $image['alt'] ?? '' ) ),
 				'keyword'      => sanitize_text_field( (string) ( $image['keyword'] ?? '' ) ),
+				'slot_id' => sanitize_key( (string) ( $image['slot_id'] ?? '' ) ),
+				'section_id' => sanitize_key( (string) ( $image['section_id'] ?? '' ) ),
+				'design_id' => sanitize_key( (string) ( $image['design_id'] ?? '' ) ),
+				'campaign_id' => absint( $image['campaign_id'] ?? 0 ),
+				'campaign_fingerprint' => sanitize_text_field( (string) ( $image['campaign_fingerprint'] ?? '' ) ),
+				'width' => absint( $image['width'] ?? 0 ),
+				'height' => absint( $image['height'] ?? 0 ),
 				'role'         => sanitize_key( (string) ( $image['role'] ?? '' ) ),
 				'section_hint' => sanitize_key( (string) ( $image['section_hint'] ?? '' ) ),
 			);

@@ -130,6 +130,16 @@ final class Settings {
 				'section' => 'indexing',
 				'desc'    => __( 'Terkunci oleh plugin agar tidak tersalah ubah.', 'lp-generator' ),
 			),
+			'lp_custom_css' => array(
+				'label' => __( 'CSS tambahan untuk semua LP', 'lp-generator' ),
+				'type' => 'css',
+				'section' => 'frameworks',
+				'desc' => __( 'CSS dasar sudah otomatis aktif. Gunakan selector .lpg-lp untuk menyesuaikan semua LP, misalnya .lpg-lp { --lpg-accent: #176b62; }. Kosongkan untuk kembali ke tampilan bawaan.', 'lp-generator' ),
+			),
+			'seo_meta_source' => array(
+				'label' => __( 'Sumber judul dan deskripsi SEO', 'lp-generator' ), 'type' => 'select', 'section' => 'seo',
+				'options' => array( 'generated' => __( 'Hasil AI khusus tiap konten', 'lp-generator' ), 'template' => __( 'Template SEO global', 'lp-generator' ) ),
+			),
 			'custom_frameworks'     => array(
 				'label'   => __( 'Custom Frameworks (JSON)', 'lp-generator' ),
 				'type'    => 'textarea',
@@ -739,6 +749,9 @@ final class Settings {
 				case 'datetime':
 					$clean[ $key ] = Utils::clean_datetime_local( $value );
 					break;
+				case 'css':
+					$clean[ $key ] = LandingPage::sanitize_css( $value );
+					break;
 				case 'textarea':
 					$clean[ $key ] = Utils::clean_textarea( $value );
 					break;
@@ -801,6 +814,10 @@ final class Settings {
 					echo '<option value="' . esc_attr( (string) $option_key ) . '" ' . selected( (string) $value, (string) $option_key, false ) . '>' . esc_html( (string) $label ) . '</option>';
 				}
 				echo '</select>';
+				break;
+			case 'css':
+				echo '<textarea id="' . esc_attr( $id ) . '" name="' . esc_attr( $name ) . '" rows="12" spellcheck="false" class="large-text code">' . esc_textarea( (string) $value ) . '</textarea>';
+				echo '<p><a href="' . esc_url( LPG_URL . 'public/css/landing-page.css' ) . '" target="_blank" rel="noopener">' . esc_html__( 'Lihat CSS dasar lengkap', 'lp-generator' ) . '</a></p>';
 				break;
 			case 'textarea':
 				echo '<textarea id="' . esc_attr( $id ) . '" name="' . esc_attr( $name ) . '" rows="6" class="large-text code">' . esc_textarea( (string) $value ) . '</textarea>';

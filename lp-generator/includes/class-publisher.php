@@ -144,6 +144,7 @@ final class Publisher {
 	 * @return string
 	 */
 	public static function build_blocks( array $structured, string $kind, array $campaign, array $images = array() ): string {
+		if ( 'lp' === $kind ) { return LandingPage::render( $structured, $campaign, $images ); }
 		if ( 'topic' === $kind ) {
 			$out = array( self::heading_block( (string) ( $structured['title'] ?? '' ) ) );
 			$out[] = self::paragraph_block( (string) ( $structured['angle'] ?? '' ) );
@@ -226,7 +227,7 @@ final class Publisher {
 		}
 		$cta_text = (string) ( $structured['cta_text'] ?? $campaign['cta'] ?? '' );
 		$cta_url  = (string) ( $structured['cta_url'] ?? $campaign['offer_url'] ?? '' );
-		if ( '' !== $cta_text && '' !== $cta_url ) {
+		if ( 'lp' === $kind && '' !== $cta_text && '' !== $cta_url ) {
 			$blocks[] = self::build_cta_block( $cta_url, $cta_text, 'affiliate' === ( $campaign['offer_type'] ?? '' ) );
 		}
 		return implode( "\n\n", array_filter( $blocks ) );
@@ -240,6 +241,31 @@ final class Publisher {
 	 * @param string $target_url   Internal link target (may be empty for LP).
 	 * @return int Published post ID, 0 on failure.
 	 */
+	public static function insert_funnel_link( string $blocks, string $url, string $anchor, string $fallback ): string {
+		SeoStandards::assert_internal( $url );
+		$inserted = false;
+		$blocks = (string) preg_replace_callback( '#<p([^>]*)>(.*?)</p>#su', static function ( array $match ) use ( $url, $anchor, &$inserted ): string {
+			if ( $inserted || preg_match( '#<a\b#i', $match[2] ) ) { return $match[0]; }
+			$parts = preg_split( '/(<[^>]+>)/u', $match[2], -1, PREG_SPLIT_DELIM_CAPTURE );
+			foreach ( $parts as &$part ) {
+				if ( $inserted || str_starts_with( $part, '<' ) ) { continue; }
+				$matched = preg_match( '/(?<![\p{L}\p{N}])' . preg_quote( $anchor, '/' ) . '(?![\p{L}\p{N}])/iu', $part, $match_anchor, PREG_OFFSET_CAPTURE );
+				$pos = $matched ? mb_strlen( substr( $part, 0, $match_anchor[0][1] ) ) : false;
+				if ( false !== $pos ) {
+					$part = mb_substr( $part, 0, $pos ) . '<a href="' . esc_url( $url ) . '">' . esc_html( $anchor ) . '</a>' . mb_substr( $part, $pos + mb_strlen( $anchor ) );
+					$inserted = true;
+				}
+			}
+			unset( $part );
+			return '<p' . $match[1] . '>' . implode( '', $parts ) . '</p>';
+		}, $blocks );
+		if ( ! $inserted ) {
+			$sentence = '' !== trim( $fallback ) ? $fallback : __( 'Pelajari solusi yang sesuai dengan kebutuhan Anda:', 'lp-generator' );
+			$blocks .= "\n\n" . self::paragraph_block( self::linkify_cta( strip_tags( $sentence ), $url, $anchor ) );
+		}
+		return $blocks;
+	}
+
 	public static function publish_item( int $item_id, array $campaign, string $target_url = '' ): int {
 		$item = ContentRepository::get_item( $item_id );
 		if ( empty( $item ) || 'topic' === $item['kind'] ) {
@@ -250,15 +276,20 @@ final class Publisher {
 			$structured = array( 'title' => $item['title'] );
 		}
 
+		if ( 'lp' === $item['kind'] && ! empty( $item['lp_plan_fingerprint'] ) && ! hash_equals( (string) $item['lp_plan_fingerprint'], Frameworks::fingerprint( $campaign ) ) ) { throw new \RuntimeException( 'Data campaign berubah setelah LP dibuat. Generate ulang LP agar sesuai framework dan offer terbaru.' ); }
 		$images = ContentRepository::item_images( $item_id );
-		$blocks = self::build_blocks( $structured, (string) $item['kind'], $campaign, $images );
+		// The reviewed editor content is authoritative; do not rebuild it from AI JSON.
+		$blocks = trim( (string) $item['content'] );
+		if ( '' === $blocks ) { $blocks = self::build_blocks( $structured, (string) $item['kind'], $campaign, $images ); }
+		FunnelContent::entities( json_decode( (string) ( $item['entities'] ?? '' ), true ) );
+		FunnelContent::assert_unique( (string) $item['title'], $blocks, FunnelContent::exclusions( $item_id ) );
 		if ( 'article' === $item['kind'] && '' !== $target_url ) {
-			$anchor = (string) ( $item['anchor'] ?? '' );
-			if ( '' === $anchor ) {
-				$anchor = __( 'lihat panduan lengkapnya', 'lp-generator' );
+			$anchor = FunnelContent::anchor( (string) ( $item['anchor'] ?? '' ) );
+			$blocks = self::insert_funnel_link( $blocks, $target_url, $anchor, (string) ( $structured['cta_paragraph'] ?? '' ) );
+			if ( ! empty( $campaign['secondary_funnel_url'] ) ) {
+				SeoStandards::assert_internal( (string) $campaign['secondary_funnel_url'] );
+				$blocks .= "\n\n" . self::paragraph_block( '<a href="' . esc_url( $campaign['secondary_funnel_url'] ) . '">' . esc_html__( 'Bandingkan pilihan dan pertimbangannya', 'lp-generator' ) . '</a>' );
 			}
-			$link_block = self::paragraph_block( self::linkify_cta( '', $target_url, $anchor ) );
-			$blocks    .= "\n\n" . $link_block;
 		}
 
 		$post_type = 'bofu' === $item['stage']
@@ -278,6 +309,23 @@ final class Publisher {
 		if ( 'post' === $post_type && absint( $campaign['article_category'] ?? 0 ) > 0 ) {
 			$post_args['post_category'] = array( absint( $campaign['article_category'] ) );
 		}
+		if ( 'bofu' === $item['stage'] && '' !== trim( (string) ( $campaign['bofu_path'] ?? '' ) ) ) {
+			$path = FunnelContent::clean_path( (string) $campaign['bofu_path'] );
+			if ( 'page' !== $post_type ) { throw new \RuntimeException( 'Path LP bertingkat memerlukan post type Page.' ); }
+			$existing = get_page_by_path( $path, OBJECT, 'page' );
+			if ( $existing && (int) $existing->ID !== (int) ( $item['post_id'] ?? 0 ) ) { throw new \RuntimeException( 'Path LP sudah digunakan. Pilih mode BOFU yang sudah ada.' ); }
+			$parts = explode( '/', $path );
+			$post_args['post_name'] = array_pop( $parts );
+			if ( $parts ) {
+				$parent = get_page_by_path( implode( '/', $parts ), OBJECT, 'page' );
+				if ( ! $parent || 'publish' !== $parent->post_status ) { throw new \RuntimeException( 'Halaman induk LP belum terbit. Buat halaman induk sesuai path terlebih dahulu.' ); }
+				$post_args['post_parent'] = (int) $parent->ID;
+			}
+		}
+		// Retrying or republishing the same item updates its destination, not a duplicate post.
+		if ( ! empty( $item['post_id'] ) && get_post( (int) $item['post_id'] ) ) {
+			$post_args['ID'] = (int) $item['post_id'];
+		}
 		$post_id = wp_insert_post( $post_args, true );
 		if ( is_wp_error( $post_id ) ) {
 			return 0;
@@ -288,6 +336,9 @@ final class Publisher {
 		update_post_meta( $item_id, '_lpgen_post_id', $post_id );
 		update_post_meta( $item_id, '_lpgen_permalink', $permalink );
 		update_post_meta( $item_id, '_lpgen_status', 'published' );
+		if ( 'lp' === $item['kind'] && false !== strpos( $blocks, 'lpg-lp' ) ) {
+			update_post_meta( $post_id, '_lpgen_canvas', 'theme' === (string) ( $campaign['lp_layout'] ?? 'canvas' ) ? 0 : 1 );
+		}
 		update_post_meta( $post_id, '_lpgen_item_id', $item_id );
 		update_post_meta( $post_id, '_lpgen_campaign_id', absint( $campaign['campaign_id'] ?? 0 ) );
 
@@ -296,6 +347,7 @@ final class Publisher {
 			wp_set_post_terms( $post_id, $tags, 'post_tag', true );
 		}
 		self::apply_seo_meta( $post_id, $item, $campaign );
+		if ( 'publish' === $status ) { SeoStandards::refresh_related( absint( $campaign['campaign_id'] ?? 0 ) ); }
 
 		if ( 'publish' === $status && ! empty( $campaign['index_enabled'] ) ) {
 			Indexer::schedule( absint( $campaign['campaign_id'] ?? 0 ), $item_id, $permalink, (int) ( $campaign['index_delay'] ?? 10 ) );
@@ -313,11 +365,10 @@ final class Publisher {
 	public static function apply_seo_meta( int $post_id, array $item, array $campaign ): void {
 		$settings = get_option( 'lpgen_settings', array() );
 		$settings = is_array( $settings ) ? $settings : array();
-		if ( isset( $settings['yoast_enabled'] ) && empty( $settings['yoast_enabled'] ) ) {
-			return;
-		}
+		$yoast_enabled = ! isset( $settings['yoast_enabled'] ) || ! empty( $settings['yoast_enabled'] );
 
-		$entities   = isset( $campaign['entities'] ) && is_array( $campaign['entities'] ) ? $campaign['entities'] : array();
+		$item_entities = json_decode( (string) ( $item['entities'] ?? '' ), true );
+		$entities = is_array( $item_entities ) && $item_entities ? $item_entities : (array) ( $campaign['entities'] ?? array() );
 		$first      = reset( $entities );
 		$entity     = is_array( $first ) ? (string) ( $first['term'] ?? '' ) : (string) $first;
 		$tag        = trim( (string) ( $item['tag'] ?? '' ) );
@@ -358,6 +409,10 @@ final class Publisher {
 		$description    = '' !== $desc_template
 			? Utils::render_template( $desc_template, $data, 155 )
 			: (string) ( $item['meta_description'] ?? '' );
+		if ( 'template' !== (string) ( $settings['seo_meta_source'] ?? 'generated' ) ) {
+			if ( '' !== trim( (string) ( $item['seo_title'] ?? '' ) ) ) { $seo_title = Utils::truncate( (string) $item['seo_title'], 60 ); }
+			if ( '' !== trim( (string) ( $item['meta_description'] ?? '' ) ) ) { $description = Utils::truncate( (string) $item['meta_description'], 155 ); }
+		}
 		if ( '' === trim( $seo_title ) ) {
 			$seo_title = Utils::truncate( (string) ( $item['title'] ?? '' ), 60 );
 		}
@@ -365,6 +420,9 @@ final class Publisher {
 			$description = Utils::truncate( (string) ( $item['meta_description'] ?? '' ), 155 );
 		}
 
+		update_post_meta( $post_id, '_lpgen_meta_description', sanitize_text_field( $description ) );
+		update_post_meta( $post_id, '_lpgen_seo_title', sanitize_text_field( $seo_title ) );
+		if ( ! $yoast_enabled ) { return; }
 		update_post_meta( $post_id, '_yoast_wpseo_focuskw', $keyword );
 		update_post_meta( $post_id, '_yoast_wpseo_title', sanitize_text_field( $seo_title ) );
 		update_post_meta( $post_id, '_yoast_wpseo_metadesc', sanitize_text_field( $description ) );

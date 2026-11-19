@@ -25,7 +25,7 @@ $context = array(
 
 $lp = Prompts::build_lp( $context );
 lpg_assert_same(
-	array( 'title', 'seo_title', 'meta_description', 'sections', 'cta_text', 'cta_url', 'faq', 'tags' ),
+	array( 'title', 'intro', 'seo_title', 'meta_description', 'sections', 'cta_text', 'cta_url', 'faq', 'tags', 'anchor_suggestion' ),
 	$lp['required'],
 	'LP required keys'
 );

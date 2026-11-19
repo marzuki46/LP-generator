@@ -83,6 +83,7 @@ final class Admin {
 		if ( ! $is_plugin_screen ) {
 			return;
 		}
+		if ( $screen && 'lpgen_campaign' === $screen->post_type ) { wp_enqueue_media(); }
 		wp_enqueue_style( 'lpgen-admin', LPG_URL . 'admin/css/admin.css', array( 'dashicons' ), LPG_VERSION );
 		wp_enqueue_script( 'lpgen-admin', LPG_URL . 'admin/js/admin.js', array( 'jquery' ), LPG_VERSION, true );
 		wp_localize_script(

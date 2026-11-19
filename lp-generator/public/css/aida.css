@@ -1,0 +1,43 @@
+/* AIDA 1.5.1: four addressed sections; the Attention section is the hero. */
+.lpg-aida { --lpg-ink:#19382e; --lpg-muted:#50675e; --lpg-accent:#245e48; --lpg-tint:#f0f5ef; --lpg-line:#d5dfd3; border-radius:0; border-top:0; }
+.lpg-aida .lpg-aida__nav { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:20px clamp(24px,5vw,64px); border-bottom:1px solid var(--lpg-line); font-size:.83rem; }
+.lpg-aida__nav > span { font-weight:700; letter-spacing:.025em; }
+.lpg-aida__nav > div { display:flex; flex-wrap:wrap; gap:22px; }
+.lpg-aida__nav a { text-decoration:none; }
+.lpg-aida .lpg-aida__hero { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); align-items:start; gap:48px; padding:clamp(32px,6vw,80px) clamp(24px,5vw,64px); background:#fff; }
+.lpg-aida .lpg-aida__hero h1 { font-family:Georgia,"Times New Roman",serif; font-size:clamp(2.1rem,4.6vw,3.6rem); font-weight:400; letter-spacing:-.045em; line-height:1.12; max-width:21ch; }
+.lpg-aida .lpg-lp__intro { font-size:1.02rem; }
+.lpg-aida__brief { padding:28px; background:var(--lpg-tint); border:1px solid var(--lpg-line); border-top:4px solid var(--lpg-accent); }
+.lpg-aida .lpg-aida__label { font-size:.75rem; text-transform:uppercase; letter-spacing:.12em; color:var(--lpg-accent); font-weight:700; }
+.lpg-aida__brief ul { padding-left:18px; margin:20px 0 0; font-size:.95rem; }
+.lpg-aida__brief li { padding:8px 0; }
+.lpg-aida__brief .lpg-lp__gallery { margin-bottom:24px; }
+.lpg-aida .lpg-aida__section { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.65fr); gap:48px; padding:clamp(28px,5vw,64px); border-top:1px solid var(--lpg-line); }
+.lpg-aida__section-content { min-width:0; }
+.lpg-aida .lpg-aida__section--desire { display:block; background:var(--lpg-tint); }
+.lpg-aida__section--desire .lpg-aida__section-heading { max-width:65ch; }
+.lpg-aida__section--desire .lpg-aida__section-content > div:first-child { max-width:76ch; }
+.lpg-aida .lpg-lp__cards:empty { display:none; }
+.lpg-aida .lpg-aida__faq { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.65fr); gap:48px; padding:clamp(28px,5vw,64px); border-top:1px solid var(--lpg-line); }
+.lpg-aida__faq details { padding:18px 0; border-bottom:1px solid var(--lpg-line); }
+.lpg-aida__faq details:first-child { border-top:1px solid var(--lpg-line); }
+.lpg-aida__faq summary { cursor:pointer; font-weight:600; }
+.lpg-aida__faq details p { margin-top:14px; color:var(--lpg-muted); }
+.lpg-aida .lpg-aida__action { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); gap:48px; padding:clamp(28px,5vw,64px); background:var(--lpg-ink); color:#fff; }
+.lpg-aida__action h2 { color:#fff; }
+.lpg-aida__action-box { padding:26px; border:1px solid #648376; }
+.lpg-aida__action-box .lpg-lp__button { margin-top:20px; background:#fff; color:var(--lpg-ink); border-color:#fff; }
+.lpg-aida__action-box p { font-size:1rem; }
+.lpg-aida .lpg-lp__price { font-size:1.2rem; }
+.lpg-aida__related { padding:32px clamp(24px,5vw,64px); border-top:1px solid var(--lpg-line); }
+.lpg-aida__related ul { padding-left:20px; }
+.lpg-aida [id] { scroll-margin-top:24px; }
+@media(max-width:760px) {
+ .lpg-aida .lpg-aida__hero,.lpg-aida .lpg-aida__section,.lpg-aida .lpg-aida__faq,.lpg-aida .lpg-aida__action { grid-template-columns:1fr; gap:24px; }
+ .lpg-aida .lpg-aida__nav { align-items:flex-start; flex-direction:column; gap:10px; }
+ .lpg-aida__nav > div { gap:15px; font-size:.8rem; }
+ .lpg-aida .lpg-aida__hero h1 { font-size:2.4rem; }
+}
+
+.lpg-aida .lpg-aida__hero--single { grid-template-columns:1fr; }
+.lpg-aida [hidden] { display:none; }

@@ -94,7 +94,8 @@ final class Database {
 		);
 
 		$format = array( '%d', '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s' );
-		$wpdb->insert( self::table( 'jobs' ), $data, $format );
+		$inserted = $wpdb->insert( self::table( 'jobs' ), $data, $format );
+		if ( false === $inserted || (int) $wpdb->insert_id <= 0 ) { throw new \RuntimeException( 'Antrean tidak dapat disimpan. Periksa tabel database plugin.' ); }
 		return (int) $wpdb->insert_id;
 	}
 
@@ -110,7 +111,7 @@ final class Database {
 		if ( null !== $campaign_id && $campaign_id > 0 ) {
 			$row = $wpdb->get_row(
 				$wpdb->prepare(
-					"SELECT * FROM {$table} WHERE campaign_id = %d AND status = %s AND run_at <= %s ORDER BY id ASC LIMIT 1",
+					"SELECT * FROM {$table} WHERE campaign_id = %d AND status = %s AND run_at <= %s AND (kind = 'index' OR NOT EXISTS (SELECT 1 FROM {$table} earlier WHERE earlier.campaign_id = {$table}.campaign_id AND earlier.id < {$table}.id AND earlier.status IN ('queued','running') AND earlier.kind NOT IN ('index','generate_tag'))) ORDER BY id ASC LIMIT 1",
 					$campaign_id,
 					'queued',
 					current_time( 'mysql', true )
@@ -120,7 +121,7 @@ final class Database {
 		} else {
 			$row = $wpdb->get_row(
 				$wpdb->prepare(
-					"SELECT * FROM {$table} WHERE status = %s AND run_at <= %s ORDER BY id ASC LIMIT 1",
+					"SELECT * FROM {$table} WHERE status = %s AND run_at <= %s AND (kind = 'index' OR NOT EXISTS (SELECT 1 FROM {$table} earlier WHERE earlier.campaign_id = {$table}.campaign_id AND earlier.id < {$table}.id AND earlier.status IN ('queued','running') AND earlier.kind NOT IN ('index','generate_tag'))) ORDER BY id ASC LIMIT 1",
 					'queued',
 					current_time( 'mysql', true )
 				),
@@ -238,15 +239,25 @@ final class Database {
 		return is_array( $row ) ? $row : null;
 	}
 
+	/** A consistent response shared by cron-independent foreground workers and the dashboard. */
+	public static function queue_snapshot( int $campaign_id ): array {
+		$total = self::count_jobs( $campaign_id );
+		$queued = self::count_jobs( $campaign_id, 'queued' );
+		$running = self::count_jobs( $campaign_id, 'running' );
+		return array( 'total' => $total, 'done_count' => self::count_jobs( $campaign_id, 'done' ), 'remaining' => $queued, 'running' => $running, 'failed' => self::count_jobs( $campaign_id, 'failed' ), 'done' => $total > 0 && 0 === $queued && 0 === $running, 'status' => (string) ContentRepository::get_meta( $campaign_id, 'status', 'draft' ), 'next_run_at' => self::next_queued_time( $campaign_id ) );
+	}
+
 	/**
 	 * Earliest UTC timestamp among queued jobs.
 	 *
 	 * @return int Timestamp or 0 when the queue is empty.
 	 */
-	public static function next_queued_time(): int {
+	public static function next_queued_time( int $campaign_id = 0 ): int {
 		global $wpdb;
 		$table = self::table( 'jobs' );
-		$value = $wpdb->get_var( "SELECT MIN(run_at) FROM {$table} WHERE status = 'queued'" );
+		$sql = "SELECT MIN(run_at) FROM {$table} WHERE status = 'queued'";
+		if ( $campaign_id > 0 ) { $sql .= $wpdb->prepare( ' AND campaign_id = %d', $campaign_id ); }
+		$value = $wpdb->get_var( $sql );
 		if ( empty( $value ) || ! is_string( $value ) ) {
 			return 0;
 		}

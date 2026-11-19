@@ -100,7 +100,7 @@ final class AiClient {
 			$url  = $base . '/v1/messages';
 			$body = array(
 				'model'      => $model,
-				'max_tokens' => 4096,
+				'max_tokens' => max( 1024, min( 16000, (int) ( $prompt['max_tokens'] ?? 4096 ) ) ),
 				'system'     => (string) ( $prompt['system'] ?? '' ),
 				'messages'   => array(
 					array(
@@ -128,6 +128,8 @@ final class AiClient {
 				'stream'      => false,
 			);
 		}
+
+		if ( isset( $prompt['max_tokens'] ) ) { $body['max_tokens'] = max( 1024, min( 16000, (int) $prompt['max_tokens'] ) ); }
 
 		$response = wp_remote_post(
 			$url,

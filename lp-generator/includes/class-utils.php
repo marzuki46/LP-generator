@@ -320,9 +320,12 @@ final class Utils {
 				$start = self::clean_datetime_local( $settings['schedule_start'] ?? '' );
 				$time  = self::clean_time( $settings['schedule_time'] ?? '09:00' );
 				if ( '' === $start ) {
-					$start = function_exists( 'current_time' ) ? current_time( 'Y-m-d' ) : gmdate( 'Y-m-d' );
+					$date = function_exists( 'current_time' ) ? current_time( 'Y-m-d' ) : gmdate( 'Y-m-d' );
+					$local = $date . ' ' . $time . ':00';
+				} else {
+					$local = str_replace( 'T', ' ', $start ) . ':00';
 				}
-				$base = self::local_to_gmt( str_replace( 'T', ' ', $start ) . ' ' . $time . ':00' );
+				$base = self::local_to_gmt( $local );
 				return max( $now, $base ) + ( $sequence * $interval ) + $jitter;
 			case 'daily':
 				$time = self::clean_time( $settings['schedule_time'] ?? '09:00' );

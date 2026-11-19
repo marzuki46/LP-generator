@@ -67,5 +67,5 @@ $images = array(
 );
 $blocks = \LPG\Publisher::build_blocks( $structured, 'lp', array(), $images );
 $benefit_pos = strpos( $blocks, 'Keunggulan' );
-$gallery_pos = strpos( $blocks, 'wp:gallery' );
+$gallery_pos = strpos( $blocks, 'lpg-lp__gallery' );
 lpg_assert_true( false !== $gallery_pos && false !== $benefit_pos && $gallery_pos > $benefit_pos, 'gallery ditempatkan setelah section yang sesuai hint' );

@@ -53,6 +53,7 @@ final class CampaignUI {
 			'language'          => 'id',
 			'framework'         => 'aida',
 			'lp_post_type'      => 'page',
+			'lp_layout'        => 'canvas',
 			'article_post_type' => 'post',
 			'publish_status'    => 'publish',
 			'index_enabled'     => 1,
@@ -86,7 +87,7 @@ final class CampaignUI {
 			'image_upload_ids'  => '',
 			'image_count'       => 0,
 		);
-		$values = array_merge( $defaults, $values );
+		$values = array_merge( $defaults, array_filter( $values, static fn( $value ): bool => '' !== $value ) );
 		$status = (string) ContentRepository::get_meta( $post->ID, 'status', 'draft' );
 		$existing_pages = get_posts(
 			array(
@@ -164,6 +165,9 @@ final class CampaignUI {
 									</select>
 								</div>
 							</fieldset>
+							<p><label for="lpgen_bofu_path"><?php echo esc_html__( 'Path LP baru (opsional)', 'lp-generator' ); ?></label><br />
+							<input class="regular-text" id="lpgen_bofu_path" name="lpgen[bofu_path]" value="<?php echo esc_attr( (string) ( $values['bofu_path'] ?? '' ) ); ?>" placeholder="jasa/website/solo" /></p>
+							<p class="description"><?php echo esc_html__( 'Untuk path bertingkat, halaman induk jasa/website harus sudah ada. Untuk LP yang sudah terbit, pilih halaman di atas. Isi kota dan area sekitar agar artikel tetap relevan. Setiap konten mendapat 8–12 entitas AI tersendiri.', 'lp-generator' ); ?></p>
 						</td>
 					</tr>
 					<tr>
@@ -175,6 +179,7 @@ final class CampaignUI {
 					<tr>
 						<th><label for="lpgen_target_areas"><?php echo esc_html__( 'Target Area / Kota (Opsional)', 'lp-generator' ); ?></label></th>
 						<td>
+							<p><label for="lpgen_city"><?php echo esc_html__( 'Kota utama LP', 'lp-generator' ); ?></label> <input id="lpgen_city" name="lpgen[city]" value="<?php echo esc_attr( (string) $values['city'] ); ?>" placeholder="Solo" /></p>
 							<textarea class="large-text" rows="3" name="lpgen[target_areas]" id="lpgen_target_areas" placeholder="Solo&#10;Sukoharjo&#10;Karanganyar&#10;Klaten"><?php echo esc_textarea( (string) $values['target_areas'] ); ?></textarea>
 							<p class="description"><?php echo esc_html__( 'Satu area per baris. AI akan membagi topik lokal secara alami dan semuanya tetap diarahkan ke BOFU campaign ini.', 'lp-generator' ); ?></p>
 						</td>
@@ -196,14 +201,16 @@ final class CampaignUI {
 									<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $values['framework'], $key ); ?>><?php echo esc_html( $label ); ?></option>
 								<?php endforeach; ?>
 							</select>
-							<button type="button" class="button" data-lpgen-action="generate-framework" data-campaign="<?php echo esc_attr( (string) $post->ID ); ?>" style="margin-left:6px;"><?php echo esc_html__( '⚡ Generate Framework AI', 'lp-generator' ); ?></button>
+							<button type="button" class="button" data-lpgen-action="generate-framework" data-campaign="<?php echo esc_attr( (string) $post->ID ); ?>" style="margin-left:6px;"><?php echo esc_html__( 'Siapkan framework campaign', 'lp-generator' ); ?></button>
 							
+							<p class="description"><?php echo esc_html__( 'LP dibuat sebagai HTML responsif WordPress. AI menyiapkan rencana section khusus campaign mengikuti formula pilihan, atau merancang urutan sendiri pada mode Framework AI Khusus. Rencana disiapkan otomatis saat Mulai Generate.', 'lp-generator' ); ?></p>
+							<p><label for="lpgen_lp_layout"><?php echo esc_html__( 'Tampilan LP:', 'lp-generator' ); ?></label> <select id="lpgen_lp_layout" name="lpgen[lp_layout]"><option value="canvas" <?php selected( $values['lp_layout'], 'canvas' ); ?>><?php echo esc_html__( 'Halaman LP penuh', 'lp-generator' ); ?></option><option value="theme" <?php selected( $values['lp_layout'], 'theme' ); ?>><?php echo esc_html__( 'Ikuti layout tema WordPress', 'lp-generator' ); ?></option></select></p>
 							<div id="lpgen_framework_steps_preview" style="margin-top:10px;">
 								<!-- Rendered via JS and PHP -->
 								<?php
 								$current_preset = Frameworks::get( (string) $values['framework'] );
-								$ai_framework = Frameworks::sanitize_generated( (string) ContentRepository::get_meta( $post->ID, 'ai_framework', '' ) );
-								$display_steps = ( 'ai' === $values['framework'] && ! empty( $ai_framework['steps'] ) )
+								$ai_framework = Frameworks::campaign_plan( ContentRepository::get_campaign( (int) $post->ID ) );
+								$display_steps = ( ! empty( $ai_framework['steps'] ) )
 									? wp_list_pluck( $ai_framework['steps'], 'name' )
 									: $current_preset['steps'];
 								?>
@@ -359,7 +366,7 @@ final class CampaignUI {
 										<label for="lpgen_internal_link_target"><?php echo esc_html__( 'Target link:', 'lp-generator' ); ?></label>
 										<select name="lpgen[internal_link_target]" id="lpgen_internal_link_target">
 											<option value="bofu" <?php selected( $values['internal_link_target'], 'bofu' ); ?>><?php echo esc_html__( 'Selalu BOFU (disarankan)', 'lp-generator' ); ?></option>
-											<option value="next_stage" <?php selected( $values['internal_link_target'], 'next_stage' ); ?>><?php echo esc_html__( 'Tahap berikutnya (TOFU → MOFU → BOFU)', 'lp-generator' ); ?></option>
+											<option value="next_stage" <?php selected( $values['internal_link_target'], 'next_stage' ); ?>><?php echo esc_html__( 'Link ke BOFU + link tambahan TOFU → MOFU', 'lp-generator' ); ?></option>
 										</select>
 									</p>
 									<p><label for="lpgen_internal_link_until"><?php echo esc_html__( 'Internal link aktif sampai (kosong = tanpa batas):', 'lp-generator' ); ?></label> <input type="date" name="lpgen[internal_link_until]" id="lpgen_internal_link_until" value="<?php echo esc_attr( (string) $values['internal_link_until'] ); ?>" /></p>
@@ -383,6 +390,12 @@ final class CampaignUI {
 								</td>
 							</tr>
 							<tr>
+								<th><?php echo esc_html__( 'Gambar AIDA per section', 'lp-generator' ); ?></th>
+								<td><p class="description"><?php echo esc_html__( 'Untuk AIDA 1.5.1, pilih upload khusus tiap slot. Slot kosong pada mode upload dibiarkan kosong; mode auto dapat mencoba AI/Bing. Maksimal tiga slot, tanpa gambar pada Action.', 'lp-generator' ); ?></p>
+								<?php foreach ( array( 'aida_hero_image_id' => 'Hero / Attention', 'aida_interest_image_id' => 'Kebutuhan / Interest', 'aida_desire_image_id' => 'Manfaat / Desire' ) as $slot_key => $slot_label ) : ?>
+								<p><label for="lpgen_<?php echo esc_attr( $slot_key ); ?>"><?php echo esc_html( $slot_label ); ?></label> <input type="hidden" id="lpgen_<?php echo esc_attr( $slot_key ); ?>" name="lpgen[<?php echo esc_attr( $slot_key ); ?>]" value="<?php echo esc_attr( (string) ( $values[ $slot_key ] ?? 0 ) ); ?>" /> <span id="lpgen_<?php echo esc_attr( $slot_key ); ?>_label"><?php echo ! empty( $values[ $slot_key ] ) ? esc_html( get_the_title( (int) $values[ $slot_key ] ) ) : esc_html__( 'Belum dipilih', 'lp-generator' ); ?></span> <button type="button" class="button" data-lpgen-slot-picker="lpgen_<?php echo esc_attr( $slot_key ); ?>"><?php echo esc_html__( 'Pilih gambar', 'lp-generator' ); ?></button> <button type="button" class="button" data-lpgen-slot-clear="lpgen_<?php echo esc_attr( $slot_key ); ?>"><?php echo esc_html__( 'Kosongkan', 'lp-generator' ); ?></button></p>
+								<?php endforeach; ?></td>
+							</tr><tr>
 								<th><label for="lpgen_amazon_enabled"><?php echo esc_html__( 'Amazon Affiliate', 'lp-generator' ); ?></label></th>
 								<td>
 									<label><input type="checkbox" name="lpgen[amazon_enabled]" value="1" id="lpgen_amazon_enabled" <?php checked( 1, (int) $values['amazon_enabled'] ); ?> /> <?php echo esc_html__( 'Aktifkan produk Amazon', 'lp-generator' ); ?></label>
@@ -474,6 +487,9 @@ final class CampaignUI {
 				case 'language':
 					$data[ $key ] = 'en' === $value ? 'en' : 'id';
 					break;
+				case 'lp_layout':
+					$data[ $key ] = 'theme' === $value ? 'theme' : 'canvas';
+					break;
 				case 'lp_post_type':
 				case 'article_post_type':
 					$data[ $key ] = in_array( $value, array( 'post', 'page' ), true ) ? $value : 'post';
@@ -514,6 +530,9 @@ final class CampaignUI {
 				case 'bofu_mode':
 					$data[ $key ] = in_array( $value, array( 'new', 'existing' ), true ) ? $value : 'new';
 					break;
+				case 'bofu_path':
+					$data[ $key ] = FunnelContent::clean_path( (string) $value );
+					break;
 				case 'bofu_existing_id':
 					$data[ $key ] = absint( $value );
 					break;
@@ -534,7 +553,7 @@ final class CampaignUI {
 					$data[ $key ] = empty( $value ) ? 0 : 1;
 					break;
 				case 'entity_count':
-					$data[ $key ] = max( 3, min( 15, absint( $value ) ) );
+					$data[ $key ] = max( 8, min( 12, absint( $value ) ) );
 					break;
 				case 'tag_max':
 					$data[ $key ] = max( 1, min( 3, absint( $value ) ) );
@@ -573,6 +592,11 @@ final class CampaignUI {
 					break;
 				case 'image_count':
 					$data[ $key ] = max( 0, min( 6, absint( $value ) ) );
+					break;
+				case 'aida_hero_image_id':
+				case 'aida_interest_image_id':
+				case 'aida_desire_image_id':
+					$data[ $key ] = absint( $value );
 					break;
 				case 'image_upload_ids':
 					$data[ $key ] = implode( ',', ImagePipeline::clean_upload_ids( $value ) );

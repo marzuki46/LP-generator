@@ -71,10 +71,10 @@ final class ReviewUI {
 						$review_url = admin_url( 'admin.php?page=lpg-review&campaign_id=' . $id );
 						$edit_url   = admin_url( 'post.php?post=' . $id . '&action=edit' );
 						?>
-						<tr>
+						<tr data-lpgen-campaign="<?php echo esc_attr( (string) $id ); ?>">
 							<td><a href="<?php echo esc_url( $edit_url ); ?>"><?php echo esc_html( get_the_title( $id ) ); ?></a></td>
-							<td><span class="lpgen-badge lpgen-badge--<?php echo esc_attr( sanitize_key( $status ) ); ?>"><?php echo esc_html( $status ); ?></span></td>
-							<td>
+							<td data-lpgen-field="status"><span class="lpgen-badge lpgen-badge--<?php echo esc_attr( sanitize_key( $status ) ); ?>"><?php echo esc_html( 'draft' === $status ? __( 'Belum digenerate', 'lp-generator' ) : $status ); ?></span></td>
+							<td data-lpgen-field="queue">
 								<?php
 								printf(
 									/* translators: 1: done, 2: total, 3: failed */
@@ -89,7 +89,7 @@ final class ReviewUI {
 								<div class="lpgen-progress" role="progressbar" aria-valuenow="<?php echo esc_attr( (string) $percent ); ?>" aria-valuemin="0" aria-valuemax="100">
 									<div class="lpgen-progress__bar" style="width:<?php echo esc_attr( (string) $percent ); ?>%"></div>
 								</div>
-								<small><?php echo esc_html( $percent . '%' ); ?></small>
+								<small data-lpgen-field="percent"><?php echo esc_html( $percent . '%' ); ?></small>
 							</td>
 							<td>
 								<a class="button button-small" href="<?php echo esc_url( $review_url ); ?>"><?php echo esc_html__( 'Review', 'lp-generator' ); ?></a>
@@ -150,6 +150,7 @@ final class ReviewUI {
 				$mode     = Utils::clean_schedule_mode( $campaign['schedule_mode'] ?? 'immediate' );
 				?>
 				<div class="lpgen-panel">
+					<p><strong><?php echo esc_html__( 'LP tujuan:', 'lp-generator' ); ?></strong> <?php echo esc_html( (string) ( $campaign['bofu_url'] ?? '' ) ); ?></p>
 					<p>
 						<strong><?php echo esc_html__( 'Entitas keyword:', 'lp-generator' ); ?></strong>
 						<?php echo esc_html( empty( $terms ) ? __( 'belum ada', 'lp-generator' ) : implode( ', ', $terms ) ); ?>
@@ -212,6 +213,21 @@ final class ReviewUI {
 								<td><?php echo esc_html( implode( ', ', ContentRepository::item_tags( (int) $item['id'] ) ) ); ?></td>
 								<td>
 									<a href="<?php echo esc_url( $edit_url ); ?>"><?php echo esc_html( (string) $item['title'] ); ?></a>
+									<details><summary><?php echo esc_html__( 'Isi, SEO, anchor & entitas', 'lp-generator' ); ?></summary>
+									<p><strong><?php echo esc_html__( 'SEO title:', 'lp-generator' ); ?></strong> <?php echo esc_html( (string) $item['seo_title'] ); ?><br />
+									<strong><?php echo esc_html__( 'Deskripsi:', 'lp-generator' ); ?></strong> <?php echo esc_html( (string) $item['meta_description'] ); ?><br />
+									<strong><?php echo esc_html__( 'Anchor ke BOFU:', 'lp-generator' ); ?></strong> <?php echo esc_html( (string) $item['anchor'] ); ?></p>
+									<?php $item_entities = json_decode( (string) ( $item['entities'] ?? '' ), true ); ?>
+									<p><strong><?php echo esc_html__( 'Entitas konten:', 'lp-generator' ); ?></strong> <?php echo esc_html( implode( ', ', array_column( is_array( $item_entities ) ? $item_entities : array(), 'term' ) ) ); ?></p>
+									<div style="max-height:420px;overflow:auto;background:#fff;padding:12px;"><?php echo wp_kses_post( (string) $item['content'] ); ?></div>
+									<?php if ( 'lp' === $item['kind'] ) : ?>
+									<p><strong><?php echo esc_html__( 'Preview HTML dari data campaign tersimpan:', 'lp-generator' ); ?></strong></p>
+									<iframe id="lpgen-preview-<?php echo esc_attr( (string) $item_id ); ?>" title="<?php echo esc_attr__( 'Preview landing page', 'lp-generator' ); ?>" sandbox="" loading="lazy" style="width:100%;height:720px;border:1px solid #ccd0d4;background:#fff;" srcdoc="<?php echo esc_attr( LandingPage::preview_document( 'published' === $item_status && ! empty( $item['post_id'] ) ? (string) get_post_field( 'post_content', (int) $item['post_id'] ) : (string) $item['content'] ) ); ?>"></iframe>
+									<p><button type="button" class="button" data-lpgen-preview-download="lpgen-preview-<?php echo esc_attr( (string) $item_id ); ?>"><?php echo esc_html__( 'Unduh preview HTML', 'lp-generator' ); ?></button></p>
+									<p><strong><?php echo esc_html__( 'HTML WordPress (salin dari sini atau edit pada item):', 'lp-generator' ); ?></strong></p>
+									<textarea readonly rows="8" class="large-text code" aria-label="<?php echo esc_attr__( 'HTML landing page WordPress', 'lp-generator' ); ?>"><?php echo esc_html( (string) $item['content'] ); ?></textarea>
+									<?php endif; ?>
+									</details>
 									<?php if ( '' !== $permalink ) : ?>
 										<br /><a href="<?php echo esc_url( $permalink ); ?>" target="_blank" rel="noopener"><?php echo esc_html__( 'Lihat publish →', 'lp-generator' ); ?></a>
 									<?php endif; ?>

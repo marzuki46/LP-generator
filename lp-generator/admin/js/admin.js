@@ -1,7 +1,9 @@
 (function ($) {
 	'use strict';
 
-	var config = window.lpgenAdmin || {};
+	var config = $.extend({ajaxUrl: window.ajaxurl || '', nonce: ''}, window.lpgenAdmin || {});
+	config.i18n = $.extend({confirmStart: 'Mulai generate funnel ini?', confirmPublish: 'Publish item yang disetujui?', running: 'Memproses…'}, config.i18n || {});
+	var activeRunners = {};
 
 	function showResult(message, ok) {
 		var $target = $('#lpgen-action-result');
@@ -10,7 +12,8 @@
 		}
 		if (!$target.length) {
 			$target = $('<div id="lpgen-action-result" aria-live="polite"></div>');
-			$('.lpgen-wrap').append($target);
+			var $container = $('.lpgen-wrap, .lpgen-campaign-form, .wrap').first();
+			$container.prepend($target);
 		}
 		$target
 			.removeClass('lpgen-result--ok lpgen-result--error')
@@ -23,7 +26,7 @@
 			action: 'lpgen_' + action,
 			nonce: config.nonce
 		});
-		return $.post(config.ajaxUrl, payload, null, 'json');
+		return $.ajax({url: config.ajaxUrl, type: 'POST', data: payload, dataType: 'json', timeout: 900000});
 	}
 
 	$(document).on('click', '[data-lpgen-action]', function (event) {
@@ -33,6 +36,10 @@
 
 		if ('delete-log' === action || 'clear-logs' === action) { return; }
 		var campaign = $button.data('campaign');
+		var data = {};
+		if ($button.prop('disabled')) { return; }
+		if (!config.ajaxUrl || !config.nonce) { showResult('Data halaman belum lengkap. Muat ulang halaman lalu coba lagi.', false); return; }
+		if (activeRunners[campaign] && ('start-campaign' === action || 'run-now' === action || 'publish-campaign' === action)) { showResult('Campaign ini sedang diproses. Tunggu progres yang sedang berjalan.', false); return; }
 
 		if ('pick-images' === action) {
 			if (!window.wp || !wp.media) {
@@ -56,8 +63,8 @@
 			return;
 		}
 
-		if ('start-campaign' === action) {
-			if (!window.confirm(config.i18n.confirmStart)) {
+		if ('start-campaign' === action || 'generate-framework' === action) {
+			if ('start-campaign' === action && !window.confirm(config.i18n.confirmStart)) {
 				return;
 			}
 			// Auto-serialize all campaign form inputs so user edits are saved even if draft wasn't published yet
@@ -78,7 +85,7 @@
 					}
 				}
 			});
-			data.lpgen = formValues;
+			if (Object.keys(formValues).length) { data.lpgen = formValues; }
 			var postTitle = $('#title').val();
 			if (postTitle) {
 				data.post_title = postTitle;
@@ -88,7 +95,6 @@
 			return;
 		}
 
-		var data = data || {};
 		if (campaign) {
 			data.campaign = campaign;
 		}
@@ -117,14 +123,17 @@
 		}
 
 		var original = $button.text();
+		var queueStarted = false;
+		function releaseButton() { $button.prop('disabled', false).text(original); }
 		$button.prop('disabled', true).text(config.i18n.running);
 
 		if ('run-now' === action) {
-			$button.prop('disabled', false).text(original);
-			runQueueLoop(campaign);
+			queueStarted = true;
+			runQueueLoop(campaign, 0, releaseButton);
 			return;
 		}
 
+		if ('start-campaign' === action) { showResult('Menyimpan campaign dan membuat antrean…', true); }
 		call(action.replace(/-/g, '_'), data)
 			.done(function (response) {
 				if ('suggest-campaign' === action) {
@@ -180,25 +189,49 @@
 				}
 
 				showResult(response && response.message ? response.message : '', !!(response && response.ok));
-				if ('start-campaign' === action && response && response.ok) {
-					runQueueLoop(campaign, response.jobs || 6);
+				if (('start-campaign' === action || 'publish-campaign' === action) && response && response.ok) {
+					queueStarted = true;
+					updateCampaignRow(campaign, {status: 'start-campaign' === action ? 'generating' : 'publishing', total: response.jobs, done_count: 0, failed: 0});
+					runQueueLoop(campaign, response.jobs || 6, releaseButton);
 					return;
 				}
 				if (response && response.ok && ('publish-campaign' === action || 'regenerate' === action || 'generate-entities' === action || 'generate-tag-content' === action || 'generate-framework' === action)) {
 					window.setTimeout(function () { window.location.reload(); }, 900);
 				}
 			})
-			.fail(function () {
-				showResult('AJAX error', false);
+			.fail(function (xhr, state) {
+				showResult(requestError(xhr, state), false);
 			})
 			.always(function () {
-				if ('start-campaign' !== action) {
-					$button.prop('disabled', false).text(original);
-				}
+				if (!queueStarted) { releaseButton(); }
 			});
 	});
 
-	function runQueueLoop(campaign, totalJobs) {
+	function requestError(xhr, state) {
+		if (xhr && xhr.responseJSON && xhr.responseJSON.message) { return xhr.responseJSON.message; }
+		if (xhr && (xhr.status === 401 || xhr.status === 403 || String(xhr.responseText).trim() === '-1')) { return 'Sesi atau izin sudah tidak berlaku. Muat ulang halaman dan coba lagi.'; }
+		if (state === 'timeout') { return 'Server belum memberi respons. Pekerjaan mungkin masih berjalan; gunakan Proses Antrean untuk melanjutkan, bukan Generate ulang.'; }
+		return 'Permintaan gagal' + (xhr && xhr.status ? ' (HTTP ' + xhr.status + ')' : '') + '. Periksa koneksi dan Activity Log, lalu coba lagi.';
+	}
+
+	function updateCampaignRow(campaign, response) {
+		var $row = $('[data-lpgen-campaign="' + Number(campaign) + '"]');
+		if (!$row.length) { return; }
+		var labels = {draft: 'Belum digenerate', generating: 'Sedang digenerate', review: 'Siap direview', publishing: 'Sedang diterbitkan', published: 'Selesai diterbitkan', failed: 'Perlu diperiksa'};
+		if (response.status) { $row.find('[data-lpgen-field="status"]').text(labels[response.status] || response.status); }
+		if (typeof response.total === 'number') {
+			var done = response.done_count || 0, percent = response.total ? Math.round(done / response.total * 100) : 0;
+			$row.find('[data-lpgen-field="queue"]').text(done + '/' + response.total + ' selesai · ' + (response.failed || 0) + ' gagal');
+			$row.find('.lpgen-progress').attr('aria-valuenow', percent).find('.lpgen-progress__bar').css('width', percent + '%');
+			$row.find('[data-lpgen-field="percent"]').text(percent + '%');
+		}
+	}
+
+	function runQueueLoop(campaign, totalJobs, onStop) {
+		if (activeRunners[campaign]) { if (onStop) { onStop(); } return; }
+		activeRunners[campaign] = true;
+		function stop() { delete activeRunners[campaign]; if (onStop) { onStop(); } }
+
 		var $runner = $('#lpgen-live-runner');
 		var $bar = $('#lpgen_runner_bar');
 		var $status = $('#lpgen_runner_status');
@@ -212,19 +245,26 @@
 		function step() {
 			call('process_queue', { campaign: campaign })
 				.done(function (res) {
+					if (res) { updateCampaignRow(campaign, res); }
 					if (!res || !res.ok) {
 						if (res && res.busy) {
+							showResult(res.message || 'Worker sedang memproses antrean.', true);
+							if ($status.length) { $status.text(res.message || 'Menunggu worker.'); }
 							window.setTimeout(step, 1500);
 							return;
 						}
 						showResult(res && res.message ? res.message : 'Error processing queue', false);
 						if ($status.length) { $status.text(res && res.message ? res.message : 'Error'); }
+						stop();
 						return;
 					}
-					if (res.done || res.remaining === 0) {
+					if (res.waiting && res.next_run_at > Date.now() / 1000 + 30) { showResult(res.message || 'Antrean menunggu jadwal berikutnya.', true); stop(); return; }
+					if (res.done && !(res.running > 0)) {
+						stop();
 						if ($bar.length) { $bar.css('width', '100%'); }
-						if ($status.length) { $status.text('Selesai! Semua konten berhasil dibuat.'); }
-						showResult('Selesai! Semua konten berhasil dibuat.', true);
+						var finishedMessage = res.failed > 0 ? 'Antrean selesai. ' + res.failed + ' item gagal atau ditahan. Periksa Review dan Activity Log.' : 'Selesai! Semua konten berhasil dibuat.';
+						if ($status.length) { $status.text(finishedMessage); }
+						showResult(finishedMessage, !(res.failed > 0));
 						window.setTimeout(function () {
 							window.location.reload();
 						}, 1200);
@@ -237,10 +277,11 @@
 					if ($status.length) {
 						$status.text('Sedang memproses... ' + (res.message || '') + ' (' + rem + ' tersisa)');
 					}
-					window.setTimeout(step, 300);
+					window.setTimeout(step, res.job_kind ? 300 : 3000);
 				})
-				.fail(function () {
-					showResult('Koneksi terputus saat memproses queue. Coba klik "Proses Antrean Sekarang".', false);
+				.fail(function (xhr, state) {
+					stop();
+					showResult(requestError(xhr, state) + ' Gunakan Proses Antrean untuk melanjutkan.', false);
 				});
 		}
 		step();
@@ -303,6 +344,8 @@
 			event.preventDefault();
 			var $button = $(this);
 			var original = $button.text();
+		var queueStarted = false;
+		function releaseButton() { $button.prop('disabled', false).text(original); }
 			$button.prop('disabled', true).text(config.i18n.running);
 			call('delete_log', { log: $button.data('log') })
 				.done(function (response) {
@@ -327,6 +370,8 @@
 			var message = data.all ? 'Hapus semua log?' : (data.ids ? 'Hapus log terpilih?' : 'Hapus log sesuai filter?');
 			if (!window.confirm(message)) { return; }
 			var original = $button.text();
+		var queueStarted = false;
+		function releaseButton() { $button.prop('disabled', false).text(original); }
 			$button.prop('disabled', true).text(config.i18n.running);
 			call('clear_logs', data)
 				.done(function (response) {
@@ -342,4 +387,21 @@
 			else { window.clearInterval(autoTimer); }
 		});
 	}
+	$(document).on('click', '[data-lpgen-preview-download]', function () {
+		var frame = document.getElementById($(this).attr('data-lpgen-preview-download'));
+		if (!frame) { return; }
+		var previewSource = (frame.getAttribute('srcdoc') || '').replace('<base href="about:srcdoc">', '');
+		var blob = new Blob([previewSource], {type: 'text/html;charset=utf-8'});
+		var url = URL.createObjectURL(blob), link = document.createElement('a');
+		link.href = url; link.download = 'lp-generator-preview.html'; link.click();
+		window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+	});
+	$(document).on('click', '[data-lpgen-slot-picker]', function () {
+		if (!window.wp || !wp.media) { return; }
+		var target = $(this).attr('data-lpgen-slot-picker');
+		var picker = wp.media({title: 'Pilih gambar untuk section ini', button: {text: 'Gunakan gambar'}, multiple: false, library: {type: 'image'}});
+		picker.on('select', function () { var selected = picker.state().get('selection').first(); if (selected) { $('#' + target).val(selected.id).trigger('change'); $('#' + target + '_label').text(selected.get('title') || 'Gambar terpilih'); } });
+		picker.open();
+	});
+	$(document).on('click', '[data-lpgen-slot-clear]', function () { var target = $(this).attr('data-lpgen-slot-clear'); $('#' + target).val(0).trigger('change'); $('#' + target + '_label').text('Belum dipilih'); });
 })(jQuery);

@@ -45,7 +45,9 @@ $blocks = Publisher::build_blocks(
 lpg_assert_true( false !== strpos( $blocks, 'Disclosure:' ), 'disclosure affiliate hadir' );
 lpg_assert_true( false !== strpos( $blocks, 'wp:heading' ), 'blok heading hadir' );
 lpg_assert_true( false !== strpos( $blocks, 'wp:list' ), 'blok list hadir' );
-lpg_assert_true( false !== strpos( $blocks, 'rel="sponsored nofollow"' ), 'CTA affiliate di blok' );
+lpg_assert_true( false === strpos( $blocks, 'wp:buttons' ), 'artikel pendukung tidak melompati funnel ke CTA offer' );
+$lp_blocks = Publisher::build_blocks( array( 'cta_text' => 'Cek harga', 'cta_url' => 'https://example.test/ref' ), 'lp', array( 'offer_type' => 'affiliate' ) );
+lpg_assert_true( false !== strpos( $lp_blocks, 'rel="sponsored nofollow noopener"' ), 'CTA affiliate tetap tersedia pada LP' );
 
 $product_blocks = Publisher::build_blocks(
 	array( 'title' => 'Produk A', 'sections' => array() ),

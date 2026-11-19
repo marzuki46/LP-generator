@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.3.6
+Stable tag: 1.5.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,33 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.5.2 =
+* Fix Generate/Prepare Framework failing before AJAX because request data was initialized too late.
+* Show queue progress and actionable errors; release failed buttons and prevent duplicate browser runners.
+* Run publish queues in the foreground too; continue through auto-publish and report running/scheduled jobs accurately.
+* Reject failed queue inserts and return structured server errors.
+* Generalize the reviewed design contract to all 12 preset frameworks; AI must return the matching design_id, section_id and image_slot. Regenerate framework plans after upgrading.
+
+
+= 1.5.1 =
+* First reviewed AIDA HTML design with stable section/image slot IDs and campaign provenance.
+* Explicit per-slot image uploads; no fuzzy placement or image fallback into unrelated sections.
+* Saved-content HTML preview/export, campaign-bound related links and per-item SEO metadata.
+
+
+= 1.5.0 =
+* Responsive WordPress HTML landing-page renderer with cards, processes, comparisons, evidence, offer sections, FAQ and repeated CTA.
+* Campaign-specific AI planning for all 12 preset frameworks and custom AI frameworks; exact step order is validated.
+* Optional full-page canvas, scoped frontend/editor CSS and inspectable HTML during review.
+
+
+= 1.4.0 =
+* Local funnel context, 8–12 AI entities for each content item, and cross-campaign duplicate checks.
+* Contextual keyword anchors to the campaign BOFU; optional additional TOFU-to-MOFU link.
+* Preserve reviewed editor content, persist all campaign settings, and enforce queue dependencies.
+* Support hierarchical landing-page paths with existing parent pages.
+
 
 = 1.3.6 =
 * Moved language selector to Step 1 (Penawaran) and strictly enforced 100% natural Indonesian generation.

@@ -19,7 +19,7 @@ final class Frameworks {
 	/**
 	 * Section hints that an AI-generated framework may use.
 	 */
-	public const HINTS = array( 'hero', 'problem', 'benefits', 'proof', 'process', 'cta', 'faq' );
+	public const HINTS = array( 'hero', 'problem', 'benefits', 'proof', 'process', 'cta', 'faq', 'pain', 'cost-of-inaction', 'solution', 'before', 'after', 'specs', 'advantages', 'qualify', 'education', 'offer', 'bridge', 'explainer', 'outcome', 'interest', 'objections', 'identify', 'demo', 'compare', 'recommend', 'testimonials', 'social-proof', 'visual', 'promise', 'context', 'cost' );
 
 	/**
 	 * Image roles that an AI-generated framework may use.
@@ -31,6 +31,65 @@ final class Frameworks {
 	 *
 	 * @return array<string,array<string,mixed>>
 	 */
+	public const LAYOUTS = array( 'story', 'benefits', 'process', 'comparison', 'proof', 'offer' );
+
+	public static function layout_for_hint( string $hint ): string {
+		if ( in_array( $hint, array( 'benefits', 'advantages', 'after', 'outcome', 'promise' ), true ) ) { return 'benefits'; }
+		if ( in_array( $hint, array( 'process', 'bridge', 'education', 'demo' ), true ) ) { return 'process'; }
+		if ( in_array( $hint, array( 'compare', 'specs', 'explainer' ), true ) ) { return 'comparison'; }
+		if ( in_array( $hint, array( 'proof', 'testimonials', 'social-proof' ), true ) ) { return 'proof'; }
+		if ( in_array( $hint, array( 'cta', 'offer', 'recommend' ), true ) ) { return 'offer'; }
+		return 'story';
+	}
+
+	/** Bind the plan to its campaign and the offer data used to design it. */
+	public static function fingerprint( array $context ): string {
+		$data = array();
+		foreach ( array( 'campaign_id', 'offer_type', 'offer_name', 'offer_url', 'audience', 'problem', 'promise', 'benefits', 'price', 'bonus', 'guarantee', 'cta', 'voice', 'language', 'phone', 'brand', 'city', 'target_areas' ) as $key ) {
+			$data[ $key ] = $context[ $key ] ?? '';
+		}
+		$data['basis'] = (string) ( $context['framework_slug'] ?? 'aida' );
+		$design_id = DesignContract::id_for( $data['basis'] );
+		if ( '' !== $design_id ) { $data['design_id'] = $design_id; }
+		$upload_keys = array_column( DesignContract::contract( $data['basis'] ), 'upload_key' );
+		foreach ( array_filter( $upload_keys ) as $key ) { $data[ $key ] = absint( $context[ $key ] ?? 0 ); }
+		return hash( 'sha256', (string) wp_json_encode( $data ) );
+	}
+
+	public static function campaign_plan( array $context ): array {
+		$plan = self::sanitize_generated( $context['ai_framework'] ?? '' );
+		if ( empty( $plan['steps'] ) || $plan['campaign_id'] !== (int) ( $context['campaign_id'] ?? 0 ) || ! hash_equals( self::fingerprint( $context ), $plan['fingerprint'] ) ) { return array(); }
+		return $plan;
+	}
+
+	/** Never silently replace a selected formula with AIDA or remove repeated steps. */
+	public static function validate_plan( array $raw, array $context ): array {
+		$basis = (string) ( $context['framework_slug'] ?? 'aida' );
+		$steps = $raw['steps'] ?? null;
+		if ( ! is_array( $steps ) || count( $steps ) < 3 || count( $steps ) > 12 ) { throw new \RuntimeException( 'Framework AI harus memiliki 3–12 langkah yang lengkap.' ); }
+		$expected = 'ai' === $basis ? array() : (array) self::get( $basis )['steps'];
+		if ( $expected && count( $steps ) !== count( $expected ) ) { throw new \RuntimeException( 'Jumlah langkah AI tidak sesuai framework pilihan.' ); }
+		if ( 'ai' === $basis && ( count( $steps ) < 4 || count( $steps ) > 6 ) ) { throw new \RuntimeException( 'Framework AI khusus memerlukan 4–6 langkah.' ); }
+		$contract = DesignContract::contract( $basis );
+		foreach ( $steps as $index => $step ) {
+			if ( is_array( $step ) && isset( $contract[ $index ] ) ) {
+				$step['section_hint'] = $contract[ $index ]['hint'];
+				$step['layout']       = $contract[ $index ]['layout'];
+				$steps[ $index ]      = $step;
+			}
+		}
+		$raw['steps'] = $steps;
+		foreach ( $steps as $index => $step ) {
+			if ( ! is_array( $step ) || ! is_string( $step['name'] ?? null ) || '' === trim( $step['name'] ) || ! is_string( $step['heading_goal'] ?? null ) || '' === trim( $step['heading_goal'] ) || ! in_array( $step['section_hint'] ?? '', self::HINTS, true ) || ! in_array( $step['layout'] ?? '', self::LAYOUTS, true ) ) { throw new \RuntimeException( 'Langkah framework AI belum memiliki tujuan dan layout yang valid.' ); }
+			if ( $expected && trim( $step['name'] ) !== $expected[ $index ] ) { throw new \RuntimeException( 'Urutan/nama langkah harus mengikuti framework yang dipilih.' ); }
+		}
+		$raw['basis'] = $basis;
+		$raw['campaign_id'] = (int) ( $context['campaign_id'] ?? 0 );
+		$raw['fingerprint'] = self::fingerprint( $context );
+		$raw['generated_at'] = current_time( 'mysql' );
+		return self::sanitize_generated( DesignContract::bind_plan( $raw, $context ) );
+	}
+
 	public static function presets(): array {
 		return array(
 			'aida' => array(
@@ -202,6 +261,10 @@ final class Frameworks {
 			'section_hint'  => $hint,
 			'image_role'    => $role,
 			'image_keyword' => Utils::truncate( $keyword, 60 ),
+			'layout' => in_array( (string) ( $data['layout'] ?? '' ), self::LAYOUTS, true ) ? $data['layout'] : self::layout_for_hint( $hint ),
+			'section_id' => sanitize_key( (string) ( $data['section_id'] ?? '' ) ),
+			'image_slot' => sanitize_key( (string) ( $data['image_slot'] ?? '' ) ),
+			'heading_goal' => Utils::truncate( sanitize_text_field( (string) ( $data['heading_goal'] ?? '' ) ), 300 ),
 		);
 	}
 
@@ -224,7 +287,7 @@ final class Frameworks {
 		}
 		$steps = array();
 		$raw_steps = isset( $raw['steps'] ) && is_array( $raw['steps'] ) ? $raw['steps'] : array();
-		foreach ( array_slice( $raw_steps, 0, 6 ) as $index => $step ) {
+		foreach ( array_slice( $raw_steps, 0, 12 ) as $index => $step ) {
 			$fallback = is_array( $step ) ? (string) ( $step['name'] ?? '' ) : ( is_scalar( $step ) ? (string) $step : '' );
 			$steps[]  = self::sanitize_step( $step, $fallback, (int) $index );
 		}
@@ -235,6 +298,10 @@ final class Frameworks {
 			'label'        => Utils::truncate( $label, 80 ),
 			'steps'        => $steps,
 			'generated_at' => sanitize_text_field( (string) ( $raw['generated_at'] ?? '' ) ),
+			'design_id' => sanitize_key( (string) ( $raw['design_id'] ?? '' ) ),
+			'basis' => sanitize_key( (string) ( $raw['basis'] ?? '' ) ),
+			'campaign_id' => absint( $raw['campaign_id'] ?? 0 ),
+			'fingerprint' => sanitize_text_field( (string) ( $raw['fingerprint'] ?? '' ) ),
 		);
 	}
 

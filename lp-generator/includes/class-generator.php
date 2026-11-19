@@ -32,12 +32,39 @@ final class Generator {
 			);
 		}
 
+		$settings = get_option( 'lpgen_settings', array() );
+		if ( empty( $settings['ninerouter_url'] ) ) { return array( 'ok' => false, 'jobs' => 0, 'message' => __( 'Isi 9Router Base URL pada Settings → AI sebelum memulai generate.', 'lp-generator' ) ); }
+
+		if ( 'existing' === $campaign['bofu_mode'] && '' === $campaign['bofu_url'] ) {
+			return array( 'ok' => false, 'message' => __( 'Pilih halaman BOFU yang sudah terbit terlebih dahulu.', 'lp-generator' ), 'jobs' => 0 );
+		}
+		if ( Database::count_jobs( $campaign_id, 'running' ) > 0 ) {
+			return array( 'ok' => false, 'message' => __( 'Tunggu job aktif selesai sebelum memulai ulang.', 'lp-generator' ), 'jobs' => 0 );
+		}
+		if ( 'manual' === $campaign['topic_mode'] ) {
+			try {
+				$exclude = array_map( static fn( array $item ): int => (int) $item['id'], ContentRepository::items( $campaign_id ) );
+				$seen = array();
+				foreach ( array_merge( $campaign['manual_mofu_topics'], $campaign['manual_tofu_topics'] ) as $title ) {
+					$key = FunnelContent::normalize( (string) $title );
+					if ( isset( $seen[ $key ] ) ) { throw new \RuntimeException( 'Topik manual tidak boleh berulang dalam satu campaign.' ); }
+					$seen[ $key ] = true;
+					FunnelContent::assert_unique( (string) $title, '', $exclude, true );
+				}
+			} catch ( \RuntimeException $e ) {
+				return array( 'ok' => false, 'message' => $e->getMessage(), 'jobs' => 0 );
+			}
+		}
 		Database::clear_pending_jobs( $campaign_id );
 		ContentRepository::delete_items( $campaign_id );
 
 		$items    = array();
 		$settings = get_option( 'lpgen_settings', array() );
 		$settings = is_array( $settings ) ? $settings : array();
+
+		if ( empty( $campaign['framework_plan'] ) ) {
+			$items[] = array( 'id' => 0, 'kind' => 'generate_framework', 'stage' => 'bofu', 'index' => 0 );
+		}
 
 		// 0a. Optional Amazon product discovery for affiliate campaigns.
 		if ( 'affiliate' === (string) $campaign['offer_type'] && ( ! empty( $settings['amazon_enabled'] ) || ! empty( $campaign['amazon_enabled'] ) ) ) {
@@ -78,7 +105,7 @@ final class Generator {
 				}
 				$id = ContentRepository::create_item( $campaign_id, 'mofu', 'topic', $i );
 				ContentRepository::set_item_status( $id, 'approved' );
-				update_post_meta( $id, '_lpgen_title', $title );
+				wp_update_post( array( 'ID' => $id, 'post_title' => $title, 'post_content' => Publisher::paragraph_block( $title ) ) );
 				update_post_meta( $id, '_lpgen_structured', wp_json_encode( array( 'title' => $title, 'angle' => $title ) ) );
 				$mofu_topics[] = $id;
 			}
@@ -114,7 +141,7 @@ final class Generator {
 				}
 				$id = ContentRepository::create_item( $campaign_id, 'tofu', 'topic', $i );
 				ContentRepository::set_item_status( $id, 'approved' );
-				update_post_meta( $id, '_lpgen_title', $title );
+				wp_update_post( array( 'ID' => $id, 'post_title' => $title, 'post_content' => Publisher::paragraph_block( $title ) ) );
 				update_post_meta( $id, '_lpgen_structured', wp_json_encode( array( 'title' => $title, 'angle' => $title ) ) );
 				$tofu_topics[] = $id;
 			}
@@ -167,11 +194,10 @@ final class Generator {
 	}
 
 	/**
-	 * Generate a custom framework for one campaign, step by step, with AI.
+	 * Generate a complete, validated framework plan for this campaign in one AI call.
 	 *
-	 * The first call proposes ordered step names. Each step is then refined in
-	 * its own call so the AI can choose a section hint and an image role. The
-	 * result is stored in campaign meta and used by every content prompt.
+	 * The selected preset order is preserved. AI specializes its section goals,
+	 * layouts and image roles to the offer; custom AI mode invents its own steps.
 	 *
 	 * @param int $campaign_id Campaign ID.
 	 * @return array{ok:bool,message:string,steps:int}
@@ -195,29 +221,10 @@ final class Generator {
 		}
 		set_transient( $lock_key, 1, 5 * MINUTE_IN_SECONDS );
 		try {
-			$plan    = AiClient::generate( Prompts::build_framework_plan( $campaign ) );
-			$names   = Frameworks::clean_step_names( $plan['structured']['step_names'] ?? array() );
-			if ( count( $names ) < 4 ) {
-				$names = Frameworks::clean_step_names( Frameworks::presets()['aida']['steps'] );
-			}
-			$label   = Utils::truncate( sanitize_text_field( (string) ( $plan['structured']['label'] ?? '' ) ), 60 );
-			if ( '' === $label ) {
-				$label = 'AI Framework';
-			}
-			$steps = array();
-			foreach ( array_values( $names ) as $index => $name ) {
-				try {
-					$detail = AiClient::generate( Prompts::build_framework_step( $campaign, $name, (int) $index ) );
-					$steps[] = Frameworks::sanitize_step( $detail['structured'], $name, (int) $index );
-				} catch ( \Throwable $e ) {
-					$steps[] = Frameworks::sanitize_step( array(), $name, (int) $index );
-				}
-			}
-			$generated = array(
-				'label'        => $label,
-				'steps'        => $steps,
-				'generated_at' => current_time( 'mysql' ),
-			);
+			$result = AiClient::generate( Prompts::build_framework_plan( $campaign ) );
+			$generated = Frameworks::validate_plan( $result['structured'], $campaign );
+			$label = $generated['label'];
+			$steps = $generated['steps'];
 			ContentRepository::save_campaign_meta( $campaign_id, array( 'ai_framework' => wp_json_encode( $generated ) ) );
 			Database::log( 'info', sprintf( 'AI framework generated: %s (%d steps)', $label, count( $steps ) ), $campaign_id );
 			return array(
@@ -396,6 +403,10 @@ final class Generator {
 	 */
 	private static function dispatch( array $job ): void {
 		switch ( (string) $job['kind'] ) {
+			case 'generate_framework':
+				$result = self::generate_framework( (int) $job['campaign_id'] );
+				if ( ! $result['ok'] ) { throw new \RuntimeException( $result['message'] ); }
+				break;
 			case 'generate_lp':
 			case 'generate_topic':
 			case 'generate_article':
@@ -442,25 +453,40 @@ final class Generator {
 		$context = $campaign;
 		$context['stage']            = $stage;
 		$context['item_index']       = (int) ( $payload['index'] ?? $item['index'] );
-		$context['existing_titles']  = self::existing_titles( $campaign_id );
-		$context['target_stage']     = (string) ( $payload['target_stage'] ?? $item['target_stage'] );
+		$context['existing_titles'] = FunnelContent::titles( array( $item_id ) );
+		$areas = (array) ( $campaign['target_areas'] ?? array() );
+		$context['content_area'] = $areas ? $areas[ $context['item_index'] % count( $areas ) ] : (string) ( $campaign['city'] ?? '' );
+		$context['target_stage'] = 'bofu';
 
 		if ( 'article' === $kind ) {
 			$topic_item_id = (int) ( $payload['topic_item_id'] ?? 0 );
 			$topic         = $topic_item_id > 0 ? ContentRepository::get_item( $topic_item_id ) : array();
 			$topic_json    = json_decode( (string) ( $topic['structured'] ?? '' ), true );
 			$topic_json    = is_array( $topic_json ) ? $topic_json : array();
+			if ( empty( $topic_json['title'] ) || ! in_array( (string) ( $topic['status'] ?? '' ), array( 'generated', 'approved', 'published' ), true ) ) {
+				throw new \RuntimeException( 'Topik belum berhasil dibuat/disetujui; artikel ditahan.' );
+			}
+			update_post_meta( $item_id, '_lpgen_source_topic_id', $topic_item_id );
 			$context['topic_title']  = (string) ( $topic['title'] ?? '' );
 			$context['topic_angle']  = (string) ( $topic_json['angle'] ?? '' );
 			$context['topic_outline'] = (array) ( $topic_json['outline'] ?? array() );
+			$context = FunnelContent::prepare( $context, $item_id );
 			$prompt = Prompts::build_article( $context );
 		} elseif ( 'topic' === $kind ) {
 			$prompt = Prompts::build_topic( $context );
 		} else {
+			if ( empty( $campaign['framework_plan'] ) ) { throw new \RuntimeException( 'Framework campaign belum siap atau data offer berubah. Generate ulang framework terlebih dahulu.' ); }
+			$context = FunnelContent::prepare( $context, $item_id );
 			$prompt = Prompts::build_lp( $context );
 		}
 
 		$result = AiClient::generate( $prompt );
+		if ( 'topic' !== $kind ) { $result['structured']['entities'] = $context['entities']; }
+		FunnelContent::validate_content( $result['structured'], $kind );
+		if ( 'lp' === $kind ) { LandingPage::validate( $result['structured'], $campaign ); $result['structured']['framework_fingerprint'] = Frameworks::fingerprint( $campaign ); }
+		$preview = Publisher::build_blocks( $result['structured'], $kind, $campaign );
+		FunnelContent::assert_unique( (string) ( $result['structured']['title'] ?? '' ), $preview, FunnelContent::exclusions( $item_id ), 'topic' === $kind );
+		if ( 'article' === $kind ) { FunnelContent::anchor( (string) ( $result['structured']['anchor_suggestion'] ?? '' ) ); }
 		$context['content_tags'] = Utils::sanitize_tags(
 			$result['structured']['tags'] ?? array(),
 			max( 1, min( 3, (int) ( $campaign['tag_max'] ?? 3 ) ) )
@@ -497,13 +523,12 @@ final class Generator {
 
 		$target = '';
 		if ( 'article' === $item['kind'] && self::internal_link_active( $campaign ) ) {
-			$target = 'bofu' === (string) ( $campaign['internal_link_target'] ?? 'bofu' )
-				? self::find_published_permalink( $campaign_id, 'bofu' )
-				: ( 'bofu' === $item['target_stage']
-				? self::find_published_permalink( $campaign_id, 'bofu' )
-				: self::find_published_permalink( $campaign_id, 'mofu' ) );
+			$target = self::find_published_permalink( $campaign_id, 'bofu' );
 			if ( '' === $target ) {
-				$target = self::find_published_permalink( $campaign_id, 'bofu' );
+				throw new \RuntimeException( 'BOFU belum terbit. Artikel ditahan agar tidak kehilangan link ke LP tujuan.' );
+			}
+			if ( 'next_stage' === (string) ( $campaign['internal_link_target'] ?? '' ) && 'tofu' === $item['stage'] ) {
+				$campaign['secondary_funnel_url'] = self::find_published_permalink( $campaign_id, 'mofu' );
 			}
 		}
 		$post_id = Publisher::publish_item( $item_id, $campaign, $target );
@@ -628,7 +653,14 @@ final class Generator {
 		$context['target_stage']    = 'bofu';
 		$context['existing_titles'] = self::existing_titles( $campaign_id );
 
+		$context['item_index'] = (int) $item['index'];
+		$context['topic_title'] = $tag;
+		$context = FunnelContent::prepare( $context, $item_id );
 		$result = AiClient::generate( Prompts::build_tag_article( $context ) );
+		$result['structured']['entities'] = $context['entities'];
+		FunnelContent::validate_content( $result['structured'], 'article' );
+		FunnelContent::anchor( (string) ( $result['structured']['anchor_suggestion'] ?? '' ) );
+		FunnelContent::assert_unique( (string) $result['structured']['title'], Publisher::build_blocks( $result['structured'], 'article', $campaign ), FunnelContent::exclusions( $item_id ) );
 		$context['content_tags'] = Utils::sanitize_tags(
 			$result['structured']['tags'] ?? array(),
 			max( 1, min( 3, (int) ( $campaign['tag_max'] ?? 3 ) ) )
@@ -786,13 +818,13 @@ final class Generator {
 			$campaign = ContentRepository::get_campaign( $campaign_id );
 			if ( 'existing' === (string) ( $campaign['bofu_mode'] ?? 'new' ) && ! empty( $campaign['bofu_existing_id'] ) ) {
 				$link = get_permalink( (int) $campaign['bofu_existing_id'] );
-				if ( ! empty( $link ) && false !== wp_http_validate_url( $link ) ) {
+				if ( 'publish' === get_post_status( (int) $campaign['bofu_existing_id'] ) && ! empty( $link ) && false !== wp_http_validate_url( $link ) ) {
 					return $link;
 				}
 			}
 		}
 		foreach ( ContentRepository::items( $campaign_id, $stage ) as $item ) {
-			if ( 'published' === (string) $item['status'] && '' !== (string) $item['permalink'] ) {
+			if ( 'published' === (string) $item['status'] && 'publish' === get_post_status( (int) $item['post_id'] ) && '' !== (string) $item['permalink'] ) {
 				return (string) $item['permalink'];
 			}
 		}
@@ -820,12 +852,12 @@ final class Generator {
 			$job = Database::get_next_job( $campaign_id > 0 ? $campaign_id : null );
 			if ( null === $job ) {
 				self::finalize_orphans();
-				return array(
-					'ok'        => true,
-					'done'      => true,
-					'remaining' => 0,
-					'message'   => __( 'Semua antrean konten telah selesai.', 'lp-generator' ),
-				);
+				$snapshot = Database::queue_snapshot( $campaign_id );
+				return array_merge( $snapshot, array(
+					'ok' => $snapshot['total'] > 0,
+					'waiting' => $snapshot['remaining'] > 0 || $snapshot['running'] > 0,
+					'message' => $snapshot['total'] > 0 ? __( 'Menunggu jadwal antrean berikutnya atau antrean selesai.', 'lp-generator' ) : __( 'Belum ada antrean untuk campaign ini. Klik Generate terlebih dahulu.', 'lp-generator' ),
+				) );
 			}
 
 			if ( ! Database::claim_job( (int) $job['id'] ) ) {
@@ -834,6 +866,7 @@ final class Generator {
 					'done'      => false,
 					'busy'      => true,
 					'remaining' => Database::count_jobs( $campaign_id, 'queued' ),
+					'failed' => Database::count_jobs( $campaign_id, 'failed' ),
 					'message'   => __( 'Job telah diambil oleh proses lain.', 'lp-generator' ),
 				);
 			}
@@ -842,11 +875,13 @@ final class Generator {
 			$job_id       = (int) $job['id'];
 			Database::log( 'info', sprintf( 'Job %s dimulai via runner (attempt %d)', $job['kind'], (int) ( $job['attempts'] ?? 0 ) ), $job_campaign, $job_id );
 
+			$outcome = 'done';
 			try {
 				self::dispatch( $job );
 				Database::update_job( $job_id, array( 'status' => 'done' ) );
 				Database::log( 'info', sprintf( 'Job %s selesai', $job['kind'] ), $job_campaign, $job_id );
 			} catch ( \Throwable $e ) {
+				$outcome = 'retry';
 				$settings = get_option( 'lpgen_settings', array() );
 				$max      = max( 1, min( 5, (int) ( $settings['max_retries'] ?? 2 ) ) );
 				$attempts = (int) ( $job['attempts'] ?? 0 ) + 1;
@@ -862,6 +897,7 @@ final class Generator {
 						)
 					);
 				} else {
+					$outcome = 'failed';
 					Database::update_job(
 						$job_id,
 						array(
@@ -883,13 +919,13 @@ final class Generator {
 				self::finalize_orphans();
 			}
 
-			return array(
-				'ok'        => true,
-				'done'      => 0 === $remaining,
-				'remaining' => $remaining,
-				'job_kind'  => (string) $job['kind'],
-				'message'   => sprintf( __( 'Job %s selesai. Sisa: %d.', 'lp-generator' ), $job['kind'], $remaining ),
-			);
+			$snapshot = Database::queue_snapshot( $job_campaign );
+			return array_merge( $snapshot, array(
+				'ok' => true,
+				'outcome' => $outcome,
+				'job_kind' => (string) $job['kind'],
+				'message' => 'done' === $outcome ? sprintf( __( 'Job %s selesai. Sisa: %d.', 'lp-generator' ), $job['kind'], $snapshot['remaining'] ) : __( 'Job belum berhasil. Antrean akan mencoba ulang sesuai batas retry; periksa Activity Log.', 'lp-generator' ),
+			) );
 		} finally {
 			self::release_lock();
 		}
@@ -931,13 +967,13 @@ final class Generator {
 				continue;
 			}
 			$status = (string) ContentRepository::get_meta( $id, 'status', '' );
-			$next   = 'generating' === $status ? 'review' : ( 'publishing' === $status ? 'published' : '' );
+			$next   = 'generating' === $status ? 'review' : ( 'publishing' === $status ? ( Database::count_jobs( $id, 'failed' ) > 0 ? 'failed' : 'published' ) : '' );
 			if ( '' !== $next ) {
 				update_post_meta( $id, '_lpgen_status', $next );
 				Database::log( 'info', 'Campaign status → ' . $next, $id );
 				if ( 'review' === $next ) {
 					$campaign = ContentRepository::get_campaign( $id );
-					if ( ! empty( $campaign ) && self::auto_publish_enabled( $campaign ) ) {
+					if ( ! empty( $campaign ) && 0 === Database::count_jobs( $id, 'failed' ) && self::auto_publish_enabled( $campaign ) ) {
 						$result = self::start_publish( $id );
 						Database::log(
 							$result['ok'] ? 'info' : 'warning',

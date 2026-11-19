@@ -47,6 +47,8 @@ if ( ! function_exists( 'add_filter' ) ) {
 	}
 }
 
+function plugin_basename( $file ) { return 'lp-generator/' . basename( $file ); }
+
 require_once dirname( __DIR__ ) . '/lp-generator.php';
 
 \LPG\init();

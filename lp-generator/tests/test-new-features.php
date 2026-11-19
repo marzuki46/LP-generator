@@ -91,7 +91,7 @@ lpg_assert_same( 'www.amazon.com', $parsed[0]['domain'], 'parse_images membaca d
 
 $entity_prompt = Prompts::build_entities( array( 'language' => 'id', 'entity_count' => 6, 'phone' => '0812' ) );
 lpg_assert_same( array( 'entities' ), $entity_prompt['required'], 'build_entities required key' );
-lpg_assert_true( false !== strpos( $entity_prompt['user'], 'exactly 6 entities' ), 'build_entities memakai entity_count' );
+lpg_assert_true( false !== strpos( $entity_prompt['user'], 'exactly 8 entities' ), 'build_entities memakai entity_count' );
 lpg_assert_true( false !== strpos( $entity_prompt['user'], '<CAMPAIGN_JSON>' ), 'build_entities menyertakan campaign context' );
 
 $tag_prompt = Prompts::build_tag_article(
@@ -108,3 +108,8 @@ lpg_assert_true( in_array( 'tags', $tag_prompt['required'], true ), 'build_tag_a
 
 $article_prompt = Prompts::build_article( array( 'language' => 'en', 'tag_max' => 2, 'stage' => 'tofu' ) );
 lpg_assert_true( false !== strpos( $article_prompt['user'], 'exactly 2 short' ), 'article prompt memakai tag_max' );
+
+$fixed_start = gmdate( 'Y-m-d\TH:i', time() + 2 * DAY_IN_SECONDS );
+$fixed_result = Utils::schedule_timestamp( array( 'schedule_mode' => 'fixed', 'schedule_start' => $fixed_start, 'schedule_time' => '01:00', 'schedule_interval' => 15 ), 2 );
+lpg_assert_same( strtotime( str_replace( 'T', ' ', $fixed_start ) . ':00 UTC' ) + 1800, $fixed_result, 'jadwal fixed memakai tanggal dan jam input tepat sekali beserta interval' );
+lpg_assert_true( $fixed_result > time() + DAY_IN_SECONDS, 'tanggal fixed masa depan tidak berubah menjadi publish secepatnya' );

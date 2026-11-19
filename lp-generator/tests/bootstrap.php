@@ -36,6 +36,7 @@ if ( ! function_exists( 'esc_html__' ) ) {
 		return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
 	}
 }
+if ( ! function_exists( 'esc_attr__' ) ) { function esc_attr__( $text, $domain = '' ) { return esc_attr( $text ); } }
 if ( ! function_exists( '__' ) ) {
 	function __( $text, $domain = '' ) {
 		return (string) $text;
@@ -78,7 +79,7 @@ if ( ! function_exists( 'absint' ) ) {
 }
 if ( ! function_exists( 'get_option' ) ) {
 	function get_option( $name, $default = false ) {
-		return $default;
+		return $GLOBALS['lpg_test_options'][$name] ?? $default;
 	}
 }
 if ( ! defined( 'MINUTE_IN_SECONDS' ) ) {
@@ -95,7 +96,7 @@ if ( ! function_exists( 'current_time' ) ) {
 		if ( 'timestamp' === $type ) {
 			return time();
 		}
-		return gmdate( 'Y-m-d H:i:s' );
+		return gmdate( 'mysql' === $type ? 'Y-m-d H:i:s' : $type );
 	}
 }
 if ( ! function_exists( 'get_gmt_from_date' ) ) {
@@ -132,10 +133,15 @@ if ( ! function_exists( 'wp_http_validate_url' ) ) {
 
 require_once dirname( __DIR__ ) . '/includes/class-utils.php';
 require_once dirname( __DIR__ ) . '/includes/class-frameworks.php';
+require_once dirname( __DIR__ ) . '/includes/class-design-contract.php';
 require_once dirname( __DIR__ ) . '/includes/class-prompts.php';
 require_once dirname( __DIR__ ) . '/includes/class-amazon.php';
 require_once dirname( __DIR__ ) . '/includes/class-image.php';
 require_once dirname( __DIR__ ) . '/includes/class-indexer.php';
+require_once dirname( __DIR__ ) . '/includes/class-funnel-content.php';
+require_once dirname( __DIR__ ) . '/includes/class-landing-page.php';
+require_once dirname( __DIR__ ) . '/includes/class-aida-layout.php';
+require_once dirname( __DIR__ ) . '/includes/class-seo-standards.php';
 require_once dirname( __DIR__ ) . '/includes/class-publisher.php';
 require_once dirname( __DIR__ ) . '/includes/class-updater.php';
 require_once dirname( __DIR__ ) . '/includes/class-ai-client.php';

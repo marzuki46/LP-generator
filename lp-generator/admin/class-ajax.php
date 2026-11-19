@@ -75,6 +75,7 @@ final class Ajax {
 		if ( ! self::verify( $action ) ) {
 			return;
 		}
+		try {
 		switch ( $action ) {
 			case 'start-campaign':
 				$campaign_id = isset( $_POST['campaign'] ) ? absint( $_POST['campaign'] ) : 0;
@@ -140,10 +141,8 @@ final class Ajax {
 				break;
 			case 'generate-framework':
 				$campaign_id = isset( $_POST['campaign'] ) ? absint( $_POST['campaign'] ) : 0;
-				$result      = Generator::generate_framework( $campaign_id );
-				if ( ! empty( $result['ok'] ) && $campaign_id > 0 ) {
-					update_post_meta( $campaign_id, '_lpgen_framework', 'ai' );
-				}
+				if ( $campaign_id > 0 && isset( $_POST['lpgen'] ) && is_array( $_POST['lpgen'] ) ) { CampaignUI::save_meta_data( $campaign_id, (array) wp_unslash( $_POST['lpgen'] ) ); }
+				$result = Generator::generate_framework( $campaign_id );
 				break;
 			case 'test-connection':
 				$result = AiClient::test_connection();
@@ -195,6 +194,10 @@ final class Ajax {
 				self::error( __( 'Aksi tidak dikenal.', 'lp-generator' ) );
 				return;
 		}
+		} catch ( \Throwable $error ) {
+			Database::log( 'error', 'Aksi admin gagal: ' . sanitize_key( $action ), isset( $_POST['campaign'] ) ? absint( $_POST['campaign'] ) : 0, 0, array( 'error_type' => get_class( $error ) ) );
+			$result = array( 'ok' => false, 'code' => 'server_error', 'message' => __( 'Proses gagal di server. Periksa Activity Log. Jika antrean sudah terbentuk, gunakan Proses Antrean untuk melanjutkan.', 'lp-generator' ) );
+		}
 		wp_send_json( $result );
 	}
 
@@ -216,6 +219,17 @@ final class Ajax {
 		$payload = null !== $old_job ? json_decode( (string) $old_job['payload'], true ) : array();
 		$payload = is_array( $payload ) ? $payload : array();
 		$kind    = 'generate_' . (string) $item['kind'];
+		if ( 'article' === $item['kind'] ) {
+			$payload['topic_item_id'] = (int) ( $item['source_topic_id'] ?? 0 );
+			$payload['stage'] = (string) $item['stage'];
+			$payload['index'] = (int) $item['index'];
+			$payload['target_stage'] = 'bofu';
+			if ( 'tag' === $item['stage'] ) { $kind = 'generate_tag'; $payload['tag'] = (string) $item['tag']; }
+		}
+		delete_post_meta( $item_id, '_lpgen_entities' );
+		if ( 'lp' === $item['kind'] && empty( ContentRepository::get_campaign( (int) $item['campaign_id'] )['framework_plan'] ) ) {
+			Database::insert_job( array( 'campaign_id' => (int) $item['campaign_id'], 'kind' => 'generate_framework', 'payload' => array() ) );
+		}
 
 		Database::insert_job(
 			array(

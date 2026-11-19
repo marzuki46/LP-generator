@@ -291,6 +291,15 @@ final class ImagePipeline {
 
 		$desired = self::image_count( $settings, $context );
 		$images  = ContentRepository::item_images( $item_id );
+		$design_id    = DesignContract::id_for( (string) ( $context['framework_slug'] ?? '' ) );
+		$strict_slots = 'bofu' === ( $context['stage'] ?? '' ) && DesignContract::active( $context );
+		$placements   = $strict_slots ? DesignContract::placements( $context ) : array();
+		if ( $strict_slots ) {
+			foreach ( $placements as $index => $placement ) { if ( '' !== $placement['upload_key'] && ! empty( $context[ $placement['upload_key'] ] ) ) { $desired = max( $desired, $index + 1 ); } }
+			$desired = min( $desired, count( $placements ) );
+			$images = array_values( array_filter( $images, static fn( array $image ): bool => $design_id === ( $image['design_id'] ?? '' ) && (int) ( $image['campaign_id'] ?? 0 ) === $campaign_id && ( $image['campaign_fingerprint'] ?? '' ) === Frameworks::fingerprint( $context ) ) );
+			DesignContract::validate_images( $images, $context );
+		}
 		if ( count( $images ) >= $desired ) {
 			return array_slice( $images, 0, $desired );
 		}
@@ -308,10 +317,12 @@ final class ImagePipeline {
 			$base = 'lpgen-image';
 		}
 
-		for ( $i = count( $images ); $i < $desired; $i++ ) {
-			$keyword = $fw_keywords[ $i ] ?? $keywords[ $i % count( $keywords ) ];
-			$role    = $fw_roles[ $i ] ?? '';
-			$hint    = $fw_hints[ $i ] ?? '';
+		for ( $i = $strict_slots ? 0 : count( $images ); $i < $desired; $i++ ) {
+			if ( $strict_slots && in_array( $placements[ $i ]['image_slot'], array_column( $images, 'slot_id' ), true ) ) { continue; }
+			if ( $strict_slots && '' === trim( $placements[ $i ]['keyword'] ) ) { Database::log( 'warning', 'Slot gambar dilewati karena brief kosong: ' . $placements[ $i ]['image_slot'], $campaign_id ); continue; }
+			$keyword = $strict_slots ? $placements[ $i ]['keyword'] : ( $fw_keywords[ $i ] ?? $keywords[ $i % count( $keywords ) ] );
+			$role    = $strict_slots ? $placements[ $i ]['role'] : ( $fw_roles[ $i ] ?? '' );
+			$hint    = $strict_slots ? $placements[ $i ]['hint'] : ( $fw_hints[ $i ] ?? '' );
 			$found   = null;
 			$source_used = '';
 			foreach ( $order as $source ) {
@@ -331,6 +342,7 @@ final class ImagePipeline {
 			}
 
 			$meta = self::metadata( $keyword, $settings, $context );
+			if ( ! empty( $found['alt'] ) ) { $meta['alt'] = sanitize_text_field( (string) $found['alt'] ); }
 			$webp = self::to_webp( (string) $found['file'], $base . '-' . ( $i + 1 ), $settings, $meta );
 			if ( is_object( $webp ) && method_exists( $webp, 'get_error_message' ) ) {
 				Database::log( 'warning', 'WebP conversion failed: ' . $webp->get_error_message(), $campaign_id );
@@ -340,6 +352,13 @@ final class ImagePipeline {
 			$record = self::attach( (string) $webp, $meta, $role, $hint );
 			self::cleanup( $found );
 			if ( ! empty( $record ) ) {
+				if ( $strict_slots ) {
+					$record['slot_id'] = $placements[ $i ]['image_slot'];
+					$record['section_id'] = $placements[ $i ]['id'];
+					$record['design_id'] = $design_id;
+					$record['campaign_id'] = $campaign_id;
+					$record['campaign_fingerprint'] = Frameworks::fingerprint( $context );
+				}
 				$images[] = $record;
 			}
 		}
@@ -384,10 +403,16 @@ final class ImagePipeline {
 	 */
 	private static function fetch_upload( int $index, array $settings, array $context ) {
 		$ids = self::clean_upload_ids( $context['image_upload_ids'] ?? ( $settings['image_upload_ids'] ?? array() ) );
-		if ( empty( $ids ) ) {
+		if ( empty( $ids ) && !( 'bofu' === ( $context['stage'] ?? '' ) && DesignContract::active( $context ) ) ) {
 			return new \WP_Error( 'lpgen_no_upload', 'no_uploaded_images' );
 		}
-		$id   = $ids[ $index % count( $ids ) ];
+		$strict = 'bofu' === ( $context['stage'] ?? '' ) && DesignContract::active( $context );
+		if ( $strict ) {
+			$placements = DesignContract::placements( $context );
+			$key        = (string) ( $placements[ $index ]['upload_key'] ?? '' );
+			$id         = '' !== $key ? absint( $context[ $key ] ?? 0 ) : 0;
+			if ( ! $id ) { return new \WP_Error( 'lpgen_slot_upload_missing', 'Belum ada upload untuk slot ' . ( $placements[ $index ]['id'] ?? '' ) . ' ini.' ); }
+		} else { $id = $ids[ $index % count( $ids ) ]; }
 		$file = get_attached_file( $id );
 		if ( ! is_string( $file ) || '' === $file || ! is_file( $file ) ) {
 			return new \WP_Error( 'lpgen_upload_missing', 'uploaded_file_missing' );
@@ -404,6 +429,7 @@ final class ImagePipeline {
 			'file'      => $file,
 			'temporary' => false,
 			'source'    => 'upload',
+			'alt' => (string) get_post_meta( $id, '_wp_attachment_image_alt', true ),
 		);
 	}
 
@@ -846,6 +872,8 @@ final class ImagePipeline {
 
 		return array(
 			'id'           => $id,
+			'width' => absint( $attachment_meta['width'] ?? 0 ),
+			'height' => absint( $attachment_meta['height'] ?? 0 ),
 			'url'          => $url,
 			'alt'          => (string) ( $meta['alt'] ?? $keyword ),
 			'keyword'      => $keyword,
