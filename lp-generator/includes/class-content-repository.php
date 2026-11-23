@@ -78,6 +78,8 @@ final class ContentRepository {
 		'bofu_existing_id',
 		'bofu_path',
 		'lp_layout',
+		'lp_model',
+		'lp_target_keyword',
 		'topic_mode',
 		'manual_mofu_topics',
 		'manual_tofu_topics',
@@ -183,6 +185,8 @@ final class ContentRepository {
 		$context['target_areas'] = Utils::lines( (string) $context['target_areas'] );
 
 		$context['lp_layout'] = 'theme' === (string) $context['lp_layout'] ? 'theme' : 'canvas';
+		$context['lp_model'] = LpTemplate::clean( $context['lp_model'] ?? 'editorial' );
+		$context['lp_target_keyword'] = trim( sanitize_text_field( (string) ( $context['lp_target_keyword'] ?? '' ) ) );
 		$context['bofu_mode'] = 'existing' === (string) $context['bofu_mode'] ? 'existing' : 'new';
 		$context['bofu_existing_id'] = absint( $context['bofu_existing_id'] );
 		$context['topic_mode'] = 'manual' === (string) $context['topic_mode'] ? 'manual' : 'auto';
@@ -299,6 +303,8 @@ final class ContentRepository {
 			'content_push_enabled' => 1,
 			'internal_link_enabled' => 1,
 			'internal_link_target' => 'bofu',
+			'lp_model' => 'editorial',
+			'lp_target_keyword' => '',
 			'bofu_mode' => 'new',
 		);
 		// Preserve fields on partial updates (e.g. framework generation).

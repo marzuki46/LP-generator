@@ -287,7 +287,9 @@ final class Publisher {
 		FunnelContent::entities( json_decode( (string) ( $item['entities'] ?? '' ), true ) );
 		FunnelContent::assert_unique( (string) $item['title'], $blocks, FunnelContent::exclusions( $item_id ) );
 		if ( 'article' === $item['kind'] && '' !== $target_url ) {
-			$anchor = FunnelContent::anchor( (string) ( $item['anchor'] ?? '' ) );
+			$anchor = class_exists( Generator::class )
+				? Generator::internal_anchor( (int) $item['id'], $campaign )
+				: FunnelContent::anchor( (string) ( $item['anchor'] ?? '' ) );
 			$blocks = self::insert_funnel_link( $blocks, $target_url, $anchor, (string) ( $structured['cta_paragraph'] ?? '' ) );
 			if ( ! empty( $campaign['secondary_funnel_url'] ) ) {
 				SeoStandards::assert_internal( (string) $campaign['secondary_funnel_url'] );

@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__.'/fixtures/lp-data.php';
 use LPG\Frameworks;
 use LPG\LandingPage;
+use LPG\LpTemplate;
 foreach(array_merge(array_keys(Frameworks::presets()),array('ai')) as $slug) {
  $fixture=lpg_lp_fixture($slug);$campaign=$fixture['campaign'];$data=$fixture['data'];
  LandingPage::validate($data,$campaign);
@@ -20,6 +21,15 @@ foreach(array_merge(array_keys(Frameworks::presets()),array('ai')) as $slug) {
  $other=$campaign;$other['city']='Bandung';
  lpg_assert_same(array(),Frameworks::campaign_plan($other),$slug.': perubahan kota membatalkan rencana lama');
 }
+foreach (array_keys(LpTemplate::MODELS) as $model) {
+ $fixture=lpg_lp_fixture('aida');$fixture['campaign']['lp_model']=$model;
+ $html=LandingPage::render($fixture['data'],$fixture['campaign']);
+ lpg_assert_true(str_contains($html,'data-lp-model="'.$model.'"'),'model LP '.$model.' tercantum di HTML');
+ lpg_assert_true(str_contains($html,'lpg-lpm--'.$model),'model LP '.$model.' memakai class layout');
+ lpg_assert_true(str_contains($html,'lpg-lpm__trust') && str_contains($html,'lpg-lpm__sticky-cta'),'model '.$model.' punya trust strip dan sticky CTA');
+ lpg_assert_true(str_contains($html,'<!-- lpg-related:start -->'),'model '.$model.' punya slot related link');
+}
+lpg_assert_same('editorial',LpTemplate::clean('tidak-ada'),'model tidak dikenal jatuh ke editorial');
 $fixture=lpg_lp_fixture('dipada');
 lpg_assert_same('Desire',$fixture['campaign']['framework_plan']['steps'][0]['name'],'DIPADA Desire pertama dipertahankan');
 lpg_assert_same('Desire',$fixture['campaign']['framework_plan']['steps'][4]['name'],'DIPADA Desire kedua dipertahankan');
@@ -102,7 +112,7 @@ function wp_styles() {return $GLOBALS['lpg_test_styles'];}
 function wp_dequeue_style($handle) {$GLOBALS['lpg_test_dequeued'][]=$handle;}
 function wp_enqueue_style(...$args) {$GLOBALS['lpg_test_enqueued'][]=$args;}
 function wp_add_inline_style($handle,$css) {$GLOBALS['lpg_test_inline'][$handle]=$css;}
-function wp_strip_all_tags($text) {return strip_tags($text);}
+if(!function_exists('wp_strip_all_tags')) { function wp_strip_all_tags($text) {return strip_tags($text);} }
 if(!defined('LPG_PATH')) {define('LPG_PATH',dirname(__DIR__).'/');}
 if(!defined('LPG_URL')) {define('LPG_URL','https://example.test/wp-content/plugins/lp-generator/');}
 if(!defined('LPG_VERSION')) {define('LPG_VERSION','1.5.0');}

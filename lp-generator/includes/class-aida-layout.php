@@ -13,7 +13,9 @@ final class AidaLayout {
   $button=LandingPage::button((string)($campaign['offer_url'] ?? ''),(string)($data['cta_text'] ?? $campaign['cta'] ?? ''),$affiliate);
   $brand=trim(implode(' · ',array_filter(array((string)($campaign['brand'] ?? ''),(string)($campaign['city'] ?? '')))));
   $has_brief=!empty($campaign['benefits']) || isset($slots['aida-hero-visual']);
-  $html='<div class="lpg-lp lpg-lp--aida lpg-aida" data-design-id="aida-1">';
+  $model=LpTemplate::model($campaign);
+  $html='<div class="lpg-lp lpg-lp--aida lpg-aida '.esc_attr(LpTemplate::root_class($campaign)).'" data-design-id="aida-1" data-lp-model="'.esc_attr($model).'">';
+  $html.=LpTemplate::open($campaign,$data);
   $html.='<nav class="lpg-aida__nav" aria-label="'.esc_attr__('Navigasi halaman','lp-generator').'"><span data-lpg-bind="brand">'.LandingPage::text($brand).'</span><div><a href="#aida-interest">'.($en?'Your needs':esc_html__('Kebutuhan','lp-generator')).'</a><a href="#aida-desire">'.($en?'Benefits':esc_html__('Manfaat','lp-generator')).'</a><a href="#aida-action">'.($en?'Next step':esc_html__('Langkah berikutnya','lp-generator')).'</a></div></nav>';
   $html.='<header id="aida-attention" class="lpg-aida__hero'.($has_brief?'':' lpg-aida__hero--single').'" data-section-id="aida-attention" data-step="1"><div class="lpg-aida__hero-copy"><p class="lpg-lp__eyebrow" data-lpg-bind="offer">'.LandingPage::text($campaign['offer_name'] ?? '').'</p><h1 data-lpg-bind="title">'.LandingPage::text($data['title'] ?? '').'</h1>';
   if($affiliate) {$html.='<p class="lpg-lp__disclosure">'.($en?'This page contains affiliate links. We may earn a commission at no additional cost to you. Check prices and terms on the official website.':esc_html__('Halaman ini memuat tautan afiliasi. Kami dapat menerima komisi tanpa biaya tambahan untuk Anda. Periksa harga dan ketentuan pada situs resmi.','lp-generator')).'</p>';}
@@ -33,7 +35,8 @@ final class AidaLayout {
   if(!empty($data['faq'])) {$html.='<section class="lpg-aida__faq"><h2>'.($en?'Before you decide':esc_html__('Sebelum Anda memutuskan','lp-generator')).'</h2><div data-lpg-bind="faq">';foreach($data['faq'] as $pair){$html.='<details><summary>'.LandingPage::text($pair['q'] ?? '').'</summary>'.LandingPage::paragraphs($pair['a'] ?? '').'</details>';}$html.='</div></section>';}
   $section=$sections[3] ?? array();
   $html.='<section id="aida-action" class="lpg-aida__action" data-section-id="aida-action" data-step="4"><div><h2 data-lpg-bind="aida-action.heading">'.LandingPage::text($section['heading'] ?? '').'</h2><div data-lpg-bind="aida-action.body">'.LandingPage::paragraphs($section['body'] ?? '').'</div></div><div class="lpg-aida__action-box"><p class="lpg-lp__price" data-lpg-bind="price">'.LandingPage::text($campaign['price'] ?? '').'</p><div data-lpg-bind="guarantee">'.LandingPage::paragraphs($campaign['guarantee'] ?? '').'</div><div data-lpg-bind="cta">'.$button.'</div></div></section>';
-  $html.='<!-- lpg-related:start --><!-- lpg-related:end --></div>';
+  $html.=LpTemplate::close($campaign,$data,$button);
+  $html.='</div>';
   return "<!-- wp:html -->\n".$html."\n<!-- /wp:html -->";
  }
  private static function image(array $slots,string $id,bool $hero=false): string {

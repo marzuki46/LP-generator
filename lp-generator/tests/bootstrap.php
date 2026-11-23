@@ -10,6 +10,9 @@ declare(strict_types=1);
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', __DIR__ . '/fake-wp/' );
 }
+if ( ! defined( 'LPG_PATH' ) ) {
+	define( 'LPG_PATH', dirname( __DIR__ ) . DIRECTORY_SEPARATOR );
+}
 if ( ! defined( 'ARRAY_A' ) ) {
 	define( 'ARRAY_A', 'ARRAY_A' );
 }
@@ -43,6 +46,11 @@ if ( ! function_exists( 'esc_attr__' ) ) { function esc_attr__( $text, $domain =
 if ( ! function_exists( '__' ) ) {
 	function __( $text, $domain = '' ) {
 		return (string) $text;
+	}
+}
+if ( ! function_exists( 'wp_strip_all_tags' ) ) {
+	function wp_strip_all_tags( $text ) {
+		return trim( strip_tags( (string) $text ) );
 	}
 }
 if ( ! function_exists( 'wp_kses_post' ) ) {
@@ -181,6 +189,7 @@ require_once dirname( __DIR__ ) . '/includes/class-cognitive-engine.php';
 require_once dirname( __DIR__ ) . '/includes/class-structured-output.php';
 require_once dirname( __DIR__ ) . '/includes/class-orchestrator.php';
 require_once dirname( __DIR__ ) . '/includes/class-visual-identity.php';
+require_once dirname( __DIR__ ) . '/includes/class-lp-template.php';
 require_once dirname( __DIR__ ) . '/includes/class-landing-page.php';
 require_once dirname( __DIR__ ) . '/includes/class-aida-layout.php';
 require_once dirname( __DIR__ ) . '/includes/class-seo-standards.php';

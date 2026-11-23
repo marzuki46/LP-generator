@@ -2,6 +2,7 @@
 /** Regression coverage for the local funnel workflow using in-memory WP storage. */
 declare(strict_types=1);
 use LPG\FunnelContent;
+use LPG\Generator;
 use LPG\Publisher;
 use LPG\ContentRepository;
 
@@ -143,4 +144,6 @@ lpg_assert_same( 1, (int) $image_campaign['image_enabled'], 'gambar campaign akt
 lpg_assert_same( 2, (int) $image_campaign['image_count'], 'jumlah gambar campaign mewarisi setelan global' );
 lpg_assert_true( \LPG\ImagePipeline::enabled( array( 'image_enabled' => 1 ), $image_campaign ), 'image pipeline aktif untuk campaign baru' );
 unset( $GLOBALS['lpg_test_options']['lpgen_settings'] );
+lpg_assert_same( 'Jasa Website Solo', Generator::internal_anchor( 999, array( 'lp_target_keyword' => 'Jasa Website Solo', 'offer_name' => 'Lain', 'city' => 'Solo' ) ), 'anchor memakai target keyword LP' );
+lpg_assert_same( 'Website Solo', Generator::internal_anchor( 999, array( 'lp_target_keyword' => '', 'offer_name' => 'Website', 'city' => 'Solo' ) ), 'anchor fallback ke offer + kota' );
 $GLOBALS['funnel_posts']=array(); $GLOBALS['funnel_meta']=array();

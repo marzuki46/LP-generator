@@ -205,6 +205,8 @@ final class CampaignUI {
 							
 							<p class="description"><?php echo esc_html__( 'LP dibuat sebagai HTML responsif WordPress. AI menyiapkan rencana section khusus campaign mengikuti formula pilihan, atau merancang urutan sendiri pada mode Framework AI Khusus. Rencana disiapkan otomatis saat Mulai Generate.', 'lp-generator' ); ?></p>
 							<p><label for="lpgen_lp_layout"><?php echo esc_html__( 'Tampilan LP:', 'lp-generator' ); ?></label> <select id="lpgen_lp_layout" name="lpgen[lp_layout]"><option value="canvas" <?php selected( $values['lp_layout'], 'canvas' ); ?>><?php echo esc_html__( 'Halaman LP penuh', 'lp-generator' ); ?></option><option value="theme" <?php selected( $values['lp_layout'], 'theme' ); ?>><?php echo esc_html__( 'Ikuti layout tema WordPress', 'lp-generator' ); ?></option></select></p>
+							<p><label for="lpgen_lp_model"><?php echo esc_html__( 'Model desain LP:', 'lp-generator' ); ?></label> <select id="lpgen_lp_model" name="lpgen[lp_model]"><?php foreach ( LpTemplate::MODELS as $model_key => $model_label ) : ?><option value="<?php echo esc_attr( $model_key ); ?>" <?php selected( LpTemplate::clean( $values['lp_model'] ?? '' ), $model_key ); ?>><?php echo esc_html( $model_label ); ?></option><?php endforeach; ?></select><br><span class="description"><?php echo esc_html__( 'JSON konten AI dikonversi plugin ke model visual ini. Framework copywriting tetap mengatur urutan pesan.', 'lp-generator' ); ?></span></p>
+							<p><label for="lpgen_lp_target_keyword"><?php echo esc_html__( 'Target keyword LP (anchor internal link):', 'lp-generator' ); ?></label> <input class="regular-text" type="text" id="lpgen_lp_target_keyword" name="lpgen[lp_target_keyword]" value="<?php echo esc_attr( (string) ( $values['lp_target_keyword'] ?? '' ) ); ?>" placeholder="<?php echo esc_attr( trim( (string) ( $values['offer_name'] ?? '' ) . ' ' . (string) ( $values['city'] ?? '' ) ) ); ?>" /><br><span class="description"><?php echo esc_html__( 'Kosongkan untuk memakai Nama penawaran + Kota. Anchor ini dipakai semua artikel TOFU/MOFU/tag yang menuju LP.', 'lp-generator' ); ?></span></p>
 							<div id="lpgen_framework_steps_preview" style="margin-top:10px;">
 								<!-- Rendered via JS and PHP -->
 								<?php
@@ -498,6 +500,12 @@ final class CampaignUI {
 					break;
 				case 'lp_layout':
 					$data[ $key ] = 'theme' === $value ? 'theme' : 'canvas';
+					break;
+				case 'lp_model':
+					$data[ $key ] = LpTemplate::clean( $value );
+					break;
+				case 'lp_target_keyword':
+					$data[ $key ] = Utils::truncate( Utils::clean_text( $value ), 100 );
 					break;
 				case 'lp_post_type':
 				case 'article_post_type':

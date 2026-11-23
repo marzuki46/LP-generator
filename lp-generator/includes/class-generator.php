@@ -630,6 +630,29 @@ final class Generator {
 		$permalink = (string) get_permalink( $post_id );
 		Database::log( 'success', sprintf( 'Item %d published as post %d: %s', $item_id, $post_id, $permalink ), $campaign_id );
 		if ( 'article' === (string) ( $item['kind'] ?? '' ) ) { TopicMemory::add_from_item( $item_id ); }
+		if ( 'lp' === (string) ( $item['kind'] ?? '' ) ) {
+			// BOFU finally exists: release every article/tag that was waiting for it.
+			foreach ( ContentRepository::items( $campaign_id ) as $pending ) {
+				$pending_id = (int) $pending['id'];
+				if ( $pending_id === $item_id || 'approved' !== (string) $pending['status'] || absint( get_post_meta( $pending_id, '_lpgen_bofu_wait', true ) ) < 1 ) {
+					continue;
+				}
+				$last = Database::last_job_for_item( $pending_id );
+				if ( $last && 'publish' === (string) $last['kind'] && 'queued' === (string) $last['status'] ) {
+					continue;
+				}
+				Database::insert_job(
+					array(
+						'campaign_id' => $campaign_id,
+						'item_id'     => $pending_id,
+						'kind'        => 'publish',
+						'payload'     => array( 'stage' => (string) $pending['stage'], 'sequence' => 0 ),
+						'run_at'      => gmdate( 'Y-m-d H:i:s', time() + 30 ),
+					)
+				);
+				Database::log( 'info', sprintf( 'Artikel #%d dilanjutkan setelah LP terbit.', $pending_id ), $campaign_id );
+			}
+		}
 	}
 
 	/**
@@ -922,6 +945,24 @@ final class Generator {
 			}
 		}
 		return '';
+	}
+
+	/** Anchor used by every support article: the campaign LP target keyword. */
+	public static function internal_anchor( int $item_id, array $campaign ): string {
+		$target = trim( (string) ( $campaign['lp_target_keyword'] ?? '' ) );
+		if ( '' === $target ) {
+			$target = trim( (string) ( $campaign['offer_name'] ?? '' ) . ' ' . ( string ) ( $campaign['city'] ?? '' ) );
+		}
+		$target = Utils::truncate( sanitize_text_field( $target ), 100 );
+		$words  = preg_split( '/\s+/u', $target ) ?: array();
+		if ( count( $words ) > 10 ) {
+			$target = implode( ' ', array_slice( $words, 0, 10 ) );
+		}
+		try {
+			return FunnelContent::anchor( $target );
+		} catch ( \RuntimeException $e ) {
+			return FunnelContent::anchor( (string) get_post_meta( $item_id, '_lpgen_anchor', true ) );
+		}
 	}
 
 	/**

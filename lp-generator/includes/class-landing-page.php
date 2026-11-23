@@ -39,7 +39,9 @@ final class LandingPage {
 	}
 
 	public static function preview_document( string $content ): string {
-		$css = (string) file_get_contents( LPG_PATH . 'public/css/landing-page.css' ) . "\n" . (string) file_get_contents( LPG_PATH . 'public/css/aida.css' );
+		$css = (string) file_get_contents( LPG_PATH . 'public/css/landing-page.css' ) . "\n"
+			. (string) file_get_contents( LPG_PATH . 'public/css/aida.css' ) . "\n"
+			. (string) file_get_contents( LPG_PATH . 'public/css/lp-models.css' );
 		$settings = get_option( 'lpgen_settings', array() );
 		$css .= "\n" . self::sanitize_css( is_array( $settings ) ? ( $settings['lp_custom_css'] ?? '' ) : '' );
 		return '<!doctype html><html><head><base href="about:srcdoc"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><style>' . $css . '</style></head><body>' . wp_kses_post( $content ) . '</body></html>';
@@ -65,6 +67,7 @@ final class LandingPage {
 		if ( ! is_admin() && ( ! is_singular( array( 'page', 'post' ) ) || false === strpos( (string) get_post_field( 'post_content', get_queried_object_id() ), 'lpg-lp' ) ) ) { return; }
 		wp_enqueue_style( 'lpgen-landing-page', LPG_URL . 'public/css/landing-page.css', array(), LPG_VERSION );
 		wp_enqueue_style( 'lpgen-aida', LPG_URL . 'public/css/aida.css', array( 'lpgen-landing-page' ), LPG_VERSION );
+		wp_enqueue_style( 'lpgen-lp-models', LPG_URL . 'public/css/lp-models.css', array( 'lpgen-aida' ), LPG_VERSION );
 		$settings = get_option( 'lpgen_settings', array() );
 		$custom = self::sanitize_css( is_array( $settings ) ? ( $settings['lp_custom_css'] ?? '' ) : '' );
 		if ( '' !== $custom ) { wp_add_inline_style( 'lpgen-aida', $custom ); }
@@ -229,7 +232,9 @@ final class LandingPage {
 			$hint = sanitize_key( (string) ( $image['section_hint'] ?? '' ) );
 			if ( '' === $hint || 'hero' === $hint ) { $hero_images[] = $image; } else { $positioned[ $hint ][] = $image; }
 		}
-		$html = '<div class="lpg-lp lpg-lp--' . esc_attr( $slug ) . ' lpg-lp--' . esc_attr( $type ) . '" data-framework="' . esc_attr( $slug ) . '">';
+		$model = LpTemplate::model( $campaign );
+		$html = '<div class="lpg-lp lpg-lp--' . esc_attr( $slug ) . ' lpg-lp--' . esc_attr( $type ) . ' ' . esc_attr( LpTemplate::root_class( $campaign ) ) . '" data-framework="' . esc_attr( $slug ) . '" data-lp-model="' . esc_attr( $model ) . '">';
+		$html .= LpTemplate::open( $campaign, $data );
 		$html .= '<header class="lpg-lp__hero' . ( $hero_images ? ' lpg-lp__hero--split' : '' ) . '"><div class="lpg-lp__hero-copy">';
 		$eyebrow = trim( implode( ' · ', array_filter( array( (string) ( $campaign['brand'] ?? '' ), (string) ( $campaign['city'] ?? '' ) ) ) ) );
 		if ( '' !== $eyebrow ) { $html .= '<p class="lpg-lp__eyebrow">' . self::text( $eyebrow ) . '</p>'; }
@@ -262,12 +267,7 @@ final class LandingPage {
 			}
 			$html .= '</section>';
 		}
-		if ( '' !== $button ) {
-			$html .= '<footer class="lpg-lp__closing"><h2>' . self::text( ! empty( $campaign['promise'] ) ? $campaign['promise'] : ( $data['title'] ?? '' ) ) . '</h2>';
-			if ( ! empty( $campaign['price'] ) ) { $html .= '<p class="lpg-lp__price">' . self::text( $campaign['price'] ) . '</p>'; }
-			if ( ! empty( $campaign['guarantee'] ) ) { $html .= self::paragraphs( $campaign['guarantee'] ); }
-			$html .= $button . '</footer>';
-		}
+		$html .= LpTemplate::close( $campaign, $data, $button );
 		return "<!-- wp:html -->\n" . $html . "</div>\n<!-- /wp:html -->";
 	}
 }

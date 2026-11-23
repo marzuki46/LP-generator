@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.7.5
+Stable tag: 1.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,12 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.8.0 =
+* Add four selectable visual LP models (Editorial SaaS, Split Proof, Pricing Focus, Minimal Direct): JSON copy is converted by the plugin into a distinct landing-page shell, not an article-like layout.
+* Add campaign target keyword used as the internal-link anchor for all TOFU, MOFU, tag and support articles to the parent LP.
+* Articles waiting for BOFU are released immediately when the LP publishes, so tag/support content appears without manual retries.
+
 
 = 1.7.5 =
 * Failed-image keywords are cached for 6 hours and replaced with the next usable keyword.

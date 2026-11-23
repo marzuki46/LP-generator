@@ -1,9 +1,9 @@
 {
-  "version": "1.7.5",
-  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.7.5.zip",
+  "version": "1.8.0",
+  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.8.0.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>Keyword gambar yang gagal di-cache 6 jam dan diganti keyword berikutnya.</li><li>Placeholder WebP brand-color dipakai bila semua engine gambar gagal, sehingga artikel tetap punya thumbnail.</li><li>Brief gambar panjang dipangkas; ukuran AI default 1536x1024 (16:9).</li><li>Campaign status failed kini punya tombol Coba Publish Ulang tanpa regenerate.</li></ul>"
+  "changelog": "<ul><li>Empat model visual LP (Editorial SaaS, Split Proof, Pricing Focus, Minimal Direct): JSON konten dikonversi plugin menjadi shell landing page, bukan tampilan artikel.</li><li>Target keyword LP dipakai sebagai anchor internal link oleh semua artikel TOFU/MOFU/tag ke LP induk.</li><li>Artikel yang menunggu BOFU langsung dilepas setelah LP publish, sehingga konten tag/support tampil tanpa retry manual.</li></ul>"
 }
