@@ -32,7 +32,19 @@ function is_wp_error( $value ) { return false; }
 function get_permalink( $id ) { return 'https://example.test/post/' . $id; }
 function get_bloginfo( $what ) { return 'Test'; }
 function wp_set_post_terms( ...$args ) { return array(); }
-function get_page_by_path( $path, $output = null, $type = 'page' ) { return $GLOBALS['funnel_paths'][$path] ?? null; }
+function get_page_by_path( $path, $output = null, $type = 'page' ) {
+ if (isset($GLOBALS['funnel_paths'][$path])) { return $GLOBALS['funnel_paths'][$path]; }
+ $parts=explode('/',trim((string)$path,'/')); $parent=0; $found=null;
+ foreach($parts as $part){
+  $match=null;
+  foreach(($GLOBALS['funnel_posts'] ?? array()) as $post){
+   if($post->post_type===$type && $post->post_name===$part && (int)$post->post_parent===$parent){$match=$post;break;}
+  }
+  if(!$match){return null;}
+  $found=$match; $parent=(int)$match->ID;
+ }
+ return $found;
+}
 if (!defined('OBJECT')) { define('OBJECT','OBJECT'); }
 function funnel_throws( callable $fn, string $label ): void {
  try { $fn(); lpg_assert_true(false,$label); } catch (RuntimeException $e) { lpg_assert_true(true,$label); }
@@ -97,16 +109,18 @@ lpg_assert_same('jasa/website/solo',get_post_meta(500,'_lpgen_bofu_path',true),'
 $GLOBALS['funnel_posts']=array(); $GLOBALS['funnel_meta']=array();
 
 require_once dirname(__DIR__) . '/includes/class-database.php';
-$GLOBALS['wpdb']=new class { public string $prefix='wp_'; public function insert(...$args) { return 1; } };
+$GLOBALS['wpdb']=new class { public string $prefix='wp_'; public int $insert_id=0; public function insert(...$args) { return 1; } };
 require_once dirname(__DIR__) . '/includes/class-generator.php';
 funnel_fixture(30,'LP Website Solo',Publisher::paragraph_block('Isi LP hasil review orisinal.'),'lpgen_item');
 foreach(array('kind'=>'lp','stage'=>'bofu','status'=>'approved','entities'=>json_encode($entities),'structured'=>'{}') as $key=>$value) { update_post_meta(30,'_lpgen_'.$key,$value); }
 $campaign=array('bofu_path'=>'jasa/website/solo','lp_post_type'=>'page','publish_status'=>'publish','index_enabled'=>0);
-funnel_throws(static fn()=>Publisher::publish_item(30,$campaign),'LP path bertingkat ditahan bila induk belum terbit');
-$GLOBALS['funnel_paths']['jasa/website']=(object)array('ID'=>800,'post_status'=>'publish');
+$first_id=Publisher::publish_item(30,$campaign);
+lpg_assert_true($first_id>0,'LP path bertingkat terbit tanpa induk dibuat manual');
+$auto_parent=get_page_by_path('jasa/website',OBJECT,'page');
+lpg_assert_true($auto_parent && (int)$auto_parent->ID>0,'halaman induk LP dibuat otomatis');
 $new_id=Publisher::publish_item(30,$campaign);
 lpg_assert_same('solo',get_post($new_id)->post_name,'slug terakhir LP sesuai path');
-lpg_assert_same(800,get_post($new_id)->post_parent,'LP berada di halaman induk yang tepat');
+lpg_assert_same((int)$auto_parent->ID,get_post($new_id)->post_parent,'LP berada di halaman induk yang tepat');
 funnel_fixture(31,'Artikel baru',Publisher::paragraph_block('Pembahasan khusus yang belum pernah ditulis.'),'lpgen_item');
 foreach(array('kind'=>'article','stage'=>'tofu','status'=>'approved','campaign_id'=>500,'anchor'=>'jasa website Solo','entities'=>json_encode($entities),'structured'=>'{}') as $key=>$value) { update_post_meta(31,'_lpgen_'.$key,$value); }
 funnel_fixture(500,'Campaign Solo','','lpgen_campaign');

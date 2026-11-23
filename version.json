@@ -1,9 +1,9 @@
 {
-  "version": "1.7.3",
-  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.7.3.zip",
+  "version": "1.7.4",
+  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.7.4.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>Waktu log dan jadwal konten ditampilkan dalam timezone WordPress (WIB), bukan UTC.</li><li>Prompt LP diberi contoh JSON copying per framework; blok table/quote AIDA dibersihkan server-side.</li><li>Log detail job dipindah ke filter Debug yang tersembunyi default; log cleanup tidak lagi menambah baris baru.</li><li>Pengiriman RSS/IndexNow yang berhasil dihitung sebagai success, bukan info.</li></ul>"
+  "changelog": "<ul><li>Fix publish deadlock: path BOFU bertingkat memaksa Page dan membuat halaman induk otomatis.</li><li>Artikel ditunda maksimal 3× dengan jeda 10 menit sambil menunggu LP terbit, bukan langsung gagal.</li><li>Post type LP dinormalisasi ke Page saat path bertingkat disimpan.</li></ul>"
 }

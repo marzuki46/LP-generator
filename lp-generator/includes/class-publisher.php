@@ -299,6 +299,10 @@ final class Publisher {
 			? (string) ( $campaign['lp_post_type'] ?? 'page' )
 			: (string) ( $campaign['article_post_type'] ?? 'post' );
 		$post_type = in_array( $post_type, array( 'page', 'post' ), true ) ? $post_type : 'post';
+		if ( 'bofu' === $item['stage'] && '' !== trim( (string) ( $campaign['bofu_path'] ?? '' ) ) && 'page' !== $post_type ) {
+			Database::log( 'warning', 'Path LP bertingkat memaksa post type Page; pengaturan campaign disesuaikan saat publish.', (int) ( $campaign['campaign_id'] ?? 0 ) );
+			$post_type = 'page';
+		}
 		$status    = (string) ( $campaign['publish_status'] ?? 'publish' );
 		$status    = in_array( $status, array( 'publish', 'draft', 'pending' ), true ) ? $status : 'draft';
 
@@ -314,15 +318,43 @@ final class Publisher {
 		}
 		if ( 'bofu' === $item['stage'] && '' !== trim( (string) ( $campaign['bofu_path'] ?? '' ) ) ) {
 			$path = FunnelContent::clean_path( (string) $campaign['bofu_path'] );
-			if ( 'page' !== $post_type ) { throw new \RuntimeException( 'Path LP bertingkat memerlukan post type Page.' ); }
-			$existing = get_page_by_path( $path, OBJECT, 'page' );
-			if ( $existing && (int) $existing->ID !== (int) ( $item['post_id'] ?? 0 ) ) { throw new \RuntimeException( 'Path LP sudah digunakan. Pilih mode BOFU yang sudah ada.' ); }
-			$parts = explode( '/', $path );
-			$post_args['post_name'] = array_pop( $parts );
-			if ( $parts ) {
-				$parent = get_page_by_path( implode( '/', $parts ), OBJECT, 'page' );
-				if ( ! $parent || 'publish' !== $parent->post_status ) { throw new \RuntimeException( 'Halaman induk LP belum terbit. Buat halaman induk sesuai path terlebih dahulu.' ); }
-				$post_args['post_parent'] = (int) $parent->ID;
+			if ( '' !== $path ) {
+				$existing = get_page_by_path( $path, OBJECT, 'page' );
+				if ( $existing && (int) $existing->ID !== (int) ( $item['post_id'] ?? 0 ) ) { throw new \RuntimeException( 'Path LP sudah digunakan. Pilih mode BOFU yang sudah ada.' ); }
+				$parts = explode( '/', $path );
+				$post_args['post_name'] = array_pop( $parts );
+				$parent_id   = 0;
+				$cumulative  = array();
+				foreach ( $parts as $part ) {
+					$cumulative[] = $part;
+					$parent_path  = implode( '/', $cumulative );
+					$parent       = get_page_by_path( $parent_path, OBJECT, 'page' );
+					if ( ! $parent ) {
+						$parent_id = wp_insert_post(
+							array(
+								'post_type'   => 'page',
+								'post_status' => 'publish',
+								'post_title'  => ucwords( str_replace( '-', ' ', $part ) ),
+								'post_name'   => $part,
+								'post_parent' => $parent_id,
+							),
+							true
+						);
+						if ( is_wp_error( $parent_id ) || (int) $parent_id <= 0 ) {
+							throw new \RuntimeException( 'Gagal membuat halaman induk LP: ' . $parent_path );
+						}
+						Database::log( 'info', sprintf( 'Halaman induk LP dibuat: /%s', $parent_path ), (int) ( $campaign['campaign_id'] ?? 0 ) );
+						$parent_id = (int) $parent_id;
+					} else {
+						$parent_id = (int) $parent->ID;
+						if ( 'publish' !== (string) $parent->post_status ) {
+							wp_update_post( array( 'ID' => $parent_id, 'post_status' => 'publish' ), true );
+						}
+					}
+				}
+				if ( $parent_id > 0 ) {
+					$post_args['post_parent'] = $parent_id;
+				}
 			}
 		}
 		// Retrying or republishing the same item updates its destination, not a duplicate post.

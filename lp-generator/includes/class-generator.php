@@ -279,6 +279,14 @@ final class Generator {
 				'jobs'    => 0,
 			);
 		}
+		if ( 'new' === (string) ( $campaign['bofu_mode'] ?? 'new' )
+			&& '' !== trim( (string) ( $campaign['bofu_path'] ?? '' ) )
+			&& false !== strpos( (string) $campaign['bofu_path'], '/' )
+			&& 'page' !== (string) ( $campaign['lp_post_type'] ?? '' ) ) {
+			update_post_meta( $campaign_id, '_lpgen_lp_post_type', 'page' );
+			$campaign['lp_post_type'] = 'page';
+			Database::log( 'warning', 'Path LP bertingkat terdeteksi; post type LP otomatis diubah ke Page sebelum publish.', $campaign_id );
+		}
 		if ( ! self::content_push_active( $campaign ) ) {
 			return array(
 				'ok'      => false,
@@ -586,8 +594,31 @@ final class Generator {
 		if ( 'article' === $item['kind'] && self::internal_link_active( $campaign ) ) {
 			$target = self::find_published_permalink( $campaign_id, 'bofu' );
 			if ( '' === $target ) {
+				$waits = absint( get_post_meta( $item_id, '_lpgen_bofu_wait', true ) );
+				if ( $waits < 3 ) {
+					$payload = json_decode( (string) ( $job['payload'] ?? '{}' ), true );
+					$payload = is_array( $payload ) ? $payload : array();
+					update_post_meta( $item_id, '_lpgen_bofu_wait', $waits + 1 );
+					Database::insert_job(
+						array(
+							'campaign_id' => $campaign_id,
+							'item_id'     => $item_id,
+							'kind'        => 'publish',
+							'payload'     => $payload,
+							'run_at'      => gmdate( 'Y-m-d H:i:s', time() + ( 10 * MINUTE_IN_SECONDS ) ),
+						)
+					);
+					Database::log(
+						'warning',
+						sprintf( 'Artikel #%d ditunda 10 menit menunggu LP terbit (%d/3).', $item_id, $waits + 1 ),
+						$campaign_id,
+						(int) ( $job['id'] ?? 0 )
+					);
+					return;
+				}
 				throw new \RuntimeException( 'BOFU belum terbit. Artikel ditahan agar tidak kehilangan link ke LP tujuan.' );
 			}
+			delete_post_meta( $item_id, '_lpgen_bofu_wait' );
 			if ( 'next_stage' === (string) ( $campaign['internal_link_target'] ?? '' ) && 'tofu' === $item['stage'] ) {
 				$campaign['secondary_funnel_url'] = self::find_published_permalink( $campaign_id, 'mofu' );
 			}

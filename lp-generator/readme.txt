@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.7.3
+Stable tag: 1.7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,12 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.7.4 =
+* Fix publish deadlock: hierarchical BOFU paths now force Page post type and auto-create parent pages instead of failing.
+* Articles now defer up to 3 times with 10-minute delays while waiting for BOFU, instead of failing permanently.
+* Campaign save normalises lp_post_type to Page when bofu_path is hierarchical.
+
 
 = 1.7.3 =
 * Log times and scheduled content times are displayed in the WordPress timezone (WIB), not UTC.

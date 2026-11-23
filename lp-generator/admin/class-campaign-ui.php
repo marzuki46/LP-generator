@@ -621,6 +621,10 @@ final class CampaignUI {
 					$data[ $key ] = Utils::clean_text( $value );
 			}
 		}
+		if ( ! empty( $data['bofu_path'] ) && false !== strpos( (string) $data['bofu_path'], '/' ) && 'page' !== (string) ( $data['lp_post_type'] ?? '' ) ) {
+			$data['lp_post_type'] = 'page';
+			Database::log( 'warning', 'Path LP bertingkat terdeteksi; post type LP otomatis diubah ke Page.', $post_id );
+		}
 		ContentRepository::save_campaign_meta( $post_id, $data );
 	}
 }
