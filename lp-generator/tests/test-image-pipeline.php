@@ -77,6 +77,20 @@ $crop = VisualIdentity::crop_size( 1000, 1000, 1280 );
 lpg_assert_same( 1000, $crop['width'], 'crop uses source width for a square source' );
 lpg_assert_true( abs( $crop['height'] - 563 ) <= 1, 'crop height follows 16:9 ratio' );
 
+$long_brief = 'Ilustrasi calon pelanggan bingung mencari info kontak resmi pada website bisnis lokal di Solo dengan beberapa kanal yang tidak saling terhubung';
+$short = ImagePipeline::short_keyword( $long_brief, 60 );
+lpg_assert_true( mb_strlen( $short ) <= 60 && ! str_contains( $short, '...' ), 'keyword panjang dipangkas tanpa elipsis' );
+lpg_assert_true( mb_strlen( ImagePipeline::build_bing_query( $long_brief, array( 'language' => 'id' ) ) ) < mb_strlen( $long_brief ), 'query Bing memakai keyword pendek' );
+$GLOBALS['lpg_transients'] = array();
+ImagePipeline::mark_keyword_failed( $long_brief );
+lpg_assert_true( ImagePipeline::keyword_failed( $long_brief ), 'keyword gagal di-cache' );
+lpg_assert_same( 'website', ImagePipeline::usable_keyword( $long_brief, array( 'website' ) ), 'keyword gagal diganti fallback' );
+if ( function_exists( 'imagewebp' ) ) {
+	$placeholder = ImagePipeline::placeholder_file( $long_brief );
+	lpg_assert_true( is_string( $placeholder ) && is_file( $placeholder ) && filesize( $placeholder ) > 1000, 'placeholder WebP lokal dibuat saat engine gagal' );
+	if ( is_string( $placeholder ) && is_file( $placeholder ) ) { @unlink( $placeholder ); }
+}
+
 lpg_assert_true( ImagePipeline::safe_image_url( 'https://images.example.com/pic.jpg' ), 'public https image URL is accepted' );
 lpg_assert_true( ! ImagePipeline::safe_image_url( 'ftp://images.example.com/pic.jpg' ), 'non-http scheme is rejected' );
 lpg_assert_true( ! ImagePipeline::safe_image_url( 'http://127.0.0.1/pic.jpg' ), 'loopback image URL is rejected' );

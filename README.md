@@ -2,7 +2,16 @@
 
 Plugin WordPress yang mengubah satu campaign offer menjadi funnel konten lengkap (TOFU → MOFU → BOFU) memakai 9Router AI, lalu mengirim URL baru ke Google PuSH + IndexNow **10 detik setelah publish**.
 
-Versi saat ini: **1.7.4**.
+Versi saat ini: **1.7.5**.
+
+## Pembaruan v1.7.5 — Gambar selalu ada & tombol publish ulang
+
+- Keyword gambar yang gagal di-cache 6 jam dan otomatis diganti keyword fallback, sehingga tidak mengulang request yang sama di setiap artikel.
+- Bila semua engine (upload/AI/Bing) gagal, plugin membuat **placeholder WebP 16:9** dengan palet brand `#1A1A2E/#FF6B35/#FFD166`—artikel tetap punya thumbnail.
+- Brief gambar panjang dari AI dipangkas sebelum dikirim ke model/Bing; ukuran AI default sekarang `1536x1024` (16:9).
+- Campaign dengan status `failed` sekarang mendapat tombol **Coba Publish Ulang** tanpa harus regenerate seluruh konten.
+
+Detail: [`docs/22-gambar-dan-publish-ulang-1.7.5.md`](docs/22-gambar-dan-publish-ulang-1.7.5.md).
 
 ## Pembaruan v1.7.4 — Publish deadlock diperbaiki
 
@@ -125,12 +134,12 @@ Lihat [`docs/05-funnel-lokal.md`](docs/05-funnel-lokal.md) untuk contoh campaign
 ## Implementasi
 
 - `lp-generator/` — source plugin, siap di-copy ke `wp-content/plugins/lp-generator/`.
-- `lp-generator-1.7.4.zip` — paket siap upload lewat **Plugins → Add New → Upload Plugin**.
+- `lp-generator-1.7.5.zip` — paket siap upload lewat **Plugins → Add New → Upload Plugin**.
 - `version.json` — manifest update untuk fitur *one-click update* dari Github.
 
 ## Instalasi & update
 
-1. Upload `lp-generator-1.7.4.zip` lewat **Plugins → Add New → Upload Plugin**, lalu aktifkan.
+1. Upload `lp-generator-1.7.5.zip` lewat **Plugins → Add New → Upload Plugin**, lalu aktifkan.
 2. Isi kredensial 9Router di **LP Generator → Settings → AI**.
 3. Saat ada rilis baru, WordPress akan menampilkan notifikasi **Update now** di halaman **Plugins** — tinggal klik. Manifest yang dibaca plugin terkunci ke `https://raw.githubusercontent.com/marzuki46/LP-generator/main/version.json`, dan paket update diambil dari file ZIP yang ada di repo yang sama. Tidak perlu upload manual lagi.
 
@@ -165,7 +174,7 @@ php tests\run.php
 php tests\smoke-bootstrap.php
 ```
 
-Terakhir dijalankan pada paket v1.7.4: **883 test passed, 0 failed**; `php -l` untuk file yang diubah lolos; bootstrap & hook PASS. Pengujian browser untuk tombol Generate juga PASS. Generate/publish langsung ke WordPress dan 9Router produksi belum diuji pada sesi ini.
+Terakhir dijalankan pada paket v1.7.5: **888 test passed, 0 failed**; `php -l` untuk file yang diubah lolos; bootstrap & hook PASS. Pengujian browser untuk tombol Generate juga PASS. Generate/publish langsung ke WordPress dan 9Router produksi belum diuji pada sesi ini.
 
 ## Alur singkat
 

@@ -52,10 +52,10 @@ $prompt=\LPG\Prompts::build_lp(lpg_lp_fixture()['campaign']);
 lpg_assert_true(str_contains($prompt['user'],'framework_plan.steps exactly'),'penulisan LP menggunakan rencana campaign');
 
 // Exercise the actual AI client + campaign persistence with a deterministic HTTP response.
-function wp_list_pluck($list,$field) { return array_column($list,$field); }
-function get_transient($key) { return $GLOBALS['lpg_test_transients'][$key] ?? false; }
-function set_transient($key,$value,$expiry) { $GLOBALS['lpg_test_transients'][$key]=$value;return true; }
-function delete_transient($key) { unset($GLOBALS['lpg_test_transients'][$key]); }
+if(!function_exists('wp_list_pluck')) { function wp_list_pluck($list,$field) { return array_column($list,$field); } }
+if(!function_exists('get_transient')) { function get_transient($key) { return $GLOBALS['lpg_test_transients'][$key] ?? false; } }
+if(!function_exists('set_transient')) { function set_transient($key,$value,$expiry) { $GLOBALS['lpg_test_transients'][$key]=$value;return true; } }
+if(!function_exists('delete_transient')) { function delete_transient($key) { unset($GLOBALS['lpg_test_transients'][$key]); } }
 function wp_remote_post($url,$args) {
  $GLOBALS['lpg_test_requests'][]=array('url'=>$url,'args'=>$args);
  if(!isset($GLOBALS['lpg_test_ai'])) { throw new RuntimeException('No test AI response configured; network disabled.'); }

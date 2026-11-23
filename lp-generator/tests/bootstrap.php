@@ -149,6 +149,17 @@ if ( ! function_exists( 'wp_http_validate_url' ) ) {
 		return filter_var( $url, FILTER_VALIDATE_URL );
 	}
 }
+if ( ! function_exists( 'get_transient' ) ) {
+	function get_transient( $key ) {
+		return $GLOBALS['lpg_transients'][ $key ] ?? false;
+	}
+}
+if ( ! function_exists( 'set_transient' ) ) {
+	function set_transient( $key, $value, $ttl = 0 ) {
+		$GLOBALS['lpg_transients'][ $key ] = $value;
+		return true;
+	}
+}
 if ( ! function_exists( 'set_post_thumbnail' ) ) {
 	function set_post_thumbnail( $post_id, $thumbnail_id ) {
 		$GLOBALS['lpg_thumbnails'][ (int) $post_id ] = (int) $thumbnail_id;

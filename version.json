@@ -1,9 +1,9 @@
 {
-  "version": "1.7.4",
-  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.7.4.zip",
+  "version": "1.7.5",
+  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.7.5.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>Fix publish deadlock: path BOFU bertingkat memaksa Page dan membuat halaman induk otomatis.</li><li>Artikel ditunda maksimal 3× dengan jeda 10 menit sambil menunggu LP terbit, bukan langsung gagal.</li><li>Post type LP dinormalisasi ke Page saat path bertingkat disimpan.</li></ul>"
+  "changelog": "<ul><li>Keyword gambar yang gagal di-cache 6 jam dan diganti keyword berikutnya.</li><li>Placeholder WebP brand-color dipakai bila semua engine gambar gagal, sehingga artikel tetap punya thumbnail.</li><li>Brief gambar panjang dipangkas; ukuran AI default 1536x1024 (16:9).</li><li>Campaign status failed kini punya tombol Coba Publish Ulang tanpa regenerate.</li></ul>"
 }

@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.7.4
+Stable tag: 1.7.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,13 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.7.5 =
+* Failed-image keywords are cached for 6 hours and replaced with the next usable keyword.
+* When every image engine fails, a deterministic brand-coloured WebP placeholder is used instead of leaving the article imageless.
+* Long AI-generated image briefs are shortened for AI and Bing; default AI size is now 1536x1024 (16:9).
+* Campaigns in failed status now get a "Coba Publish Ulang" button without regenerating content.
+
 
 = 1.7.4 =
 * Fix publish deadlock: hierarchical BOFU paths now force Page post type and auto-create parent pages instead of failing.

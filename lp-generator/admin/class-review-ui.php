@@ -192,9 +192,9 @@ final class ReviewUI {
 					<button type="button" class="button" data-lpgen-action="run-now" data-campaign="<?php echo esc_attr( (string) $campaign_id ); ?>" style="margin-left:8px;">
 						<?php echo esc_html__( '⚡ Proses Antrean Sekarang', 'lp-generator' ); ?>
 					</button>
-					<?php if ( 'review' === $status || 'publishing' === $status ) : ?>
+					<?php if ( in_array( $status, array( 'review', 'publishing', 'failed' ), true ) ) : ?>
 						<button type="button" class="button button-primary" data-lpgen-action="publish-campaign" data-campaign="<?php echo esc_attr( (string) $campaign_id ); ?>">
-							<?php echo esc_html__( 'Publish & Index', 'lp-generator' ); ?>
+							<?php echo esc_html( 'failed' === $status ? __( 'Coba Publish Ulang', 'lp-generator' ) : __( 'Publish & Index', 'lp-generator' ) ); ?>
 						</button>
 					<?php endif; ?>
 				</p>

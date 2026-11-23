@@ -27,6 +27,55 @@ final class ImagePipeline {
 	 */
 	public const SOURCES = array( 'auto', 'upload', 'ai', 'bing' );
 
+	/** Trim long AI-generated briefs to a stable subject for image engines. */
+	public static function short_keyword( string $keyword, int $max = 72 ): string {
+		$keyword = trim( preg_replace( '/\s+/u', ' ', sanitize_text_field( $keyword ) ) ?? '' );
+		$keyword = rtrim( $keyword, " \t\n\r\0\x0B.,;:!?" );
+		if ( function_exists( 'mb_strlen' ) && mb_strlen( $keyword ) <= $max ) {
+			return $keyword;
+		}
+		if ( function_exists( 'mb_substr' ) ) {
+			$short = mb_substr( $keyword, 0, $max );
+		} else {
+			$short = substr( $keyword, 0, $max );
+		}
+		$space = function_exists( 'mb_strrpos' ) ? mb_strrpos( $short, ' ' ) : strrpos( $short, ' ' );
+		if ( false !== $space && $space > 24 ) {
+			$short = mb_substr( $short, 0, $space );
+		}
+		return rtrim( $short, " \t\n\r\0\x0B.,;:!?" );
+	}
+
+	/** Cache key for a failed image brief. */
+	private static function failure_key( string $keyword ): string {
+		return 'lpgen_imgfail_' . md5( self::short_keyword( $keyword ) );
+	}
+
+	public static function keyword_failed( string $keyword ): bool {
+		return function_exists( 'get_transient' ) && false !== get_transient( self::failure_key( $keyword ) );
+	}
+
+	public static function mark_keyword_failed( string $keyword ): void {
+		if ( function_exists( 'set_transient' ) ) {
+			set_transient( self::failure_key( $keyword ), 1, self::FAILURE_TTL );
+		}
+	}
+
+	/** Pick the first keyword that has not failed recently. */
+	public static function usable_keyword( string $preferred, array $fallbacks = array() ): string {
+		$preferred = self::short_keyword( $preferred );
+		if ( '' !== $preferred && ! self::keyword_failed( $preferred ) ) {
+			return $preferred;
+		}
+		foreach ( $fallbacks as $fallback ) {
+			$candidate = self::short_keyword( is_scalar( $fallback ) ? (string) $fallback : '' );
+			if ( '' !== $candidate && ! self::keyword_failed( $candidate ) ) {
+				return $candidate;
+			}
+		}
+		return '' !== $preferred ? $preferred : self::short_keyword( (string) ( $fallbacks[0] ?? 'website' ) );
+	}
+
 	/**
 	 * Default image model for 9Router. Discover available ids via /v1/models/image.
 	 */
@@ -41,6 +90,9 @@ final class ImagePipeline {
 	 * Hard download ceiling to avoid memory exhaustion.
 	 */
 	public const MAX_DOWNLOAD_BYTES = 10485760;
+
+	/** Cache window for a keyword that failed on every engine. */
+	public const FAILURE_TTL = 21600;
 
 	/**
 	 * Normalize an image source.
@@ -196,7 +248,7 @@ final class ImagePipeline {
 	 * @return string
 	 */
 	public static function build_bing_query( string $keyword, array $context ): string {
-		$keyword = trim( preg_replace( '/\s+/u', ' ', $keyword ) ?? '' );
+		$keyword = self::short_keyword( $keyword, 60 );
 		if ( '' === $keyword ) {
 			return '';
 		}
@@ -214,13 +266,14 @@ final class ImagePipeline {
 	 * @return string
 	 */
 	public static function build_ai_prompt( string $keyword, array $context ): string {
-		$subject = Utils::truncate( sanitize_text_field( $keyword ), 80 );
-		$topic   = Utils::truncate( sanitize_text_field( (string) ( $context['topic_title'] ?? $context['offer_name'] ?? $keyword ) ), 120 );
+		$subject = self::short_keyword( $keyword, 60 );
+		$topic   = self::short_keyword( (string) ( $context['topic_title'] ?? $context['offer_name'] ?? $keyword ), 80 );
 		$concept = trim( sanitize_text_field( (string) ( $context['visual_concept'] ?? '' ) ) );
 		if ( '' === $concept ) {
-			$concept = 'A structured editorial technical illustration of ' . $subject . ' connected to ' . $topic
-				. ', with a clear focal object, supporting process elements and generous negative space.';
+			$concept = 'A clear editorial illustration of ' . $subject . ' for ' . $topic
+				. ', with one focal object, supporting process paths and generous negative space.';
 		}
+		$concept = self::short_keyword( $concept, 180 );
 		$prompt = VisualIdentity::master_prompt( $topic, $concept, $subject );
 		$offer  = Utils::truncate( sanitize_text_field( (string) ( $context['offer_name'] ?? '' ) ), 80 );
 		if ( '' !== $offer ) {
@@ -312,7 +365,12 @@ final class ImagePipeline {
 		for ( $i = $strict_slots ? 0 : count( $images ); $i < $desired; $i++ ) {
 			if ( $strict_slots && in_array( $placements[ $i ]['image_slot'], array_column( $images, 'slot_id' ), true ) ) { continue; }
 			if ( $strict_slots && '' === trim( $placements[ $i ]['keyword'] ) ) { Database::log( 'warning', 'Slot gambar dilewati karena brief kosong: ' . $placements[ $i ]['image_slot'], $campaign_id ); continue; }
-			$keyword = $strict_slots ? $placements[ $i ]['keyword'] : ( $fw_keywords[ $i ] ?? $keywords[ $i % count( $keywords ) ] );
+			$raw_keyword = $strict_slots ? $placements[ $i ]['keyword'] : ( $fw_keywords[ $i ] ?? $keywords[ $i % count( $keywords ) ] );
+			$keyword     = self::usable_keyword( (string) $raw_keyword, $keywords );
+			if ( '' === $keyword ) {
+				Database::log( 'warning', sprintf( 'Semua keyword gambar baru saja gagal; memakai placeholder untuk item %d.', $item_id ), $campaign_id );
+				$keyword = self::short_keyword( (string) $raw_keyword ) ?: 'website';
+			}
 			$role    = $strict_slots ? $placements[ $i ]['role'] : ( $fw_roles[ $i ] ?? '' );
 			$hint    = $strict_slots ? $placements[ $i ]['hint'] : ( $fw_hints[ $i ] ?? '' );
 			$found   = null;
@@ -329,11 +387,23 @@ final class ImagePipeline {
 				Database::log( 'info', sprintf( 'Image %d untuk item %d dari engine %s (hint: %s)', $i + 1, $item_id, $source_used, '' !== $hint ? $hint : 'auto' ), $campaign_id );
 			}
 			if ( null === $found ) {
-				Database::log( 'warning', sprintf( 'Image fetch failed for keyword "%s"', $keyword ), $campaign_id );
-				continue;
+				self::mark_keyword_failed( $keyword );
+				Database::log( 'warning', sprintf( 'Image fetch failed for keyword "%s"; using local placeholder', self::short_keyword( $keyword ) ), $campaign_id );
+				$placeholder = self::placeholder_file( $keyword, $context );
+				if ( '' === $placeholder ) {
+					continue;
+				}
+				$found       = array(
+					'file'      => $placeholder,
+					'temporary' => true,
+					'source'    => 'placeholder',
+					'alt'       => self::short_keyword( $keyword ),
+				);
+				$source_used = 'placeholder';
 			}
 
 			$meta = self::metadata( $keyword, $settings, $context );
+			$meta['visual_status'] = 'placeholder' === $source_used ? 'placeholder' : 'generated';
 			if ( ! empty( $found['alt'] ) ) { $meta['alt'] = sanitize_text_field( (string) $found['alt'] ); }
 			$meta['visual_path']  = $visual_path;
 			$meta['visual_style'] = VisualIdentity::STYLE;
@@ -446,7 +516,7 @@ final class ImagePipeline {
 			'model'  => Utils::clean_text( $settings['image_ai_model'] ?? self::DEFAULT_AI_MODEL ) ?: self::DEFAULT_AI_MODEL,
 			'prompt' => self::build_ai_prompt( $keyword, $context ),
 			'n'      => 1,
-			'size'   => self::clean_ai_size( $settings['image_ai_size'] ?? '1024x1024' ),
+			'size'   => self::clean_ai_size( $settings['image_ai_size'] ?? '1536x1024' ),
 		);
 		$key     = trim( (string) ( $settings['ninerouter_key'] ?? '' ) );
 		$headers = array( 'Content-Type' => 'application/json' );
@@ -623,6 +693,46 @@ final class ImagePipeline {
 	 * @param string $bytes Raw bytes.
 	 * @return string|false
 	 */
+	/** Brand-consistent local WebP placeholder when every engine fails. */
+	public static function placeholder_file( string $keyword, array $context = array() ) {
+		if ( ! function_exists( 'imagecreatetruecolor' ) || ! function_exists( 'imagewebp' ) || ! function_exists( 'imagefill' ) ) {
+			return '';
+		}
+		$width  = 1280;
+		$height = 720;
+		$image  = imagecreatetruecolor( $width, $height );
+		if ( false === $image ) {
+			return '';
+		}
+		$navy  = self::allocate_color( $image, VisualIdentity::BACKGROUND );
+		$orange = self::allocate_color( $image, VisualIdentity::ACCENT );
+		$gold   = self::allocate_color( $image, VisualIdentity::GOLD );
+		imagefill( $image, 0, 0, $navy );
+		// Abstract editorial composition: focal block right, supporting lines left. No text.
+		imagefilledrectangle( $image, 754, 104, 1186, 616, $orange );
+		imagefilledellipse( $image, 970, 360, 268, 268, $gold );
+		imagefilledrectangle( $image, 88, 512, 660, 528, $orange );
+		imagefilledrectangle( $image, 88, 560, 470, 573, $gold );
+		imagefilledrectangle( $image, 88, 600, 560, 610, $gold );
+		ob_start();
+		$ok = imagewebp( $image, null, 82 );
+		$bytes = ob_get_clean();
+		imagedestroy( $image );
+		if ( false === $ok || ! is_string( $bytes ) || '' === $bytes ) {
+			return '';
+		}
+		return self::write_temp( $bytes );
+	}
+
+	private static function allocate_color( $image, string $hex ) {
+		$hex = ltrim( $hex, '#' );
+		$r   = hexdec( substr( $hex, 0, 2 ) );
+		$g   = hexdec( substr( $hex, 2, 2 ) );
+		$b   = hexdec( substr( $hex, 4, 2 ) );
+		$color = imagecolorallocate( $image, (int) $r, (int) $g, (int) $b );
+		return false === $color ? imagecolorallocate( $image, 255, 255, 255 ) : $color;
+	}
+
 	private static function write_temp( string $bytes ) {
 		$file = tempnam( sys_get_temp_dir(), 'lpgen-' );
 		if ( false === $file || false === file_put_contents( $file, $bytes ) ) {
@@ -911,6 +1021,9 @@ final class ImagePipeline {
 		if ( ! empty( $meta['visual_style'] ) ) {
 			update_post_meta( $id, '_lpgen_visual_style', sanitize_text_field( (string) $meta['visual_style'] ) );
 		}
+		if ( ! empty( $meta['visual_status'] ) ) {
+			update_post_meta( $id, '_lpgen_visual_status', sanitize_key( (string) $meta['visual_status'] ) );
+		}
 
 		return array(
 			'id'           => $id,
@@ -921,8 +1034,9 @@ final class ImagePipeline {
 			'keyword'      => $keyword,
 			'role'         => sanitize_key( $role ),
 			'section_hint' => sanitize_key( $hint ),
-			'visual_path'  => (string) ( $meta['visual_path'] ?? '' ),
-			'visual_style' => (string) ( $meta['visual_style'] ?? '' ),
+			'visual_path'   => (string) ( $meta['visual_path'] ?? '' ),
+			'visual_style'  => (string) ( $meta['visual_style'] ?? '' ),
+			'visual_status' => (string) ( $meta['visual_status'] ?? 'generated' ),
 		);
 	}
 

@@ -101,7 +101,7 @@ final class Activator {
 					'image_max_kb'           => 180,
 					'image_max_width'        => 1280,
 					'image_ai_model'         => ImagePipeline::DEFAULT_AI_MODEL,
-					'image_ai_size'          => '1024x1024',
+					'image_ai_size'          => '1536x1024',
 					'image_ai_timeout'       => 120,
 					'image_bing_timeout'     => 15,
 					'image_title_template'   => '{{keyword}}',
