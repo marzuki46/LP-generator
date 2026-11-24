@@ -1,9 +1,9 @@
 {
-  "version": "2.0.0",
-  "package": "https://github.com/marzuki46/LP-generator/releases/download/v2.0.0/lp-generator-2.0.0.zip",
+  "version": "2.0.1",
+  "package": "https://github.com/marzuki46/LP-generator/releases/download/v2.0.1/lp-generator-2.0.1.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>3 tipe landing page: SERVICE, PRODUCT, dan AMAZON_AFFILIATE.</li><li>Lokalisasi penuh ID/EN pada UI publik, footer lokasi, dan disclosure afiliasi.</li><li>Yoast tetap authority untuk canonical, robots, sitemap, metadata sosial, dan JSON-LD.</li><li>Duplicate prevention, local/affiliate value gates, dan laporan kualitas 6 dimensi.</li><li>Experiment mode: default draft + noindex untuk campaign baru, dengan promosi terkontrol.</li><li>Publishing workflow dengan history dan transisi tervalidasi.</li></ul>"
+  "changelog": "<ul><li>Redesign layar Review: hero, statistik ringkas, toolbar aksi, dan tabel item yang lebih mudah dipindai.</li><li>Tampilan review responsif: tabel berubah menjadi kartu pada layar sempit.</li><li>Perbaikan skor kualitas yang tidak tampil karena prefix meta ganda.</li></ul>"
 }

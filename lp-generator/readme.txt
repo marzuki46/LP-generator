@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,11 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 2.0.1 =
+* Redesign layar Review dengan hero, ringkasan statistik, toolbar aksi, dan tabel item yang lebih mudah dipindai.
+* Perbaiki tampilan review pada layar sempit: tabel berubah menjadi kartu dengan label field.
+* Perbaiki skor kualitas yang tidak tampil akibat prefix meta yang ganda.
 
 = 2.0.0 =
 * Add SERVICE, PRODUCT and AMAZON_AFFILIATE landing-page types with type-specific briefs, schemas and visual templates.

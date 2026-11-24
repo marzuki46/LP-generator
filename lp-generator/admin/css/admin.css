@@ -472,3 +472,241 @@
 .lpgen-log-level--success { background: #d1f2e4; color: #0c6b43; }
 .lpgen-log-level--warn, .lpgen-log-level--warning { background: #fff3cd; color: #7a5b00; }
 .lpgen-log-level--error { background: #ffdadd; color: #9b1c24; }
+
+/* Review screen: hierarchy, scanability and calm admin-native surfaces. */
+.lpgen-review { max-width: 1440px; }
+
+.lpgen-review-hero {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 24px;
+	margin: 18px 0 20px;
+	padding: 24px 26px;
+	border-radius: 10px;
+	background: #1d2327;
+	color: #f0f0f1;
+	box-shadow: 0 1px 2px rgba( 0, 0, 0, .16 );
+}
+
+.lpgen-review-hero__main { min-width: 260px; }
+.lpgen-review-hero h1 { margin: 6px 0 8px; color: #fff; font-size: 26px; line-height: 1.2; }
+.lpgen-review-hero__desc { margin: 0; color: #c3c4c7; font-size: 13px; }
+
+.lpgen-review-picker { min-width: 280px; }
+.lpgen-review-picker label {
+	display: block;
+	margin-bottom: 6px;
+	color: #c3c4c7;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .12em;
+	text-transform: uppercase;
+}
+.lpgen-review-picker__row { display: flex; gap: 8px; }
+.lpgen-review-picker select { flex: 1 1 auto; min-width: 220px; }
+.lpgen-review-picker .button { flex: 0 0 auto; }
+.lpgen-review-picker select:focus-visible,
+.lpgen-review .button:focus-visible,
+.lpgen-review a:focus-visible,
+.lpgen-review summary:focus-visible { outline: 2px solid #72aee6; outline-offset: 2px; }
+
+.lpgen-review-empty {
+	padding: 48px 24px;
+	border: 1px dashed #c3c4c7;
+	border-radius: 10px;
+	background: #fff;
+	text-align: center;
+}
+.lpgen-review-empty .dashicons { width: 42px; height: 42px; font-size: 42px; color: #72aee6; }
+.lpgen-review-empty h2 { margin: 10px 0 6px; font-size: 18px; }
+.lpgen-review-empty p { margin: 0; color: #646970; }
+
+.lpgen-review-summary {
+	display: grid;
+	grid-template-columns: minmax( 0, 1.6fr ) minmax( 320px, 1fr );
+	gap: 14px;
+	align-items: stretch;
+	margin-bottom: 16px;
+}
+
+.lpgen-review-info {
+	padding: 18px 20px;
+	border: 1px solid #c3c4c7;
+	border-radius: 10px;
+	background: #fff;
+}
+.lpgen-review-info p { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; font-size: 13px; line-height: 1.5; }
+.lpgen-review-info p:last-child { margin-bottom: 0; }
+.lpgen-review-info strong { min-width: 112px; color: #1d2327; }
+.lpgen-review-info code { margin-right: 4px; }
+
+.lpgen-review-stats { display: grid; grid-template-columns: repeat( 3, minmax( 0, 1fr ) ); gap: 10px; }
+.lpgen-review-stat {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 14px;
+	border: 1px solid #c3c4c7;
+	border-radius: 10px;
+	background: #fff;
+}
+.lpgen-review-stat strong { color: #1d2327; font-size: 22px; line-height: 1; }
+.lpgen-review-stat span { color: #646970; font-size: 11px; }
+.lpgen-review-stat--alert { border-color: #d63638; background: #fdf0f0; }
+.lpgen-review-stat--alert strong { color: #b32d2e; }
+
+.lpgen-review-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 10px;
+	padding: 14px 16px;
+	border: 1px solid #c3c4c7;
+	border-radius: 10px;
+	background: #f0f0f1;
+}
+.lpgen-review-toolbar__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lpgen-review-toolbar__label { color: #50575e; font-size: 12px; font-weight: 700; }
+.lpgen-review-toolbar__note { color: #646970; font-size: 12px; }
+.lpgen-review-toolbar__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.lpgen-review-toolbar .button { display: inline-flex; align-items: center; gap: 5px; }
+.lpgen-review-toolbar .dashicons { width: 16px; height: 16px; font-size: 16px; }
+.lpgen-badge--experiment { background: #fef3c7; color: #7a5b00; }
+.lpgen-review-hint { margin: 0 0 14px; }
+
+.lpgen-review-list {
+	overflow: hidden;
+	border: 1px solid #c3c4c7;
+	border-radius: 10px;
+	background: #fff;
+}
+.lpgen-review-list__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 16px 20px;
+	border-bottom: 1px solid #dcdcde;
+}
+.lpgen-review-list__head h2 { margin: 0; font-size: 15px; }
+.lpgen-review-table-wrap { overflow-x: auto; }
+.lpgen-review-table { margin: 0; border: 0; }
+.lpgen-review-table th {
+	width: auto;
+	padding: 12px 14px;
+	border-bottom: 1px solid #c3c4c7;
+	background: #f6f7f7;
+	color: #50575e;
+	font-size: 11px;
+	letter-spacing: .06em;
+	text-align: left;
+	text-transform: uppercase;
+}
+.lpgen-review-table td { padding: 14px; border-bottom: 1px solid #dcdcde; font-size: 13px; vertical-align: top; }
+.lpgen-review-table tbody tr:hover { background: #f6f7f7; }
+.lpgen-review-table tbody tr:last-child td { border-bottom: 0; }
+.lpgen-stage-chip {
+	display: inline-block;
+	padding: 3px 9px;
+	border-radius: 999px;
+	background: #e7f1ff;
+	color: #135e96;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: .08em;
+}
+.lpgen-review-title-cell { min-width: 220px; max-width: 380px; }
+.lpgen-review-title { color: #2271b1; font-weight: 600; text-decoration: none; }
+.lpgen-review-title-cell details { margin-top: 6px; }
+.lpgen-review-title-cell summary { color: #646970; cursor: pointer; font-size: 12px; }
+.lpgen-review-content {
+	max-height: 420px;
+	overflow: auto;
+	margin-top: 8px;
+	padding: 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	background: #f6f7f7;
+}
+.lpgen-review-preview { display: block; width: 100%; height: 720px; margin-top: 8px; border: 1px solid #c3c4c7; border-radius: 6px; background: #fff; }
+.lpgen-review-model { font-weight: 600; }
+.lpgen-review-status-cell { min-width: 170px; }
+.lpgen-review-status-line { margin-bottom: 6px; }
+.lpgen-review-meta-line {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+	padding: 3px 0;
+	border-top: 1px solid #f0f0f1;
+	font-size: 11px;
+}
+.lpgen-review-meta-line span { color: #646970; }
+.lpgen-review-meta-line strong { color: #1d2327; }
+.lpgen-review-error {
+	margin-top: 6px;
+	padding: 6px 8px;
+	border-left: 3px solid #d63638;
+	background: #fdf0f0;
+	color: #9b1c24;
+	font-size: 11px;
+}
+.lpgen-review-actions { min-width: 180px; }
+.lpgen-review-actions__group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.lpgen-review-actions__group:last-child { margin-bottom: 0; }
+.lpgen-review-table td[data-label]::before { content: attr( data-label ); display: none; }
+
+@media ( max-width: 1180px ) {
+	.lpgen-review-summary { grid-template-columns: 1fr; }
+}
+
+@media ( max-width: 900px ) {
+	.lpgen-review-hero { flex-direction: column; align-items: stretch; }
+	.lpgen-review-picker { min-width: 0; }
+	.lpgen-review-picker select { min-width: 0; }
+	.lpgen-review-stats { grid-template-columns: repeat( 2, minmax( 0, 1fr ) ); }
+	.lpgen-review-table,
+	.lpgen-review-table tbody,
+	.lpgen-review-table tr,
+	.lpgen-review-table td { display: block; width: 100%; }
+	.lpgen-review-table thead { display: none; }
+	.lpgen-review-table tr { padding: 14px; border-bottom: 1px solid #dcdcde; }
+	.lpgen-review-table tr:last-child { border-bottom: 0; }
+	.lpgen-review-table td { padding: 6px 0; border: 0; }
+	.lpgen-review-table td[data-label]::before {
+		display: block;
+		margin-bottom: 3px;
+		color: #646970;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: .06em;
+		content: attr( data-label );
+		text-transform: uppercase;
+	}
+	.lpgen-review-title-cell { max-width: none; }
+	.lpgen-review-meta-line { flex-wrap: wrap; justify-content: flex-start; gap: 8px; }
+	.lpgen-review-meta-line strong { overflow-wrap: anywhere; }
+	.lpgen-review-preview { height: 520px; }
+}
+
+.dark-mode .lpgen-review-info,
+.dark-mode .lpgen-review-stat,
+.dark-mode .lpgen-review-list,
+.dark-mode .lpgen-review-empty { border-color: #3c434a; background: #2c3338; }
+.dark-mode .lpgen-review-table th { border-color: #3c434a; background: #3c434a; color: #f0f0f1; }
+.dark-mode .lpgen-review-table td { border-color: #3c434a; }
+.dark-mode .lpgen-review-stat strong,
+.dark-mode .lpgen-review-info strong,
+.dark-mode .lpgen-review-meta-line strong { color: #f0f0f1; }
+.dark-mode .lpgen-review-toolbar,
+.dark-mode .lpgen-review-content,
+.dark-mode .lpgen-review-table tbody tr:hover { background: #3c434a; }
+.dark-mode .lpgen-review-meta-line { border-color: #50575e; }
+
+@media ( prefers-reduced-motion: reduce ) {
+	.lpgen-review .button { transition: none; }
+}

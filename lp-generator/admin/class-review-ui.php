@@ -142,18 +142,34 @@ final class ReviewUI {
 			)
 		);
 		?>
-		<div class="wrap lpgen-wrap">
-			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			<form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
-				<input type="hidden" name="page" value="lpg-review" />
-				<select name="campaign_id" onchange="this.form.submit()">
-					<option value="0"><?php echo esc_html__( '— pilih campaign —', 'lp-generator' ); ?></option>
-					<?php foreach ( $campaigns as $campaign ) : ?>
-						<option value="<?php echo esc_attr( (string) $campaign->ID ); ?>" <?php selected( $campaign_id, (int) $campaign->ID ); ?>><?php echo esc_html( get_the_title( $campaign ) ); ?></option>
-					<?php endforeach; ?>
-				</select>
-				<noscript><button class="button"><?php echo esc_html__( 'Pilih', 'lp-generator' ); ?></button></noscript>
-			</form>
+		<div class="wrap lpgen-wrap lpgen-review">
+			<header class="lpgen-review-hero">
+				<div class="lpgen-review-hero__main">
+					<p class="lpgen-eyebrow"><?php echo esc_html__( 'Review & Publishing', 'lp-generator' ); ?></p>
+					<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+					<p class="lpgen-review-hero__desc"><?php echo esc_html__( 'Periksa konten, kualitas, dan status workflow sebelum mempublish.', 'lp-generator' ); ?></p>
+				</div>
+				<form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" class="lpgen-review-picker">
+					<input type="hidden" name="page" value="lpg-review" />
+					<label for="lpgen_review_campaign"><?php echo esc_html__( 'Campaign', 'lp-generator' ); ?></label>
+					<div class="lpgen-review-picker__row">
+						<select id="lpgen_review_campaign" name="campaign_id" onchange="this.form.submit()">
+							<option value="0"><?php echo esc_html__( '— pilih campaign —', 'lp-generator' ); ?></option>
+							<?php foreach ( $campaigns as $campaign ) : ?>
+								<option value="<?php echo esc_attr( (string) $campaign->ID ); ?>" <?php selected( $campaign_id, (int) $campaign->ID ); ?>><?php echo esc_html( get_the_title( $campaign ) ); ?></option>
+							<?php endforeach; ?>
+						</select>
+						<noscript><button class="button"><?php echo esc_html__( 'Pilih', 'lp-generator' ); ?></button></noscript>
+					</div>
+				</form>
+			</header>
+			<?php if ( 0 === $campaign_id ) : ?>
+				<div class="lpgen-review-empty">
+					<span class="dashicons dashicons-feedback" aria-hidden="true"></span>
+					<h2><?php echo esc_html__( 'Pilih campaign untuk mulai review', 'lp-generator' ); ?></h2>
+					<p><?php echo esc_html__( 'Daftar item, kualitas, dan status publish akan tampil di sini.', 'lp-generator' ); ?></p>
+				</div>
+			<?php endif; ?>
 			<?php if ( $campaign_id > 0 ) : ?>
 				<?php
 				$status   = (string) ContentRepository::get_meta( $campaign_id, 'status', 'draft' );
@@ -166,8 +182,23 @@ final class ReviewUI {
 				}
 				$tags     = ContentRepository::collect_tags( $campaign_id, 3 );
 				$mode     = Utils::clean_schedule_mode( $campaign['schedule_mode'] ?? 'immediate' );
+				$counts   = array( 'total' => count( $items ), 'generated' => 0, 'approved' => 0, 'published' => 0, 'failed' => 0, 'quality_sum' => 0, 'quality_count' => 0 );
+				foreach ( $items as $stat_item ) {
+					$stat_status = (string) ( $stat_item['status'] ?? '' );
+					if ( in_array( $stat_status, array( 'generated', 'review' ), true ) ) { ++$counts['generated']; }
+					if ( 'approved' === $stat_status ) { ++$counts['approved']; }
+					if ( 'published' === $stat_status ) { ++$counts['published']; }
+					if ( in_array( $stat_status, array( 'failed', 'rejected' ), true ) ) { ++$counts['failed']; }
+					$stat_quality = json_decode( (string) get_post_meta( (int) ( $stat_item['id'] ?? 0 ), '_lpgen_v2_quality', true ), true );
+					if ( is_array( $stat_quality ) && isset( $stat_quality['score'] ) ) {
+						$counts['quality_sum'] += (int) $stat_quality['score'];
+						++$counts['quality_count'];
+					}
+				}
+				$quality_avg = $counts['quality_count'] > 0 ? (int) round( $counts['quality_sum'] / $counts['quality_count'] ) : 0;
 				?>
-				<div class="lpgen-panel">
+				<div class="lpgen-review-summary">
+				<section class="lpgen-review-info">
 					<p><strong><?php echo esc_html__( 'LP tujuan:', 'lp-generator' ); ?></strong> <?php echo esc_html( (string) ( $campaign['bofu_url'] ?? '' ) ); ?></p>
 					<p>
 						<strong><?php echo esc_html__( 'Entitas keyword:', 'lp-generator' ); ?></strong>
@@ -189,6 +220,15 @@ final class ReviewUI {
 						<strong><?php echo esc_html__( 'Jadwal publish:', 'lp-generator' ); ?></strong>
 						<?php echo esc_html( sprintf( '%s · interval %d menit · delay index %d detik', $mode, (int) ( $campaign['schedule_interval'] ?? 0 ), (int) ( $campaign['index_delay'] ?? 10 ) ) ); ?>
 					</p>
+				</section>
+				<div class="lpgen-review-stats">
+					<div class="lpgen-review-stat"><strong><?php echo esc_html( (string) $counts['total'] ); ?></strong><span><?php echo esc_html__( 'Total item', 'lp-generator' ); ?></span></div>
+					<div class="lpgen-review-stat"><strong><?php echo esc_html( (string) $counts['generated'] ); ?></strong><span><?php echo esc_html__( 'Siap review', 'lp-generator' ); ?></span></div>
+					<div class="lpgen-review-stat"><strong><?php echo esc_html( (string) $counts['approved'] ); ?></strong><span><?php echo esc_html__( 'Disetujui', 'lp-generator' ); ?></span></div>
+					<div class="lpgen-review-stat"><strong><?php echo esc_html( (string) $counts['published'] ); ?></strong><span><?php echo esc_html__( 'Terbit', 'lp-generator' ); ?></span></div>
+					<div class="lpgen-review-stat <?php echo $counts['failed'] > 0 ? 'lpgen-review-stat--alert' : ''; ?>"><strong><?php echo esc_html( (string) $counts['failed'] ); ?></strong><span><?php echo esc_html__( 'Perlu perhatian', 'lp-generator' ); ?></span></div>
+					<div class="lpgen-review-stat"><strong><?php echo $counts['quality_count'] > 0 ? esc_html( (string) $quality_avg ) : '—'; ?></strong><span><?php echo esc_html__( 'Skor kualitas', 'lp-generator' ); ?></span></div>
+				</div>
 				</div>
 				<?php
 				$experiment_label = ExperimentMode::admin_label( $campaign );
@@ -197,31 +237,44 @@ final class ReviewUI {
 					if ( absint( $candidate['post_id'] ?? 0 ) > 0 ) { $promote_item_id = (int) $candidate['id']; break; }
 				}
 				?>
-				<?php if ( '' !== $experiment_label ) : ?>
-					<p><span class="lpgen-badge" style="background:#fef3c7;color:#92400e;font-weight:600;"><?php echo esc_html( $experiment_label ); ?></span>
-						<span class="description"><?php echo esc_html__( 'Halaman noindex dan di luar sitemap. Promosi hanya setelah pemeriksaan; publish tetap manual.', 'lp-generator' ); ?></span></p>
-				<?php endif; ?>
-				<p>
-					<?php echo esc_html__( 'Status campaign:', 'lp-generator' ); ?>
-					<strong><?php echo esc_html( $status ); ?></strong>
-					<button type="button" class="button" data-lpgen-action="run-now" data-campaign="<?php echo esc_attr( (string) $campaign_id ); ?>" style="margin-left:8px;">
-						<?php echo esc_html__( '⚡ Proses Antrean Sekarang', 'lp-generator' ); ?>
-					</button>
-					<?php if ( in_array( $status, array( 'review', 'publishing', 'failed' ), true ) ) : ?>
-						<button type="button" class="button button-primary" data-lpgen-action="publish-campaign" data-campaign="<?php echo esc_attr( (string) $campaign_id ); ?>">
-							<?php echo esc_html( 'failed' === $status ? __( 'Coba Publish Ulang', 'lp-generator' ) : __( 'Publish & Index', 'lp-generator' ) ); ?>
+				<section class="lpgen-review-toolbar">
+					<div class="lpgen-review-toolbar__meta">
+						<span class="lpgen-review-toolbar__label"><?php echo esc_html__( 'Status campaign', 'lp-generator' ); ?></span>
+						<span class="lpgen-badge lpgen-badge--<?php echo esc_attr( sanitize_key( $status ) ); ?>"><?php echo esc_html( $status ); ?></span>
+						<?php if ( '' !== $experiment_label ) : ?>
+							<span class="lpgen-badge lpgen-badge--experiment"><?php echo esc_html( $experiment_label ); ?></span>
+							<span class="lpgen-review-toolbar__note"><?php echo esc_html__( 'Noindex & di luar sitemap sampai dipromosikan.', 'lp-generator' ); ?></span>
+						<?php endif; ?>
+					</div>
+					<div class="lpgen-review-toolbar__actions">
+						<button type="button" class="button" data-lpgen-action="run-now" data-campaign="<?php echo esc_attr( (string) $campaign_id ); ?>">
+							<span class="dashicons dashicons-update" aria-hidden="true"></span>
+							<?php echo esc_html__( 'Proses Antrean', 'lp-generator' ); ?>
 						</button>
-					<?php endif; ?>
-					<?php if ( '' !== $experiment_label ) : ?>
-						<button type="button" class="button button-secondary" data-lpgen-action="promote-experiment" data-campaign="<?php echo esc_attr( (string) $campaign_id ); ?>" data-item="<?php echo esc_attr( (string) $promote_item_id ); ?>">
-							<?php echo esc_html__( 'Promosikan dari Eksperimen', 'lp-generator' ); ?>
-						</button>
-					<?php endif; ?>
-				</p>
-				<p class="description" style="margin:0 0 12px;">
+						<?php if ( '' !== $experiment_label ) : ?>
+							<button type="button" class="button button-secondary" data-lpgen-action="promote-experiment" data-campaign="<?php echo esc_attr( (string) $campaign_id ); ?>" data-item="<?php echo esc_attr( (string) $promote_item_id ); ?>">
+								<span class="dashicons dashicons-migrate" aria-hidden="true"></span>
+								<?php echo esc_html__( 'Promosikan', 'lp-generator' ); ?>
+							</button>
+						<?php endif; ?>
+						<?php if ( in_array( $status, array( 'review', 'publishing', 'failed' ), true ) ) : ?>
+							<button type="button" class="button button-primary" data-lpgen-action="publish-campaign" data-campaign="<?php echo esc_attr( (string) $campaign_id ); ?>">
+								<span class="dashicons dashicons-upload" aria-hidden="true"></span>
+								<?php echo esc_html( 'failed' === $status ? __( 'Coba Publish Ulang', 'lp-generator' ) : __( 'Publish & Index', 'lp-generator' ) ); ?>
+							</button>
+						<?php endif; ?>
+					</div>
+				</section>
+				<p class="description lpgen-review-hint">
 					<?php echo esc_html__( 'Topik (brief) adalah hasil tahap 1: judul, angle, outline, pain points, dan funnel angle. Artikel lengkap dibuat oleh job terpisah. Internal link baru muncul setelah BOFU dan artikel dipublish.', 'lp-generator' ); ?>
 				</p>
-				<table class="widefat striped lpgen-table">
+				<section class="lpgen-review-list">
+					<div class="lpgen-review-list__head">
+						<h2><?php echo esc_html__( 'Item campaign', 'lp-generator' ); ?></h2>
+						<span class="description"><?php echo esc_html__( 'Setiap baris bisa diperiksa, disetujui, atau dibuat ulang.', 'lp-generator' ); ?></span>
+					</div>
+					<div class="lpgen-review-table-wrap">
+				<table class="widefat striped lpgen-table lpgen-review-table">
 					<thead>
 					<tr>
 						<th><?php echo esc_html__( 'Stage', 'lp-generator' ); ?></th>
@@ -250,8 +303,8 @@ final class ReviewUI {
 							}
 							?>
 							<tr>
-								<td><?php echo esc_html( strtoupper( (string) $item['stage'] ) ); ?></td>
-								<td>
+								<td data-label="<?php echo esc_attr__( 'Stage', 'lp-generator' ); ?>"><span class="lpgen-stage-chip"><?php echo esc_html( strtoupper( (string) $item['stage'] ) ); ?></span></td>
+								<td data-label="<?php echo esc_attr__( 'Jenis', 'lp-generator' ); ?>">
 									<?php
 									$kind_labels = array(
 										'lp'      => __( 'Landing Page', 'lp-generator' ),
@@ -262,19 +315,19 @@ final class ReviewUI {
 									echo esc_html( $kind_labels[ (string) $item['kind'] ] ?? (string) $item['kind'] );
 									?>
 								</td>
-								<td><?php echo esc_html( implode( ', ', ContentRepository::item_tags( (int) $item['id'] ) ) ); ?></td>
-								<td>
-									<a href="<?php echo esc_url( $edit_url ); ?>"><?php echo esc_html( (string) $item['title'] ); ?></a>
+								<td data-label="<?php echo esc_attr__( 'Tag', 'lp-generator' ); ?>"><?php echo esc_html( implode( ', ', ContentRepository::item_tags( (int) $item['id'] ) ) ); ?></td>
+								<td data-label="<?php echo esc_attr__( 'Judul', 'lp-generator' ); ?>" class="lpgen-review-title-cell">
+									<a class="lpgen-review-title" href="<?php echo esc_url( $edit_url ); ?>"><?php echo esc_html( (string) $item['title'] ); ?></a>
 									<details><summary><?php echo esc_html__( 'Isi, SEO, anchor & entitas', 'lp-generator' ); ?></summary>
 									<p><strong><?php echo esc_html__( 'SEO title:', 'lp-generator' ); ?></strong> <?php echo esc_html( (string) $item['seo_title'] ); ?><br />
 									<strong><?php echo esc_html__( 'Deskripsi:', 'lp-generator' ); ?></strong> <?php echo esc_html( (string) $item['meta_description'] ); ?><br />
 									<strong><?php echo esc_html__( 'Anchor ke BOFU:', 'lp-generator' ); ?></strong> <?php echo esc_html( (string) $item['anchor'] ); ?></p>
 									<?php $item_entities = json_decode( (string) ( $item['entities'] ?? '' ), true ); ?>
 									<p><strong><?php echo esc_html__( 'Entitas konten:', 'lp-generator' ); ?></strong> <?php echo esc_html( implode( ', ', array_column( is_array( $item_entities ) ? $item_entities : array(), 'term' ) ) ); ?></p>
-									<div style="max-height:420px;overflow:auto;background:#fff;padding:12px;"><?php echo wp_kses_post( (string) $item['content'] ); ?></div>
+									<div class="lpgen-review-content"><?php echo wp_kses_post( (string) $item['content'] ); ?></div>
 									<?php if ( 'lp' === $item['kind'] ) : ?>
 									<p><strong><?php echo esc_html__( 'Preview HTML dari data campaign tersimpan:', 'lp-generator' ); ?></strong></p>
-									<iframe id="lpgen-preview-<?php echo esc_attr( (string) $item_id ); ?>" title="<?php echo esc_attr__( 'Preview landing page', 'lp-generator' ); ?>" sandbox="" loading="lazy" style="width:100%;height:720px;border:1px solid #ccd0d4;background:#fff;" srcdoc="<?php echo esc_attr( LandingPage::preview_document( 'published' === $item_status && ! empty( $item['post_id'] ) ? (string) get_post_field( 'post_content', (int) $item['post_id'] ) : (string) $item['content'] ) ); ?>"></iframe>
+									<iframe id="lpgen-preview-<?php echo esc_attr( (string) $item_id ); ?>" title="<?php echo esc_attr__( 'Preview landing page', 'lp-generator' ); ?>" sandbox="" loading="lazy" class="lpgen-review-preview" srcdoc="<?php echo esc_attr( LandingPage::preview_document( 'published' === $item_status && ! empty( $item['post_id'] ) ? (string) get_post_field( 'post_content', (int) $item['post_id'] ) : (string) $item['content'] ) ); ?>"></iframe>
 									<p><button type="button" class="button" data-lpgen-preview-download="lpgen-preview-<?php echo esc_attr( (string) $item_id ); ?>"><?php echo esc_html__( 'Unduh preview HTML', 'lp-generator' ); ?></button></p>
 									<p><strong><?php echo esc_html__( 'HTML WordPress (salin dari sini atau edit pada item):', 'lp-generator' ); ?></strong></p>
 									<textarea readonly rows="8" class="large-text code" aria-label="<?php echo esc_attr__( 'HTML landing page WordPress', 'lp-generator' ); ?>"><?php echo esc_html( (string) $item['content'] ); ?></textarea>
@@ -284,35 +337,42 @@ final class ReviewUI {
 										<br /><a href="<?php echo esc_url( $permalink ); ?>" target="_blank" rel="noopener"><?php echo esc_html__( 'Lihat publish →', 'lp-generator' ); ?></a>
 									<?php endif; ?>
 								</td>
-								<td>
-									<?php echo esc_html( (string) $item['model'] ); ?>
+								<td data-label="<?php echo esc_attr__( 'Model / Token', 'lp-generator' ); ?>">
+									<span class="lpgen-review-model"><?php echo esc_html( (string) $item['model'] ); ?></span>
 									<?php if ( (int) $item['tokens'] > 0 ) : ?>
 										<br /><small><?php echo esc_html( (string) $item['tokens'] . ' tokens' ); ?></small>
 									<?php endif; ?>
 								</td>
-								<td><span class="lpgen-badge lpgen-badge--<?php echo esc_attr( sanitize_key( $item_status ) ); ?>"><?php echo esc_html( $item_status ); ?></span>
-									<br /><small><?php echo esc_html__( 'Workflow:', 'lp-generator' ); ?> <?php echo esc_html( PublishingWorkflow::state( $item_id ) ); ?></small>
-									<?php $quality_report = json_decode( (string) ContentRepository::get_meta( $item_id, '_lpgen_v2_quality', '' ), true ); ?>
+								<td data-label="<?php echo esc_attr__( 'Status', 'lp-generator' ); ?>" class="lpgen-review-status-cell">
+									<div class="lpgen-review-status-line"><span class="lpgen-badge lpgen-badge--<?php echo esc_attr( sanitize_key( $item_status ) ); ?>"><?php echo esc_html( $item_status ); ?></span></div>
+									<div class="lpgen-review-meta-line"><span><?php echo esc_html__( 'Workflow', 'lp-generator' ); ?></span><strong><?php echo esc_html( PublishingWorkflow::state( $item_id ) ); ?></strong></div>
+									<?php $quality_report = json_decode( (string) get_post_meta( $item_id, '_lpgen_v2_quality', true ), true ); ?>
 									<?php if ( is_array( $quality_report ) ) : ?>
-										<br /><small><?php echo esc_html( sprintf( 'Quality: %d · %s', (int) ( $quality_report['score'] ?? 0 ), (string) ( $quality_report['decision'] ?? '' ) ) ); ?></small>
+										<div class="lpgen-review-meta-line"><span><?php echo esc_html__( 'Quality', 'lp-generator' ); ?></span><strong><?php echo esc_html( sprintf( '%d · %s', (int) ( $quality_report['score'] ?? 0 ), (string) ( $quality_report['decision'] ?? '' ) ) ); ?></strong></div>
 									<?php endif; ?>
 									<?php if ( '' !== (string) $item['error'] ) : ?>
-										<br /><small><?php echo esc_html( (string) $item['error'] ); ?></small>
+										<div class="lpgen-review-error"><?php echo esc_html( (string) $item['error'] ); ?></div>
 									<?php endif; ?>
 								</td>
-								<td>
-									<button type="button" class="button button-small" data-lpgen-action="set-status" data-status="approved" data-item="<?php echo esc_attr( (string) $item_id ); ?>"><?php echo esc_html__( 'Approve', 'lp-generator' ); ?></button>
-									<button type="button" class="button button-small" data-lpgen-action="set-status" data-status="rejected" data-item="<?php echo esc_attr( (string) $item_id ); ?>"><?php echo esc_html__( 'Reject', 'lp-generator' ); ?></button>
-									<button type="button" class="button button-small" data-lpgen-action="regenerate" data-item="<?php echo esc_attr( (string) $item_id ); ?>"><?php echo esc_html__( 'Regenerate', 'lp-generator' ); ?></button>
-									<?php if ( $has_placeholder ) : ?>
-										<button type="button" class="button button-small" data-lpgen-action="regenerate-image" data-item="<?php echo esc_attr( (string) $item_id ); ?>"><?php echo esc_html__( 'Ganti gambar', 'lp-generator' ); ?></button>
-									<?php endif; ?>
+								<td data-label="<?php echo esc_attr__( 'Aksi', 'lp-generator' ); ?>" class="lpgen-review-actions">
+									<div class="lpgen-review-actions__group">
+										<button type="button" class="button button-small button-primary" data-lpgen-action="set-status" data-status="approved" data-item="<?php echo esc_attr( (string) $item_id ); ?>"><?php echo esc_html__( 'Approve', 'lp-generator' ); ?></button>
+										<button type="button" class="button button-small" data-lpgen-action="set-status" data-status="rejected" data-item="<?php echo esc_attr( (string) $item_id ); ?>"><?php echo esc_html__( 'Reject', 'lp-generator' ); ?></button>
+									</div>
+									<div class="lpgen-review-actions__group">
+										<button type="button" class="button button-small" data-lpgen-action="regenerate" data-item="<?php echo esc_attr( (string) $item_id ); ?>"><?php echo esc_html__( 'Regenerate', 'lp-generator' ); ?></button>
+										<?php if ( $has_placeholder ) : ?>
+											<button type="button" class="button button-small" data-lpgen-action="regenerate-image" data-item="<?php echo esc_attr( (string) $item_id ); ?>"><?php echo esc_html__( 'Ganti gambar', 'lp-generator' ); ?></button>
+										<?php endif; ?>
+									</div>
 								</td>
 							</tr>
 						<?php endforeach; ?>
 					<?php endif; ?>
 					</tbody>
 				</table>
+					</div>
+				</section>
 			<?php endif; ?>
 			<div id="lpgen-action-result" aria-live="polite"></div>
 		</div>
