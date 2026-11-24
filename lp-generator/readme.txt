@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,11 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 2.0.2 =
+* Fix teks judul gelap di atas hero dan area kontak berlatar gelap pada template LP.
+* Fix horizontal scroll pada canvas LP karena padding ditambahkan di luar lebar 100%.
+* Sembunyikan label internal “Split Proof” dan ganti kicker TOFU/MOFU/Tag lama pada konten yang sudah terbit.
 
 = 2.0.1 =
 * Redesign layar Review dengan hero, ringkasan statistik, toolbar aksi, dan tabel item yang lebih mudah dipindai.

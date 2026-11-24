@@ -38,6 +38,26 @@
 .lpg-lpt--amazon_affiliate .lpg-lpt__final-cta { background: var(--lpm-navy); color: #fff; }
 .lpg-lpt--amazon_affiliate .lpg-lpt__final-cta .lpg-lp__button { background: var(--lpm-orange); color: #fff; }
 
+/* Dark surfaces must override the base .lpg-lp heading colour. */
+.lpg-lpt--service .lpg-lpt__hero h1,
+.lpg-lpt--service .lpg-lpt__hero h2,
+.lpg-lpt--service .lpg-lpt__hero h3,
+.lpg-lpt--service .lpg-lpt__hero p,
+.lpg-lpt--service .lpg-lpt__contact h2,
+.lpg-lpt--service .lpg-lpt__contact h3,
+.lpg-lpt--service .lpg-lpt__contact p,
+.lpg-lpt--product .lpg-lpt__product-banner h2,
+.lpg-lpt--product .lpg-lpt__product-banner h3,
+.lpg-lpt--product .lpg-lpt__product-banner p,
+.lpg-lpt--amazon_affiliate .lpg-lpt__final-cta h2,
+.lpg-lpt--amazon_affiliate .lpg-lpt__final-cta h3,
+.lpg-lpt--amazon_affiliate .lpg-lpt__final-cta p { color: #fff; }
+.lpg-lpt--service .lpg-lpt__hero .lpg-lp__eyebrow { color: var(--lpm-gold); }
+.lpg-lpt--service .lpg-lpt__hero .lpg-lp__intro,
+.lpg-lpt--service .lpg-lpt__contact p { color: rgba(255, 255, 255, .82); }
+.lpg-lpt--service .lpg-lpt__contact a { color: var(--lpm-gold); }
+.lpg-lpt--service .lpg-lpt__hero .lpg-lpt__secondary { color: var(--lpm-gold); }
+
 @media (max-width: 720px) {
   .lpg-lpt__hero,
   .lpg-lpt--product .lpg-lpt__product-banner { grid-template-columns: 1fr; padding: 28px 16px; margin: 0 12px; }

@@ -78,4 +78,4 @@
 }
 /* Only the optional standalone LP template uses these page-level selectors. */
 body.lpgen-canvas { margin:0; padding:0; background:#e8eff2; }
-.lpgen-canvas .lpgen-canvas__main { display:block; width:100%; max-width:none; margin:0; padding:clamp(0px,3vw,36px) clamp(0px,2vw,24px); }
+.lpgen-canvas .lpgen-canvas__main { display:block; box-sizing:border-box; width:100%; max-width:none; margin:0; padding:clamp(0px,3vw,36px) clamp(0px,2vw,24px); }

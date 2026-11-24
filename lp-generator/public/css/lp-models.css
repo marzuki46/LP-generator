@@ -22,7 +22,7 @@
   letter-spacing: .02em;
 }
 .lpg-lpm__brand { font-weight: 700; }
-.lpg-lpm__model { color: var(--lpm-gold); text-transform: uppercase; font-size: 11px; letter-spacing: .12em; }
+.lpg-lpm__model { display: none; }
 
 .lpg-lpm__trust {
   display: grid;
@@ -109,6 +109,16 @@
 .lpg-lp.lpg-lpm--editorial .lpg-aida__hero .lpg-lp__intro { color: rgba(255,255,255,.82); }
 .lpg-lp.lpg-lpm--editorial .lpg-aida__label { color: var(--lpm-gold); }
 .lpg-lp.lpg-lpm--editorial .lpg-aida__brief li { color: #fff; }
+.lpg-lp.lpg-lpm--pricing .lpg-aida__hero h1,
+.lpg-lp.lpg-lpm--pricing .lpg-aida__hero h2,
+.lpg-lp.lpg-lpm--pricing .lpg-aida__hero h3,
+.lpg-lp.lpg-lpm--pricing .lpg-aida__hero p,
+.lpg-lp.lpg-lpm--pricing .lpg-aida__hero .lpg-lp__eyebrow { color: #fff; }
+.lpg-lp.lpg-lpm--pricing .lpg-aida__hero .lpg-lp__intro { color: rgba(255, 255, 255, .82); }
+.lpg-lp.lpg-lpm--split .lpg-aida__brief h2,
+.lpg-lp.lpg-lpm--split .lpg-aida__brief h3,
+.lpg-lp.lpg-lpm--split .lpg-aida__brief p,
+.lpg-lp.lpg-lpm--split .lpg-aida__brief li { color: #fff; }
 
 .lpg-lp.lpg-lpm--split .lpg-aida__hero { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(220px, .6fr); gap: 28px; align-items: start; }
 .lpg-lp.lpg-lpm--split .lpg-aida__brief { background: var(--lpm-navy); color: #fff; border-radius: 12px; padding: 20px; }
@@ -167,7 +177,9 @@
 }
 .lpg-related__card:hover,
 .lpg-related__card:focus-visible { transform: translateY(-3px); border-color: var(--lpm-orange); box-shadow: 0 12px 26px rgba(23,32,51,.12); outline: none; }
-.lpg-related__kicker { align-self: flex-start; padding: 4px 9px; border-radius: 999px; background: rgba(255,107,53,.12); color: var(--lpm-orange); font-size: 11px; font-weight: 700; letter-spacing: .1em; }
+.lpg-related__kicker { align-self: flex-start; padding: 4px 9px; border-radius: 999px; background: rgba(255,107,53,.12); color: var(--lpm-orange); font-size: 0; font-weight: 700; letter-spacing: .1em; }
+.lpg-related__kicker::after { content: "Panduan"; font-size: 11px; }
+html[lang^="en"] .lpg-related__kicker::after { content: "Guide"; }
 .lpg-related__title { font-size: 17px; font-weight: 700; line-height: 1.35; }
 .lpg-related__link { margin-top: auto; color: var(--lpm-orange); font-size: 13px; font-weight: 700; }
 
