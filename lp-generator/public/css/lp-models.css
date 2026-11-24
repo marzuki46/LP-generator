@@ -11,18 +11,49 @@
 }
 
 .lpg-lpm__nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
   background: var(--lpm-navy);
   color: #fff;
   font-size: 13px;
   letter-spacing: .02em;
 }
-.lpg-lpm__brand { font-weight: 700; }
+.lpg-lpm__nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 24px;
+}
+.lpg-lpm__brand { font-weight: 700; white-space: nowrap; }
 .lpg-lpm__model { display: none; }
+.lpg-lpm__nav-links { display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.lpg-lpm__nav-links::-webkit-scrollbar { display: none; }
+.lpg-lpm__nav-links a {
+  flex: 0 0 auto;
+  padding: 6px 11px;
+  border-radius: 999px;
+  color: rgba(255,255,255,.82);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.lpg-lpm__nav-links a:hover,
+.lpg-lpm__nav-links a:focus-visible { background: rgba(255,255,255,.12); color: #fff; outline: none; }
+.lpg-lpm__breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: var(--lpm-tint);
+  color: var(--lpm-muted);
+  font-size: 12px;
+}
+.lpg-lpm__breadcrumb a { color: var(--lpm-ink); text-decoration: none; }
+.lpg-lpm__breadcrumb a:hover { text-decoration: underline; }
 
 .lpg-lpm__trust {
   display: grid;
@@ -49,14 +80,18 @@
   text-align: center;
 }
 .lpg-lpm__footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 24px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  padding: 28px 24px;
   background: var(--lpm-navy);
   color: rgba(255,255,255,.72);
   font-size: 12px;
 }
+.lpg-lpm__footer-col { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.lpg-lpm__footer-col strong { color: #fff; font-size: 13px; }
+.lpg-lpm__footer-col a { color: rgba(255,255,255,.78); text-decoration: none; }
+.lpg-lpm__footer-col a:hover { color: #fff; text-decoration: underline; }
 
 /* Editorial SaaS: dark hero, bento sections. */
 .lpg-lpm--editorial .lpg-lp__hero {
@@ -188,11 +223,12 @@ html[lang^="en"] .lpg-related__kicker::after { content: "Guide"; }
   .lpg-lpm--split .lpg-aida__section { grid-template-columns: 1fr; }
   .lpg-lpm--split .lpg-lp__hero,
   .lpg-lpm--split .lpg-lp__section { grid-template-columns: 1fr; }
-  .lpg-lpm__nav { flex-wrap: wrap; }
+  .lpg-lpm__nav-inner { flex-wrap: wrap; gap: 8px; padding: 10px 16px; }
+  .lpg-lpm__nav-links { width: 100%; }
+  .lpg-lpm__breadcrumb { padding: 9px 16px; }
   .lpm-offerbar { padding: 14px 16px; gap: 10px; }
   .lpm-offerbar__order .lpg-lp__button { padding: 11px 14px; font-size: 13px; }
-  .lpg-lpm__footer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
-  .lpg-lpm__footer span:last-child:nth-child(3) { grid-column: 1 / -1; }
+  .lpg-lpm__footer { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 24px 16px; }
   .lpg-related { padding: 28px 16px; }
   .lpg-related__grid { gap: 10px; }
   .lpg-related__card { min-height: 132px; padding: 14px; gap: 7px; }

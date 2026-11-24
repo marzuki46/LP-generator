@@ -11,3 +11,6 @@ lpg_assert_true( false !== strpos( $types, '.lpg-lpt--service .lpg-lpt__hero h1'
 lpg_assert_true( false !== strpos( $types, '.lpg-lpt--service .lpg-lpt__contact h2' ), 'judul kontak service menimpa warna gelap' );
 lpg_assert_true( false !== strpos( $models, '.lpg-lpm__model { display: none; }' ), 'label model tidak tampil di publik' );
 lpg_assert_true( false !== strpos( $models, '.lpg-related__kicker::after' ), 'kicker related lama diganti label netral' );
+lpg_assert_true( false !== strpos( $models, '.lpg-lpm__nav-links' ), 'navigasi AIDA tersedia' );
+lpg_assert_true( false !== strpos( $models, '.lpg-lpm__breadcrumb' ), 'breadcrumb AIDA tersedia' );
+lpg_assert_true( false !== strpos( $types, '.lpg-lpt__hero-aside' ) && false !== strpos( $types, '.lpg-lpt__price-card' ), 'sticky aside dan kartu harga AIDA tersedia' );

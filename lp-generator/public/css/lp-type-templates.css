@@ -58,9 +58,76 @@
 .lpg-lpt--service .lpg-lpt__contact a { color: var(--lpm-gold); }
 .lpg-lpt--service .lpg-lpt__hero .lpg-lpt__secondary { color: var(--lpm-gold); }
 
+/* AIDA sales flow: sticky proof rail + late-stage price card. */
+.lpg-lpt--aida-service .lpg-lpt__hero { grid-template-columns: minmax(0, 1.55fr) minmax(240px, .75fr); gap: 36px; }
+.lpg-lpt__hero-aside { align-self: start; position: sticky; top: 84px; }
+.lpg-lpt__hero-aside-card {
+  padding: 22px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 16px;
+  background: rgba(255,255,255,.06);
+  color: #fff;
+}
+.lpg-lpt__hero-aside-card .lpg-lpt__kicker { color: var(--lpm-gold); letter-spacing: .12em; font-size: 11px; text-transform: uppercase; }
+.lpg-lpt__hero-aside-card ul { list-style: none; margin: 14px 0 0; padding: 0; }
+.lpg-lpt__hero-aside-card li {
+  position: relative;
+  margin-bottom: 12px;
+  padding-left: 22px;
+  color: rgba(255,255,255,.88);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.lpg-lpt__hero-aside-card li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--lpm-gold);
+  font-weight: 700;
+}
+.lpg-lpt__hero-aside-note { margin: 18px 0 0; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.14); color: rgba(255,255,255,.72); font-size: 13px; }
+
+.lpg-lpt__section[id], .lpg-lpt__faq[id], .lpg-lpt__price-card[id] { scroll-margin-top: 92px; }
+.lpg-lpt__price-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, .7fr);
+  gap: 32px;
+  align-items: start;
+  margin: 24px;
+  padding: 36px;
+  border-radius: 20px;
+  background: var(--lpm-tint);
+}
+.lpg-lpt__price-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; list-style: none; margin: 20px 0; padding: 0; }
+.lpg-lpt__price-list li { position: relative; padding-left: 20px; color: var(--lpm-ink); font-size: 14px; }
+.lpg-lpt__price-list li::before { content: "•"; position: absolute; left: 0; color: var(--lpm-orange); font-size: 20px; line-height: 1; }
+.lpg-lpt__price-meta { margin: 8px 0; color: var(--lpm-muted); font-size: 13px; }
+.lpg-lpt__price-box {
+  position: sticky;
+  top: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 26px;
+  border-radius: 16px;
+  background: var(--lpm-navy);
+  color: #fff;
+  text-align: center;
+}
+.lpg-lpt__price-box > span { color: rgba(255,255,255,.72); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.lpg-lpt__price-box > strong { color: #fff; font-size: clamp(22px, 3vw, 34px); line-height: 1.15; }
+.lpg-lpt__price-box .lpg-lp__button { width: 100%; background: var(--lpm-orange); color: #fff; }
+.lpg-lpt__price-box small { color: rgba(255,255,255,.6); font-size: 11px; }
+
 @media (max-width: 720px) {
   .lpg-lpt__hero,
+  .lpg-lpt--aida-service .lpg-lpt__hero,
   .lpg-lpt--product .lpg-lpt__product-banner { grid-template-columns: 1fr; padding: 28px 16px; margin: 0 12px; }
+  .lpg-lpt__hero-aside { position: static; }
+  .lpg-lpt__price-card { grid-template-columns: 1fr; gap: 20px; margin: 12px; padding: 24px; }
+  .lpg-lpt__price-box { position: static; }
+  .lpg-lpt__price-list { grid-template-columns: 1fr; }
   .lpg-lpt__section, .lpg-lpt__faq, .lpg-lpt__final-cta, .lpg-lpt__contact { padding: 24px 16px; }
   .lpg-lpt__secondary { display: block; margin: 12px 0 0; }
 }

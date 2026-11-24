@@ -410,8 +410,18 @@ final class Publisher {
 		if ( 'bofu' === $item['stage'] && '' !== trim( (string) ( $campaign['bofu_path'] ?? '' ) ) ) {
 			$path = FunnelContent::clean_path( (string) $campaign['bofu_path'] );
 			if ( '' !== $path ) {
-				$existing = get_page_by_path( $path, OBJECT, 'page' );
-				if ( $existing && (int) $existing->ID !== (int) ( $item['post_id'] ?? 0 ) ) { throw new \RuntimeException( 'Path LP sudah digunakan. Pilih mode BOFU yang sudah ada.' ); }
+				$existing      = get_page_by_path( $path, OBJECT, 'page' );
+				$existing_id   = $existing ? (int) $existing->ID : 0;
+				$item_post_id  = (int) ( $item['post_id'] ?? 0 );
+				$campaign_id   = (int) ( $campaign['campaign_id'] ?? 0 );
+				$existing_owner = $existing_id > 0 ? (int) get_post_meta( $existing_id, '_lpgen_campaign_id', true ) : 0;
+				$owned         = $existing_id > 0 && ( $existing_id === $item_post_id || ( $campaign_id > 0 && $existing_owner === $campaign_id ) );
+				if ( $existing && ! $owned ) { throw new \RuntimeException( 'Path LP sudah digunakan oleh campaign lain. Pilih path lain atau mode BOFU yang sudah ada.' ); }
+				if ( $owned ) {
+					// Reuse the campaign's own page instead of failing on a retry/new item.
+					$post_args['ID'] = $existing_id;
+					$item['post_id'] = $existing_id;
+				}
 				$parts = explode( '/', $path );
 				$post_args['post_name'] = array_pop( $parts );
 				$parent_id   = 0;

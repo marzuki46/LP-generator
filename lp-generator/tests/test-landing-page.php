@@ -35,7 +35,7 @@ foreach (array('service','product','amazon_affiliate') as $lp_type) {
  $fixture['campaign']['product_specs']="Responsive\nSEO lokal";$fixture['campaign']['product_status']='available';
  $html=LandingPage::render($fixture['data'],$fixture['campaign']);
  lpg_assert_true(str_contains($html,'data-lp-type="'.$lp_type.'"') && str_contains($html,'lpg-lpt--'.$lp_type),'template tipe '.$lp_type.' dipakai');
- lpg_assert_true(str_contains($html,'Area layanan: Solo') && str_contains($html,'lpg-lpm__footer'),'footer menyesuaikan lokasi campaign');
+ lpg_assert_true(str_contains($html,'Area layanan') && str_contains($html,'Solo') && str_contains($html,'lpg-lpm__footer-col'),'footer menyesuaikan lokasi campaign');
  lpg_assert_same(1,preg_match_all('/<h1\b/',$html),'tipe '.$lp_type.' tetap satu H1');
  lpg_assert_same(count($fixture['data']['sections']),substr_count($html,'data-step='),'tipe '.$lp_type.' mempertahankan langkah framework');
  if ('service'===$lp_type) { lpg_assert_true(str_contains($html,'lpg-lpt__contact') && !str_contains($html,'lpg-lpt__disclosure-top'),'service memakai blok kontak'); }

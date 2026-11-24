@@ -21,12 +21,19 @@ foreach ( array( 'service', 'product', 'amazon_affiliate' ) as $lp_type ) {
 		lpg_assert_true( false === strpos( $html, '>TAG<' ), $label . ': tidak ada label Tag' );
 		$area_label = 'en' === $language ? 'Service area' : 'Area layanan';
 		lpg_assert_true( false !== strpos( $html, $area_label ) && false !== strpos( $html, 'Solo' ), $label . ': footer lokasi terlokalisasi' );
-		if ( 'en' === $language ) {
+		if ( 'service' === $lp_type ) {
+			lpg_assert_true( false === strpos( $html, 'lpm-offerbar' ), $label . ': tidak ada price bar di atas' );
+			lpg_assert_true( false !== strpos( $html, 'lpg-lpt__price-card' ), $label . ': kartu harga di tahap-action' );
+			lpg_assert_true( false !== strpos( $html, 'lpg-lpm__breadcrumb' ) && false !== strpos( $html, 'lpg-lpm__nav-links' ), $label . ': navigasi & breadcrumb hadir' );
+		}
+		if ( 'en' === $language && 'service' === $lp_type ) {
 			$indonesian_chrome = array( 'MULAI DARI', 'PAKET & INVESTASI', 'Ringkasan penawaran', 'Panduan terkait', 'Pelajari sebelum menentukan pilihan', 'Baca panduan', 'Rekomendasi singkat', 'Pertanyaan yang sering diajukan', 'Pesan sekarang', 'Hubungi kami', 'Tersedia', 'Sebagai Amazon Associate', 'Halaman ini memuat tautan afiliasi' );
 			foreach ( $indonesian_chrome as $needle ) {
 				lpg_assert_true( false === strpos( $html, $needle ), $label . ': tidak ada string UI Indonesia "' . $needle . '"' );
 			}
-			lpg_assert_true( false !== strpos( $html, 'STARTING FROM' ), $label . ': label harga EN' );
+			lpg_assert_true( false !== strpos( $html, 'Pricing &amp; investment' ) || false !== strpos( $html, 'Pricing & investment' ), $label . ': kartu harga EN' );
+		}
+		if ( 'en' === $language ) {
 			lpg_assert_same( 'Related guides', LPG\LanguageService::strings( 'en' )['related'], $label . ': label related EN tersedia' );
 		}
 	}

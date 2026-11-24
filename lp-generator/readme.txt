@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 2.0.2
+Stable tag: 2.0.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,12 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 2.0.3 =
+* Fix publish LP: path yang sudah dibuat oleh campaign yang sama dipakai ulang saat retry, bukan dianggap bentrok.
+* AIDA service: sticky navigation + breadcrumb, temporary sticky proof rail di hero, price card di tahap Action, dan footer 4 kolom.
+* Price bar "MULAI DARI" tidak ditampilkan di awal untuk landing page AIDA service; harga muncul bersama kartu investasi setelah narasi nilai.
+* Lazy loading + async decoding untuk gambar konten.
 
 = 2.0.2 =
 * Fix teks judul gelap di atas hero dan area kontak berlatar gelap pada template LP.

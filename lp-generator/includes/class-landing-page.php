@@ -163,7 +163,7 @@ final class LandingPage {
 		$html = '<div class="lpg-lp__gallery' . ( $hero ? ' lpg-lp__gallery--hero' : '' ) . '">';
 		foreach ( $images as $image ) {
 			if ( ! is_array( $image ) || empty( $image['url'] ) || '' === esc_url( (string) $image['url'] ) ) { continue; }
-			$html .= '<figure><img src="' . esc_url( (string) $image['url'] ) . '" alt="' . esc_attr( (string) ( $image['alt'] ?? '' ) ) . '" class="wp-image-' . absint( $image['id'] ?? 0 ) . '" loading="' . ( $hero ? 'eager' : 'lazy' ) . '"' . ( $hero ? ' fetchpriority="high"' : '' ) . ( ! empty( $image['width'] ) && ! empty( $image['height'] ) ? ' width="' . absint( $image['width'] ) . '" height="' . absint( $image['height'] ) . '"' : '' ) . ' /></figure>';
+			$html .= '<figure><img src="' . esc_url( (string) $image['url'] ) . '" alt="' . esc_attr( (string) ( $image['alt'] ?? '' ) ) . '" class="wp-image-' . absint( $image['id'] ?? 0 ) . '" loading="' . ( $hero ? 'eager' : 'lazy' ) . '" decoding="async"' . ( $hero ? ' fetchpriority="high"' : '' ) . ( ! empty( $image['width'] ) && ! empty( $image['height'] ) ? ' width="' . absint( $image['width'] ) . '" height="' . absint( $image['height'] ) . '"' : '' ) . ' /></figure>';
 		}
 		return $html . '</div>';
 	}

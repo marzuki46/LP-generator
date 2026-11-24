@@ -13,6 +13,7 @@ final class LpTypeTemplate {
   $strings  = LanguageService::strings( (string) ( $campaign['language'] ?? 'id' ) );
   $model    = LpTemplate::model( $campaign );
   $affiliate = 'amazon_affiliate' === $type;
+  $aida_service = ( 'service' === $type && 'aida' === sanitize_key( (string) ( $campaign['framework_slug'] ?? 'aida' ) ) );
   $url      = (string) ( $campaign['offer_url'] ?? $data['cta_url'] ?? '' );
   $label    = (string) ( $data['cta_text'] ?? $campaign['cta'] ?? '' );
   if ( $affiliate ) {
@@ -31,6 +32,7 @@ final class LpTypeTemplate {
   $html = '<div class="lpg-lp lpg-lp--' . esc_attr( sanitize_key( (string) ( $campaign['framework_slug'] ?? 'aida' ) ) )
    . ' lpg-lpt lpg-lpt--' . esc_attr( $type )
    . ' lpg-lpm lpg-lpm--' . esc_attr( $model )
+   . ( $aida_service ? ' lpg-lpt--aida-service' : '' )
    . '" data-framework="' . esc_attr( sanitize_key( (string) ( $campaign['framework_slug'] ?? 'aida' ) ) )
    . '" data-lp-type="' . esc_attr( $type )
    . '" data-lp-model="' . esc_attr( $model ) . '"';
@@ -55,7 +57,11 @@ final class LpTypeTemplate {
   if ( 'service' === $type && ! empty( $campaign['phone'] ) ) {
    $html .= '<a class="lpg-lpt__secondary" href="https://wa.me/' . esc_attr( preg_replace( '/\D+/', '', (string) $campaign['phone'] ) ) . '">' . esc_html( $strings['chat_whatsapp'] ) . '</a>';
   }
-  $html .= '</div>' . LandingPage::images( $hero_images, true ) . '</header>';
+  $html .= '</div>' . LandingPage::images( $hero_images, true );
+  if ( $aida_service ) {
+   $html .= self::hero_aside( $campaign, $strings );
+  }
+  $html .= '</header>';
 
   if ( 'product' === $type ) {
    $html .= self::product_banner( $campaign );
@@ -69,13 +75,17 @@ final class LpTypeTemplate {
    $html .= self::section( $section, $slotted, $button, $type );
   }
 
+  if ( $aida_service ) {
+   $html .= self::price_card( $campaign, $strings, $button );
+  }
+
   if ( 'service' === $type ) {
    $html .= self::service_contact( $campaign );
   }
 
   $faq = is_array( $data['faq'] ?? null ) ? $data['faq'] : array();
   if ( $faq ) {
-   $html .= '<section class="lpg-lpt__faq"><h2>' . esc_html( LanguageService::strings( (string) ( $campaign['language'] ?? 'id' ) )['faq'] ) . '</h2>';
+   $html .= '<section id="aida-faq" class="lpg-lpt__faq"><h2>' . esc_html( LanguageService::strings( (string) ( $campaign['language'] ?? 'id' ) )['faq'] ) . '</h2>';
    foreach ( $faq as $pair ) {
     if ( is_array( $pair ) && ! empty( $pair['q'] ) && ! empty( $pair['a'] ) ) {
      $html .= '<details><summary>' . LandingPage::text( $pair['q'] ) . '</summary>' . LandingPage::paragraphs( $pair['a'] ) . '</details>';
@@ -92,12 +102,55 @@ final class LpTypeTemplate {
   return "<!-- wp:html -->\n" . $html . "\n<!-- /wp:html -->";
  }
 
+ private static function hero_aside( array $campaign, array $strings ): string {
+  $benefits = array_values( array_filter( array_map( 'trim', (array) ( $campaign['benefits'] ?? array() ) ) ) );
+  if ( ! $benefits ) {
+   $benefits = array( $strings['needs'], $strings['solution'], $strings['benefits_label'] );
+  }
+  $html = '<aside class="lpg-lpt__hero-aside" aria-label="' . esc_attr( $strings['benefits_label'] ) . '">'
+   . '<div class="lpg-lpt__hero-aside-card"><p class="lpg-lpt__kicker">' . esc_html( $strings['benefits_label'] ) . '</p><ul>';
+  foreach ( array_slice( $benefits, 0, 3 ) as $benefit ) {
+   $html .= '<li>' . LandingPage::text( (string) $benefit ) . '</li>';
+  }
+  $html .= '</ul>';
+  if ( '' !== trim( (string) ( $campaign['promise'] ?? '' ) ) ) {
+   $html .= '<p class="lpg-lpt__hero-aside-note">' . LandingPage::text( (string) $campaign['promise'] ) . '</p>';
+  }
+  return $html . '</div></aside>';
+ }
+
+ private static function price_card( array $campaign, array $strings, string $button ): string {
+  $price = trim( (string) ( $campaign['price'] ?? '' ) );
+  if ( '' === $price ) { return ''; }
+  $benefits = array_values( array_filter( array_map( 'trim', (array) ( $campaign['benefits'] ?? array() ) ) ) );
+  $html = '<section id="aida-price" class="lpg-lpt__price-card">'
+   . '<div class="lpg-lpt__price-copy"><p class="lpg-lp__eyebrow">' . esc_html( $strings['pricing'] ) . '</p>'
+   . '<h2>' . LandingPage::text( (string) ( $campaign['promise'] ?? $campaign['offer_name'] ?? '' ) ) . '</h2>';
+  if ( $benefits ) {
+   $html .= '<ul class="lpg-lpt__price-list">';
+   foreach ( array_slice( $benefits, 0, 4 ) as $benefit ) {
+    $html .= '<li>' . LandingPage::text( (string) $benefit ) . '</li>';
+   }
+   $html .= '</ul>';
+  }
+  foreach ( array( 'guarantee' => $strings['guarantee'], 'bonus' => $strings['bonus'] ) as $key => $label ) {
+   if ( ! empty( $campaign[ $key ] ) ) {
+    $html .= '<p class="lpg-lpt__price-meta"><strong>' . esc_html( $label ) . ':</strong> ' . LandingPage::text( (string) $campaign[ $key ] ) . '</p>';
+   }
+  }
+  $html .= '</div><div class="lpg-lpt__price-box"><span>' . esc_html( $strings['from_label'] ) . '</span>'
+   . '<strong>' . LandingPage::text( $price ) . '</strong>';
+  if ( '' !== $button ) { $html .= $button; }
+  $html .= '<small>' . esc_html( $strings['contact'] ) . '</small></div></section>';
+  return $html;
+ }
+
  private static function section( array $section, array &$slotted, string $button, string $type ): string {
   $slot       = sanitize_key( (string) ( $section['image_slot'] ?? '' ) );
   $section_id = sanitize_key( (string) ( $section['section_id'] ?? '' ) );
   $html = '<section class="lpg-lpt__section lpg-lpt__section--' . esc_attr( sanitize_key( (string) ( $section['layout'] ?? 'story' ) ) ) . '"'
    . ' data-step="' . absint( $section['step'] ?? 0 ) . '"'
-   . ( '' !== $section_id ? ' data-section-id="' . esc_attr( $section_id ) . '"' : '' )
+   . ( '' !== $section_id ? ' id="' . esc_attr( $section_id ) . '" data-section-id="' . esc_attr( $section_id ) . '"' : '' )
    . ( '' !== $slot ? ' data-image-slot="' . esc_attr( $slot ) . '"' : '' ) . '>';
   $html .= '<div class="lpg-lpt__copy"><h2>' . LandingPage::text( $section['heading'] ?? '' ) . '</h2>' . LandingPage::paragraphs( $section['body'] ?? '' ) . '</div>';
   $cards = is_array( $section['cards'] ?? null ) ? $section['cards'] : array();
