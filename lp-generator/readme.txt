@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.9.1
+Stable tag: 1.9.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,12 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.9.2 =
+* Vary BOFU internal-link placement per article (top, middle, bottom) instead of always appending at the end.
+* Add compact 2-item related box with three lines per card (stage, title, excerpt), placed opposite the main link.
+* Add responsive CSS for the compact box in all article themes.
+
 
 = 1.9.1 =
 * Add editable content inputs for every hierarchical LP parent page (title, intro, body, CTA).

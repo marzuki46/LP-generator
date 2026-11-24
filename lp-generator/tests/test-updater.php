@@ -43,13 +43,13 @@ lpg_assert_same( array(), $bad_version, 'updater menolak versi tidak semver' );
 $plugin_src = (string) file_get_contents( dirname( __DIR__ ) . '/lp-generator.php' );
 lpg_assert_true( false !== strpos( $plugin_src, 'Update URI:        https://github.com/marzuki46/LP-generator' ), 'header Update URI GitHub tersedia' );
 lpg_assert_true(
-	false !== strpos( $plugin_src, "define( 'LPG_VERSION', '1.9.1' );" ),
-	'versi plugin adalah 1.9.1'
+	false !== strpos( $plugin_src, "define( 'LPG_VERSION', '1.9.2' );" ),
+	'versi plugin adalah 1.9.2'
 );
 $repo_manifest = dirname( __DIR__, 2 ) . '/version.json';
 if ( is_file( $repo_manifest ) ) {
 	$repo_json = json_decode( (string) file_get_contents( $repo_manifest ), true );
-	lpg_assert_same( '1.9.1', (string) ( $repo_json['version'] ?? '' ), 'version.json repo sinkron dengan plugin' );
+	lpg_assert_same( '1.9.2', (string) ( $repo_json['version'] ?? '' ), 'version.json repo sinkron dengan plugin' );
 } else {
 	lpg_assert_true( true, 'version.json adalah manifest repo, tidak dikemas di zip (dilewati)' );
 }

@@ -65,3 +65,12 @@ $article_media = Publisher::build_blocks(
 );
 lpg_assert_true( false === strpos( $article_media, 'wp:gallery' ), 'gambar artikel tidak disisipkan di dalam konten' );
 lpg_assert_true( false === strpos( $article_media, 'hero.webp' ), 'URL gambar artikel tidak muncul di body' );
+
+$slots = array();
+for ( $i = 1; $i <= 24; $i++ ) { $slots[ Publisher::link_slot( $i, 'jasa website Solo' ) ] = true; }
+lpg_assert_same( 3, count( $slots ), 'penempatan link bervariasi: atas/tengah/bawah' );
+$body = '<p>Pertama jasa website Solo disebut.</p><p>Kedua jasa website Solo lagi.</p><p>Ketiga jasa website Solo lagi.</p><p>Keempat jasa website Solo lagi.</p>';
+$top = Publisher::insert_funnel_link( $body, 'https://example.test/lp', 'jasa website Solo', '', 'top' );
+$bottom = Publisher::insert_funnel_link( $body, 'https://example.test/lp', 'jasa website Solo', '', 'bottom' );
+lpg_assert_true( strpos( $top, '<a href=' ) < strpos( $top, 'Kedua' ), 'slot atas meletakkan link di paragraf awal' );
+lpg_assert_true( strpos( $bottom, '<a href=' ) > strpos( $bottom, 'Ketiga' ), 'slot bawah meletakkan link di paragraf akhir' );

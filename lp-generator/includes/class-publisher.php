@@ -260,29 +260,94 @@ final class Publisher {
 	 * @param string $target_url   Internal link target (may be empty for LP).
 	 * @return int Published post ID, 0 on failure.
 	 */
-	public static function insert_funnel_link( string $blocks, string $url, string $anchor, string $fallback ): string {
+	/** Deterministic, varied placement so not every article links at the end. */
+	public static function link_slot( int $item_id, string $anchor = '' ): string {
+		$slots = array( 'top', 'middle', 'bottom' );
+		$index = absint( crc32( $item_id . '|' . $anchor ) ) % 3;
+		return $slots[ $index ];
+	}
+
+	/** Small 2-item related box (kicker + title + one-line excerpt). */
+	public static function compact_related_box( int $item_id, array $campaign ): string {
+		$campaign_id = (int) ( $campaign['campaign_id'] ?? 0 );
+		if ( $campaign_id <= 0 || ! function_exists( 'get_post_meta' ) ) { return ''; }
+		$items = ContentRepository::items( $campaign_id );
+		$picks = array();
+		foreach ( $items as $item ) {
+			if ( (int) $item['id'] === $item_id || 'article' !== (string) $item['kind'] ) { continue; }
+			$picks[] = $item;
+		}
+		$anchor = class_exists( Generator::class )
+			? Generator::internal_anchor( $item_id, $campaign )
+			: trim( (string) ( $campaign['offer_name'] ?? '' ) . ' ' . (string) ( $campaign['city'] ?? '' ) );
+		$cards  = '';
+		foreach ( array_slice( $picks, 0, 2 ) as $pick ) {
+			$link = (string) ( $pick['permalink'] ?? '' );
+			if ( '' === $link && ! empty( $pick['post_id'] ) ) { $link = (string) get_permalink( (int) $pick['post_id'] ); }
+			if ( '' === $link ) { continue; }
+			$kicker  = strtoupper( (string) ( $pick['stage'] ?? 'artikel' ) );
+			$title   = (string) ( $pick['title'] ?? '' );
+			$excerpt = Utils::truncate( sanitize_text_field( (string) ( $pick['meta_description'] ?? '' ) ), 110 );
+			if ( '' === $excerpt ) { $excerpt = Utils::truncate( $title, 110 ); }
+			$cards .= '<a class="lpg-inline-related__card" href="' . esc_url( $link ) . '">'
+				. '<span class="lpg-inline-related__kicker">' . esc_html( $kicker ) . '</span>'
+				. '<span class="lpg-inline-related__title">' . esc_html( $title ) . '</span>'
+				. '<span class="lpg-inline-related__excerpt">' . esc_html( $excerpt ) . '</span>'
+				. '</a>';
+		}
+		if ( '' === $cards ) { return ''; }
+		return "<!-- wp:html -->\n<div class=\"lpg-inline-related\" data-lp-related=\"compact\" data-anchor=\"" . esc_attr( $anchor ) . "\">" . $cards . "</div>\n<!-- /wp:html -->";
+	}
+
+	/** Insert the BOFU link into a natural paragraph at a deterministic position. */
+	public static function insert_funnel_link( string $blocks, string $url, string $anchor, string $fallback, string $slot = 'middle' ): string {
 		SeoStandards::assert_internal( $url );
-		$inserted = false;
-		$blocks = (string) preg_replace_callback( '#<p([^>]*)>(.*?)</p>#su', static function ( array $match ) use ( $url, $anchor, &$inserted ): string {
-			if ( $inserted || preg_match( '#<a\b#i', $match[2] ) ) { return $match[0]; }
-			$parts = preg_split( '/(<[^>]+>)/u', $match[2], -1, PREG_SPLIT_DELIM_CAPTURE );
+		preg_match_all( '#<p([^>]*)>(.*?)</p>#su', $blocks, $matches, PREG_OFFSET_CAPTURE );
+		$paragraphs = isset( $matches[0] ) ? $matches[0] : array();
+		$count      = count( $paragraphs );
+		if ( 0 === $count ) {
+			$sentence = '' !== trim( $fallback ) ? $fallback : __( 'Pelajari solusi yang sesuai dengan kebutuhan Anda:', 'lp-generator' );
+			return $blocks . "\n\n" . self::paragraph_block( self::linkify_cta( strip_tags( $sentence ), $url, $anchor ) );
+		}
+		if ( 'top' === $slot ) {
+			$want = 0;
+		} elseif ( 'bottom' === $slot ) {
+			$want = max( 0, $count - 2 );
+		} else {
+			$want = (int) floor( $count / 2 );
+		}
+		$link = '<a href="' . esc_url( $url ) . '">' . esc_html( $anchor ) . '</a>';
+		$order = array();
+		for ( $step = 0; $step < $count; $step++ ) {
+			$order[] = ( $want + $step ) % $count;
+		}
+		foreach ( $order as $index ) {
+			$full    = $paragraphs[ $index ][0];
+			$inner   = $matches[2][ $index ][0];
+			if ( preg_match( '#<a\b#i', $inner ) ) { continue; }
+			$parts   = preg_split( '/(<[^>]+>)/u', $inner, -1, PREG_SPLIT_DELIM_CAPTURE );
+			$done    = false;
 			foreach ( $parts as &$part ) {
-				if ( $inserted || str_starts_with( $part, '<' ) ) { continue; }
-				$matched = preg_match( '/(?<![\p{L}\p{N}])' . preg_quote( $anchor, '/' ) . '(?![\p{L}\p{N}])/iu', $part, $match_anchor, PREG_OFFSET_CAPTURE );
-				$pos = $matched ? mb_strlen( substr( $part, 0, $match_anchor[0][1] ) ) : false;
-				if ( false !== $pos ) {
-					$part = mb_substr( $part, 0, $pos ) . '<a href="' . esc_url( $url ) . '">' . esc_html( $anchor ) . '</a>' . mb_substr( $part, $pos + mb_strlen( $anchor ) );
-					$inserted = true;
-				}
+				if ( $done || str_starts_with( (string) $part, '<' ) ) { continue; }
+				$matched = preg_match( '/(?<![\p{L}\p{N}])' . preg_quote( $anchor, '/' ) . '(?![\p{L}\p{N}])/iu', (string) $part, $found, PREG_OFFSET_CAPTURE );
+				if ( ! $matched ) { continue; }
+				$pos   = mb_strlen( substr( (string) $part, 0, $found[0][1] ) );
+				$part  = mb_substr( (string) $part, 0, $pos ) . $link . mb_substr( (string) $part, $pos + mb_strlen( $anchor ) );
+				$done  = true;
 			}
 			unset( $part );
-			return '<p' . $match[1] . '>' . implode( '', $parts ) . '</p>';
-		}, $blocks );
-		if ( ! $inserted ) {
-			$sentence = '' !== trim( $fallback ) ? $fallback : __( 'Pelajari solusi yang sesuai dengan kebutuhan Anda:', 'lp-generator' );
-			$blocks .= "\n\n" . self::paragraph_block( self::linkify_cta( strip_tags( $sentence ), $url, $anchor ) );
+			if ( ! $done ) { continue; }
+			$replacement = '<p' . $matches[1][ $index ][0] . '>' . implode( '', $parts ) . '</p>';
+			$offset      = (int) $paragraphs[ $index ][1];
+			$length      = strlen( $full );
+			$blocks      = substr( $blocks, 0, $offset ) . $replacement . substr( $blocks, $offset + $length );
+			return $blocks;
 		}
-		return $blocks;
+		// Anchor absent from reader copy: insert a short natural bridge at the chosen position.
+		$sentence = '' !== trim( $fallback ) ? strip_tags( $fallback ) : __( 'Pelajari solusi yang sesuai dengan kebutuhan Anda:', 'lp-generator' );
+		$bridge   = self::paragraph_block( self::linkify_cta( $sentence, $url, $anchor ) );
+		$insert_at = (int) $paragraphs[ min( $want, $count - 1 ) ][1];
+		return substr( $blocks, 0, $insert_at ) . $bridge . "\n\n" . substr( $blocks, $insert_at );
 	}
 
 	public static function publish_item( int $item_id, array $campaign, string $target_url = '' ): int {
@@ -306,7 +371,15 @@ final class Publisher {
 			$anchor = class_exists( Generator::class )
 				? Generator::internal_anchor( (int) $item['id'], $campaign )
 				: FunnelContent::anchor( (string) ( $item['anchor'] ?? '' ) );
-			$blocks = self::insert_funnel_link( $blocks, $target_url, $anchor, (string) ( $structured['cta_paragraph'] ?? '' ) );
+			$slot   = self::link_slot( $item_id, $anchor );
+			$blocks = self::insert_funnel_link( $blocks, $target_url, $anchor, (string) ( $structured['cta_paragraph'] ?? '' ), $slot );
+			$compact = self::compact_related_box( $item_id, $campaign );
+			if ( '' !== $compact ) {
+				// Place the compact box opposite the main funnel link for variety.
+				$blocks = 'bottom' === $slot
+					? $compact . "\n\n" . $blocks
+					: $blocks . "\n\n" . $compact;
+			}
 			if ( ! empty( $campaign['secondary_funnel_url'] ) ) {
 				SeoStandards::assert_internal( (string) $campaign['secondary_funnel_url'] );
 				$blocks .= "\n\n" . self::paragraph_block( '<a href="' . esc_url( $campaign['secondary_funnel_url'] ) . '">' . esc_html__( 'Bandingkan pilihan dan pertimbangannya', 'lp-generator' ) . '</a>' );
