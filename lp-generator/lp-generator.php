@@ -3,7 +3,7 @@
  * Plugin Name:       LP Generator
  * Plugin URI:        https://example.com/lp-generator
  * Description:       Generates a complete TOFU/MOFU/BOFU funnel — landing page plus supporting articles — from a single offer campaign using 9Router AI, then submits new URLs to PuSH and IndexNow 10 seconds after publishing.
- * Version:           1.8.1
+ * Version:           1.8.2
  * Update URI:        https://github.com/marzuki46/LP-generator
  * Requires at least: 6.4
  * Requires PHP:      8.1
@@ -22,7 +22,7 @@ namespace LPG;
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'LPG_VERSION', '1.8.1' );
+define( 'LPG_VERSION', '1.8.2' );
 define( 'LPG_FILE', __FILE__ );
 define( 'LPG_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LPG_URL', plugin_dir_url( __FILE__ ) );

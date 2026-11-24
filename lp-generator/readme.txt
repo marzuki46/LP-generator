@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.8.1
+Stable tag: 1.8.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,10 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.8.2 =
+* Switch the primary update manifest to the fresh GitHub raw refs path, with jsDelivr and raw.githubusercontent fallbacks.
+
 
 = 1.8.1 =
 * Use jsDelivr as the primary update manifest mirror with raw GitHub fallback to avoid stale 1.7.5 version checks.

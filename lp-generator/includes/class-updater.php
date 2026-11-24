@@ -21,13 +21,16 @@ defined( 'ABSPATH' ) || exit;
 final class Updater {
 
 	/**
-	 * Primary manifest mirror. jsDelivr serves fresh main-branch content
-	 * without the stale edge cache seen on raw.githubusercontent.com.
+	 * Primary manifest mirror. This GitHub raw path is not served from the
+	 * stale edge cache that affected raw.githubusercontent.com and jsDelivr.
 	 */
-	public const MANIFEST_URL = 'https://cdn.jsdelivr.net/gh/marzuki46/LP-generator@main/version.json';
+	public const MANIFEST_URL = 'https://github.com/marzuki46/LP-generator/raw/refs/heads/main/version.json';
 
-	/** Fallback manifest location. */
-	public const MANIFEST_FALLBACK_URL = 'https://raw.githubusercontent.com/marzuki46/LP-generator/main/version.json';
+	/** Secondary mirror. */
+	public const MANIFEST_FALLBACK_URL = 'https://cdn.jsdelivr.net/gh/marzuki46/LP-generator@main/version.json';
+
+	/** Last-resort mirror. */
+	public const MANIFEST_LAST_URL = 'https://raw.githubusercontent.com/marzuki46/LP-generator/main/version.json';
 
 	/**
 	 * Plugin slug used by the WordPress updater.
@@ -106,6 +109,9 @@ final class Updater {
 		$manifest = self::fetch_manifest( self::MANIFEST_URL );
 		if ( empty( $manifest['version'] ) ) {
 			$manifest = self::fetch_manifest( self::MANIFEST_FALLBACK_URL );
+		}
+		if ( empty( $manifest['version'] ) ) {
+			$manifest = self::fetch_manifest( self::MANIFEST_LAST_URL );
 		}
 		if ( empty( $manifest['version'] ) ) {
 			set_site_transient( 'lpgen_update_manifest', array(), 5 * MINUTE_IN_SECONDS );
