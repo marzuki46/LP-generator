@@ -1,9 +1,9 @@
 {
-  "version": "1.8.2",
-  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.8.2.zip",
+  "version": "1.9.0",
+  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.9.0.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>Manifest update memakai path raw GitHub refs yang segar, dengan fallback jsDelivr dan raw.githubusercontent.</li><li>Related article card, strip harga + tombol Pesan, label framework dihapus, tabel pipe jadi HTML, heading 2-3 paragraf.</li></ul>"
+  "changelog": "<ul><li>Canonical lpSpec JSON Schema + normalizer deterministik dengan warning per step pada tiap item.</li><li>Status gambar completed/placeholder/failed dan tombol Ganti gambar untuk regenerate selektif.</li></ul>"
 }

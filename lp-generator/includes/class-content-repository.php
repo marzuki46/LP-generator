@@ -731,6 +731,9 @@ final class ContentRepository {
 				'height' => absint( $image['height'] ?? 0 ),
 				'role'         => sanitize_key( (string) ( $image['role'] ?? '' ) ),
 				'section_hint' => sanitize_key( (string) ( $image['section_hint'] ?? '' ) ),
+				'visual_status'=> sanitize_key( (string) ( $image['visual_status'] ?? 'generated' ) ),
+				'source'       => sanitize_key( (string) ( $image['source'] ?? '' ) ),
+				'visual_path'  => sanitize_text_field( (string) ( $image['visual_path'] ?? '' ) ),
 			);
 		}
 		return $out;
@@ -762,6 +765,9 @@ final class ContentRepository {
 				'height' => absint( $image['height'] ?? 0 ),
 				'role'         => sanitize_key( (string) ( $image['role'] ?? '' ) ),
 				'section_hint' => sanitize_key( (string) ( $image['section_hint'] ?? '' ) ),
+				'visual_status'=> sanitize_key( (string) ( $image['visual_status'] ?? 'generated' ) ),
+				'source'       => sanitize_key( (string) ( $image['source'] ?? '' ) ),
+				'visual_path'  => sanitize_text_field( (string) ( $image['visual_path'] ?? '' ) ),
 			);
 		}
 		update_post_meta( $item_id, '_lpgen_images', wp_json_encode( $clean ) );

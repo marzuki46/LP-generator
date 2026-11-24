@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator/schemas/lp-spec.schema.json",
+  "title": "LP Generator canonical LP spec",
+  "description": "Canonical normalised spec for one landing page. Fixed fields describe identity and section addresses; design decisions stay in DesignContract. Host-specific facts are allowed.",
+  "type": "object",
+  "required": ["campaign_id", "offer_name", "framework_slug", "lp_model", "sections", "created_at", "checked_at"],
+  "additionalProperties": true,
+  "properties": {
+    "campaign_id": { "type": "integer", "minimum": 0 },
+    "item_id": { "type": "integer", "minimum": 0 },
+    "offer_name": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "offer_url": { "type": "string" },
+    "offer_type": { "type": "string", "enum": ["product", "service", "affiliate"] },
+    "audience": { "type": "string" },
+    "problem": { "type": "string" },
+    "promise": { "type": "string" },
+    "benefits": { "type": "array", "items": { "type": "string" } },
+    "price": { "type": "string" },
+    "city": { "type": "string" },
+    "language": { "type": "string", "enum": ["id", "en"] },
+    "framework": { "type": "string" },
+    "framework_slug": { "type": "string", "minLength": 1 },
+    "lp_model": { "type": "string", "enum": ["editorial", "split", "pricing", "minimal"] },
+    "lp_target_keyword": { "type": "string" },
+    "sources": { "type": "array", "items": { "type": "object" } },
+    "entities": { "type": "array", "items": { "type": "string" } },
+    "created_at": { "type": "string" },
+    "checked_at": { "type": "string" },
+    "sections": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "required": ["id", "step", "hint", "layout", "image_slot", "heading_goal", "internal_link_target"],
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string" },
+          "step": { "type": "integer", "minimum": 1 },
+          "hint": { "type": "string" },
+          "layout": { "type": "string" },
+          "image_slot": { "type": "string" },
+          "role": { "type": "string" },
+          "shape": { "type": "string" },
+          "heading_goal": { "type": "string" },
+          "body": { "type": "string" },
+          "image_keyword": { "type": "string" },
+          "table_needed": { "type": "boolean" },
+          "pain_points": { "type": "array", "items": { "type": "string" } },
+          "cta_type": { "type": "string" },
+          "internal_link_target": { "type": "string" }
+        }
+      }
+    }
+  }
+}

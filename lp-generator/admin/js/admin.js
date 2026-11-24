@@ -195,7 +195,7 @@
 					runQueueLoop(campaign, response.jobs || 6, releaseButton);
 					return;
 				}
-				if (response && response.ok && ('publish-campaign' === action || 'regenerate' === action || 'generate-entities' === action || 'generate-tag-content' === action || 'generate-framework' === action)) {
+				if (response && response.ok && ('publish-campaign' === action || 'regenerate' === action || 'regenerate-image' === action || 'generate-entities' === action || 'generate-tag-content' === action || 'generate-framework' === action)) {
 					window.setTimeout(function () { window.location.reload(); }, 900);
 				}
 			})

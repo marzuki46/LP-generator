@@ -3,6 +3,8 @@
 declare(strict_types=1);
 use LPG\FunnelContent;
 use LPG\Generator;
+use LPG\LpSpec;
+use LPG\LpWarnings;
 use LPG\Publisher;
 use LPG\ContentRepository;
 
@@ -154,4 +156,12 @@ $extracted = FunnelContent::extract_table( $pipe );
 lpg_assert_same( array( 'Faktor', 'Media Sosial', 'Website' ), $extracted[1], 'tabel pipe dikonversi jadi kolom' );
 lpg_assert_same( array( array( 'Jangkauan', 'Algoritma', 'SEO' ) ), $extracted[2], 'tabel pipe dikonversi jadi baris' );
 lpg_assert_same( 'Paragraf intro.', $extracted[0], 'body bersih setelah tabel diekstrak' );
+$spec_campaign = array( 'campaign_id' => 77, 'framework_slug' => 'aida', 'framework' => 'AIDA', 'offer_name' => 'Jasa Website Solo', 'city' => 'Solo', 'language' => 'id', 'lp_model' => 'editorial', 'offer_type' => 'service' );
+$spec = LpSpec::normalize( array( 'title' => 'LP', 'sections' => array( array( 'heading' => 'Hero', 'body' => 'Isi.' ) ) ), $spec_campaign, 501 );
+lpg_assert_same( 4, count( $spec['sections'] ), 'spec kanonik mengikuti kontrak AIDA' );
+lpg_assert_same( $spec, LpSpec::normalize( $spec, $spec_campaign, 501 ), 'normalisasi spec idempoten' );
+lpg_assert_true( is_file( LpSpec::schema_path() ), 'file schema lp-spec tersedia' );
+LpWarnings::replace( 501, 'outline', array( 'authored=a; delivered=b; disposition=c' ) );
+LpWarnings::add( 501, 'outline', 'authored=a; delivered=b; disposition=c' );
+lpg_assert_same( 1, count( LpWarnings::get( 501 )['outline'] ), 'warning duplikat tidak ditambahkan' );
 $GLOBALS['funnel_posts']=array(); $GLOBALS['funnel_meta']=array();

@@ -168,6 +168,12 @@ if ( ! function_exists( 'set_transient' ) ) {
 		return true;
 	}
 }
+if ( ! function_exists( 'delete_transient' ) ) {
+	function delete_transient( $key ) {
+		unset( $GLOBALS['lpg_transients'][ $key ] );
+		return true;
+	}
+}
 if ( ! function_exists( 'set_post_thumbnail' ) ) {
 	function set_post_thumbnail( $post_id, $thumbnail_id ) {
 		$GLOBALS['lpg_thumbnails'][ (int) $post_id ] = (int) $thumbnail_id;
@@ -189,6 +195,8 @@ require_once dirname( __DIR__ ) . '/includes/class-cognitive-engine.php';
 require_once dirname( __DIR__ ) . '/includes/class-structured-output.php';
 require_once dirname( __DIR__ ) . '/includes/class-orchestrator.php';
 require_once dirname( __DIR__ ) . '/includes/class-visual-identity.php';
+require_once dirname( __DIR__ ) . '/includes/class-lp-warnings.php';
+require_once dirname( __DIR__ ) . '/includes/class-lp-spec.php';
 require_once dirname( __DIR__ ) . '/includes/class-lp-template.php';
 require_once dirname( __DIR__ ) . '/includes/class-landing-page.php';
 require_once dirname( __DIR__ ) . '/includes/class-aida-layout.php';

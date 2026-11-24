@@ -223,6 +223,11 @@ final class ReviewUI {
 							$item_id     = (int) $item['id'];
 							$permalink   = (string) $item['permalink'];
 							$edit_url    = admin_url( 'post.php?post=' . $item_id . '&action=edit' );
+							$image_specs = json_decode( (string) get_post_meta( $item_id, '_lpgen_image_specs', true ), true );
+							$has_placeholder = false;
+							foreach ( is_array( $image_specs ) ? $image_specs : array() as $image_spec ) {
+								if ( in_array( (string) ( $image_spec['status'] ?? '' ), array( 'placeholder', 'failed' ), true ) ) { $has_placeholder = true; break; }
+							}
 							?>
 							<tr>
 								<td><?php echo esc_html( strtoupper( (string) $item['stage'] ) ); ?></td>
@@ -274,6 +279,9 @@ final class ReviewUI {
 									<button type="button" class="button button-small" data-lpgen-action="set-status" data-status="approved" data-item="<?php echo esc_attr( (string) $item_id ); ?>"><?php echo esc_html__( 'Approve', 'lp-generator' ); ?></button>
 									<button type="button" class="button button-small" data-lpgen-action="set-status" data-status="rejected" data-item="<?php echo esc_attr( (string) $item_id ); ?>"><?php echo esc_html__( 'Reject', 'lp-generator' ); ?></button>
 									<button type="button" class="button button-small" data-lpgen-action="regenerate" data-item="<?php echo esc_attr( (string) $item_id ); ?>"><?php echo esc_html__( 'Regenerate', 'lp-generator' ); ?></button>
+									<?php if ( $has_placeholder ) : ?>
+										<button type="button" class="button button-small" data-lpgen-action="regenerate-image" data-item="<?php echo esc_attr( (string) $item_id ); ?>"><?php echo esc_html__( 'Ganti gambar', 'lp-generator' ); ?></button>
+									<?php endif; ?>
 								</td>
 							</tr>
 						<?php endforeach; ?>

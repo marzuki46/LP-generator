@@ -61,6 +61,12 @@ final class ImagePipeline {
 		}
 	}
 
+	public static function clear_keyword_failure( string $keyword ): void {
+		if ( function_exists( 'delete_transient' ) ) {
+			delete_transient( self::failure_key( $keyword ) );
+		}
+	}
+
 	/** Pick the first keyword that has not failed recently. */
 	public static function usable_keyword( string $preferred, array $fallbacks = array() ): string {
 		$preferred = self::short_keyword( $preferred );
@@ -403,6 +409,7 @@ final class ImagePipeline {
 			}
 
 			$meta = self::metadata( $keyword, $settings, $context );
+			$meta['source'] = $source_used;
 			$meta['visual_status'] = 'placeholder' === $source_used ? 'placeholder' : 'generated';
 			if ( ! empty( $found['alt'] ) ) { $meta['alt'] = sanitize_text_field( (string) $found['alt'] ); }
 			$meta['visual_path']  = $visual_path;
@@ -429,6 +436,21 @@ final class ImagePipeline {
 		}
 
 		ContentRepository::save_item_images( $item_id, $images );
+		$specs = array();
+		foreach ( $images as $image ) {
+			if ( ! is_array( $image ) ) { continue; }
+			$status = (string) ( $image['visual_status'] ?? 'generated' );
+			$specs[] = array(
+				'slot_id'      => sanitize_key( (string) ( $image['slot_id'] ?? '' ) ),
+				'id'           => absint( $image['id'] ?? 0 ),
+				'source'       => sanitize_key( (string) ( $image['source'] ?? '' ) ),
+				'status'       => 'placeholder' === $status ? 'placeholder' : 'completed',
+				'keyword'      => sanitize_text_field( (string) ( $image['keyword'] ?? '' ) ),
+				'visual_path'  => sanitize_text_field( (string) ( $image['visual_path'] ?? '' ) ),
+				'checked_at'   => gmdate( 'Y-m-d H:i:s' ),
+			);
+		}
+		update_post_meta( $item_id, '_lpgen_image_specs', wp_json_encode( $specs ) );
 		if ( ! empty( $images ) ) {
 			Database::log( 'info', sprintf( 'Prepared %d keyword images for item %d', count( $images ), $item_id ), $campaign_id );
 		}
@@ -1037,6 +1059,7 @@ final class ImagePipeline {
 			'visual_path'   => (string) ( $meta['visual_path'] ?? '' ),
 			'visual_style'  => (string) ( $meta['visual_style'] ?? '' ),
 			'visual_status' => (string) ( $meta['visual_status'] ?? 'generated' ),
+			'source'        => (string) ( $meta['source'] ?? '' ),
 		);
 	}
 

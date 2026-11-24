@@ -28,6 +28,7 @@ final class Ajax {
 			'process-queue',
 			'set-status',
 			'regenerate',
+			'regenerate-image',
 			'generate-tag-content',
 			'generate-entities',
 			'test-connection',
@@ -130,6 +131,9 @@ final class Ajax {
 				break;
 			case 'regenerate':
 				$result = self::regenerate( isset( $_POST['item'] ) ? absint( $_POST['item'] ) : 0 );
+				break;
+			case 'regenerate-image':
+				$result = Generator::regenerate_images( isset( $_POST['item'] ) ? absint( $_POST['item'] ) : 0 );
 				break;
 			case 'generate-tag-content':
 				$raw_tag = isset( $_POST['tag'] ) ? wp_unslash( $_POST['tag'] ) : '';

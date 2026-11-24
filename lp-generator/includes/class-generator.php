@@ -564,6 +564,7 @@ final class Generator {
 			: ImagePipeline::prepare_for_item( $campaign_id, $item_id, $context );
 		$blocks = Publisher::build_blocks( $result['structured'], $kind, $campaign, $images );
 		ContentRepository::save_item_result( $item_id, $result['structured'], $result['model'], $result['tokens'], $blocks );
+		self::save_lp_spec( $item_id, $result['structured'], $campaign, $context, 'topic' === $kind ? 'outline' : 'write' );
 		if ( 'topic' === $kind ) { TopicMemory::add_from_item( $item_id ); }
 		if ( 'writing' === (string) ( Orchestrator::state( $item_id )['stage'] ?? '' ) ) {
 			Orchestrator::transition( $item_id, 'writing', 'review' );
@@ -948,6 +949,64 @@ final class Generator {
 			}
 		}
 		return '';
+	}
+
+	/** Replace placeholder/failed images for one item without regenerating the copy. */
+	public static function regenerate_images( int $item_id ): array {
+		$item = ContentRepository::get_item( $item_id );
+		if ( empty( $item ) ) {
+			return array( 'ok' => false, 'message' => __( 'Item tidak ditemukan.', 'lp-generator' ) );
+		}
+		$campaign_id = (int) ( $item['campaign_id'] ?? 0 );
+		$campaign    = ContentRepository::get_campaign( $campaign_id );
+		if ( empty( $campaign ) ) {
+			return array( 'ok' => false, 'message' => __( 'Campaign tidak ditemukan.', 'lp-generator' ) );
+		}
+		$kept   = array();
+		$specs  = json_decode( (string) get_post_meta( $item_id, '_lpgen_image_specs', true ), true );
+		foreach ( is_array( $specs ) ? $specs : array() as $spec ) {
+			$status = (string) ( $spec['status'] ?? '' );
+			if ( in_array( $status, array( 'placeholder', 'failed' ), true ) ) {
+				ImagePipeline::clear_keyword_failure( (string) ( $spec['keyword'] ?? '' ) );
+				continue;
+			}
+		}
+		foreach ( ContentRepository::item_images( $item_id ) as $image ) {
+			if ( in_array( (string) ( $image['visual_status'] ?? '' ), array( 'placeholder', 'failed' ), true ) ) {
+				continue;
+			}
+			$kept[] = $image;
+		}
+		ContentRepository::save_item_images( $item_id, $kept );
+		$context          = $campaign;
+		$context['stage'] = (string) ( $item['stage'] ?? 'mofu' );
+		$context['topic_title'] = (string) ( $item['title'] ?? '' );
+		$context['entities'] = json_decode( (string) ( $item['entities'] ?? '' ), true );
+		$context['entities'] = is_array( $context['entities'] ) ? $context['entities'] : array();
+		$images = ImagePipeline::prepare_for_item( $campaign_id, $item_id, $context );
+		return array(
+			'ok'      => true,
+			'message' => sprintf( __( '%d gambar item #%d diperbarui.', 'lp-generator' ), count( $images ), $item_id ),
+			'count'   => count( $images ),
+		);
+	}
+
+	/** Persist a canonical, normalised spec and its warnings for one item. */
+	private static function save_lp_spec( int $item_id, array $structured, array $campaign, array $context, string $step ): void {
+		$spec = LpSpec::normalize( array_merge( $structured, array( 'entities' => $context['entities'] ?? array() ) ), $campaign, $item_id );
+		update_post_meta( $item_id, '_lpgen_spec', wp_json_encode( $spec ) );
+		$warnings = array();
+		foreach ( $spec['sections'] as $section ) {
+			if ( '' === trim( (string) $section['heading_goal'] ) ) {
+				$warnings[] = 'authored=' . $section['id'] . '.heading; delivered=derived; disposition=heading derived from hint';
+			}
+			if ( '' === trim( (string) $section['image_keyword'] ) ) {
+				$warnings[] = 'authored=' . $section['id'] . '.image_keyword; delivered=empty; disposition=image brief left to engine';
+			}
+		}
+		if ( $warnings ) {
+			LpWarnings::replace( $item_id, $step, $warnings );
+		}
 	}
 
 	/** Strip framework labels and convert pipe tables into structured HTML-ready cells. */
