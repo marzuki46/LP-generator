@@ -16,17 +16,22 @@ final class SeoStandards {
   foreach(ContentRepository::items($campaign_id) as $item) {
    if ('published'!==($item['status'] ?? '') || 'publish'!==get_post_status((int)($item['post_id'] ?? 0))) {continue;}
    if ('lp'===$item['kind']) {$lp=$item;continue;}
-   if ('article'===$item['kind'] && in_array($item['stage'],array('tofu','mofu'),true)) {$resources[]=$item;}
+   if ('article'===$item['kind'] && in_array($item['stage'],array('tofu','mofu','tag'),true)) {$resources[]=$item;}
   }
   if (!$lp || !$resources) {return;}
   $post=get_post((int)$lp['post_id']);
-  if (!$post || !str_contains($post->post_content,'data-design-id="aida-1"') || (int)get_post_meta($post->ID,'_lpgen_campaign_id',true)!==$campaign_id) {return;}
-  $list='';
+  if (!$post || !str_contains($post->post_content,'lpg-related:start') || (int)get_post_meta($post->ID,'_lpgen_campaign_id',true)!==$campaign_id) {return;}
+  $cards='';
   foreach(array_slice($resources,0,6) as $resource) {
    $url=(string)get_permalink((int)$resource['post_id']);self::assert_internal($url);
-   $list.='<li><a href="'.esc_url($url).'">'.esc_html((string)$resource['title']).'</a></li>';
+   $stage=strtoupper((string)($resource['stage'] ?? 'artikel'));
+   $cards.='<a class="lpg-related__card" href="'.esc_url($url).'">'
+    .'<span class="lpg-related__kicker">'.esc_html($stage).'</span>'
+    .'<span class="lpg-related__title">'.esc_html((string)$resource['title']).'</span>'
+    .'<span class="lpg-related__link">'.esc_html__('Baca panduan','lp-generator').' &rarr;</span>'
+    .'</a>';
   }
-  $nav='<nav class="lpg-aida__related" aria-label="'.esc_attr__('Panduan terkait','lp-generator').'"><h2>'.esc_html__('Pelajari sebelum menentukan pilihan','lp-generator').'</h2><ul>'.$list.'</ul></nav>';
+  $nav='<nav class="lpg-related" aria-label="'.esc_attr__('Panduan terkait','lp-generator').'"><div class="lpg-related__head"><h2>'.esc_html__('Panduan terkait','lp-generator').'</h2><p>'.esc_html__('Pelajari sebelum menentukan pilihan','lp-generator').'</p></div><div class="lpg-related__grid">'.$cards.'</div></nav>';
   $updated=preg_replace_callback('/<!-- lpg-related:start -->.*?<!-- lpg-related:end -->/s',static fn(): string=>'<!-- lpg-related:start -->'.$nav.'<!-- lpg-related:end -->',$post->post_content,1);
   if ($updated!==$post->post_content) {wp_update_post(array('ID'=>$post->ID,'post_content'=>wp_kses_post($updated)));}
  }

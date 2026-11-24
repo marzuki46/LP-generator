@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.8.0
+Stable tag: 1.8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,14 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.8.1 =
+* Use jsDelivr as the primary update manifest mirror with raw GitHub fallback to avoid stale 1.7.5 version checks.
+* Related articles now render as responsive cards with stage kicker and title.
+* Every LP has a price strip and an order button; affiliate LP keeps disclosure before its first CTA.
+* Strip AIDA/framework labels from reader-facing copy and convert Markdown pipe tables into real HTML tables.
+* Require 2-3 paragraphs per heading and richer long-form LP copy.
+
 
 = 1.8.0 =
 * Add four selectable visual LP models (Editorial SaaS, Split Proof, Pricing Focus, Minimal Direct): JSON copy is converted by the plugin into a distinct landing-page shell, not an article-like layout.

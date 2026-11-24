@@ -2,7 +2,18 @@
 
 Plugin WordPress yang mengubah satu campaign offer menjadi funnel konten lengkap (TOFU → MOFU → BOFU) memakai 9Router AI, lalu mengirim URL baru ke Google PuSH + IndexNow **10 detik setelah publish**.
 
-Versi saat ini: **1.8.0**.
+Versi saat ini: **1.8.1**.
+
+## Pembaruan v1.8.1 — Desain LP lebih menjual & update manifest
+
+- Manifest update kini memakai **jsDelivr** sebagai mirror utama dengan fallback raw GitHub. Ini mengatasi problem versi yang masih terbaca **1.7.5** walaupun repo sudah 1.8.0.
+- **Related article** tampil sebagai card responsif: kicker stage (TOFU/MOFU/TAG), judul, dan tautan "Baca panduan".
+- Setiap LP punya **strip harga** dan **tombol Pesan Sekarang**. LP afiliasi tetap menaruh disclosure sebelum CTA pertama.
+- Label framework seperti `Attention:` / `Interest:` dihapus dari teks yang dibaca pengunjung.
+- Tabel bentuk pipe Markdown dikonversi jadi **tabel HTML** sebelum konten disimpan.
+- Setiap heading kini diminta **2–3 paragraf**, bukan satu paragraf, dengan alur konteks → contoh → hasil.
+
+Detail: [`docs/24-desain-lp-copy-1.8.1.md`](docs/24-desain-lp-copy-1.8.1.md).
 
 ## Pembaruan v1.8.0 — Model visual LP & internal link ke LP induk
 
@@ -143,12 +154,12 @@ Lihat [`docs/05-funnel-lokal.md`](docs/05-funnel-lokal.md) untuk contoh campaign
 ## Implementasi
 
 - `lp-generator/` — source plugin, siap di-copy ke `wp-content/plugins/lp-generator/`.
-- `lp-generator-1.8.0.zip` — paket siap upload lewat **Plugins → Add New → Upload Plugin**.
+- `lp-generator-1.8.1.zip` — paket siap upload lewat **Plugins → Add New → Upload Plugin**.
 - `version.json` — manifest update untuk fitur *one-click update* dari Github.
 
 ## Instalasi & update
 
-1. Upload `lp-generator-1.8.0.zip` lewat **Plugins → Add New → Upload Plugin**, lalu aktifkan.
+1. Upload `lp-generator-1.8.1.zip` lewat **Plugins → Add New → Upload Plugin**, lalu aktifkan.
 2. Isi kredensial 9Router di **LP Generator → Settings → AI**.
 3. Saat ada rilis baru, WordPress akan menampilkan notifikasi **Update now** di halaman **Plugins** — tinggal klik. Manifest yang dibaca plugin terkunci ke `https://raw.githubusercontent.com/marzuki46/LP-generator/main/version.json`, dan paket update diambil dari file ZIP yang ada di repo yang sama. Tidak perlu upload manual lagi.
 
@@ -183,7 +194,7 @@ php tests\run.php
 php tests\smoke-bootstrap.php
 ```
 
-Terakhir dijalankan pada paket v1.8.0: **907 test passed, 0 failed**; `php -l` untuk file yang diubah lolos; bootstrap & hook PASS. Pengujian browser untuk tombol Generate juga PASS. Empat model LP diverifikasi dengan screenshot Playwright. Generate/publish langsung ke WordPress dan 9Router produksi belum diuji pada sesi ini.
+Terakhir dijalankan pada paket v1.8.1: **911 test passed, 0 failed**; `php -l` untuk file yang diubah lolos; bootstrap & hook PASS. Pengujian browser untuk tombol Generate juga PASS. Empat model LP diverifikasi dengan screenshot Playwright desktop 1440px dan mobile 390px (tanpa overflow horizontal). Generate/publish langsung ke WordPress dan 9Router produksi belum diuji pada sesi ini.
 
 ## Alur singkat
 

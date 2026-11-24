@@ -30,6 +30,79 @@ final class FunnelContent {
 		return array_values( $entities );
 	}
 
+	/**
+	 * Remove public framework labels such as "Attention:" from AI copy.
+	 * Labels belong in the campaign plan, never in reader-facing content.
+	 */
+	public static function strip_framework_labels( string $text ): string {
+		if ( '' === trim( $text ) ) {
+			return $text;
+		}
+		$names = array();
+		foreach ( Frameworks::presets() as $preset ) {
+			foreach ( (array) ( $preset['steps'] ?? array() ) as $name ) {
+				$names[] = preg_quote( (string) $name, '/' );
+			}
+		}
+		$names = array_values( array_unique( $names ) );
+		if ( ! $names ) {
+			return $text;
+		}
+		$clean = preg_replace( '/(?:^|\R)[ \t]*(?:' . implode( '|', $names ) . ')[ \t]*:[ \t]*/iu', "\n", $text );
+		return is_string( $clean ) ? trim( preg_replace( '/\R{3,}/u', "\n\n", $clean ) ?? $clean ) : $text;
+	}
+
+	/**
+	 * Convert a Markdown pipe table at the end of a body into structured cells.
+	 * Returns [clean_body, columns, rows].
+	 */
+	public static function extract_table( string $body ): array {
+		$lines = preg_split( '/\R/u', $body ) ?: array();
+		$table_lines = array();
+		foreach ( $lines as $line ) {
+			if ( preg_match( '/^\s*\|.*\|\s*$/u', (string) $line ) ) {
+				$table_lines[] = trim( (string) $line );
+			}
+		}
+		if ( count( $table_lines ) < 3 ) {
+			return array( $body, array(), array() );
+		}
+		$rows = array();
+		foreach ( $table_lines as $index => $line ) {
+			$cells = array_values( array_filter( array_map( 'trim', explode( '|', trim( $line, '|' ) ) ) ) );
+			if ( ! $cells ) {
+				continue;
+			}
+			$is_separator = true;
+			foreach ( $cells as $cell ) {
+				if ( ! preg_match( '/^:?-{3,}:?$/', $cell ) ) {
+					$is_separator = false;
+				}
+			}
+			if ( $is_separator ) {
+				continue;
+			}
+			$rows[] = $cells;
+		}
+		if ( count( $rows ) < 2 ) {
+			return array( $body, array(), array() );
+		}
+		$columns = array_shift( $rows );
+		$width   = count( $columns );
+		$clean_rows = array();
+		foreach ( $rows as $row ) {
+			if ( count( $row ) > $width ) {
+				$row = array_slice( $row, 0, $width );
+			}
+			while ( count( $row ) < $width ) {
+				$row[] = '';
+			}
+			$clean_rows[] = $row;
+		}
+		$clean_body = trim( preg_replace( '/^\s*\|.*\|\s*$\R?/mu', '', $body ) ?? $body );
+		return array( $clean_body, $columns, $clean_rows );
+	}
+
 	/** Five-word shingles detect copied passages despite changes of place names. */
 	public static function similar( string $left, string $right ): bool {
 		$a = self::normalize( $left ); $b = self::normalize( $right );

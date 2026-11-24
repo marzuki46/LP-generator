@@ -146,4 +146,12 @@ lpg_assert_true( \LPG\ImagePipeline::enabled( array( 'image_enabled' => 1 ), $im
 unset( $GLOBALS['lpg_test_options']['lpgen_settings'] );
 lpg_assert_same( 'Jasa Website Solo', Generator::internal_anchor( 999, array( 'lp_target_keyword' => 'Jasa Website Solo', 'offer_name' => 'Lain', 'city' => 'Solo' ) ), 'anchor memakai target keyword LP' );
 lpg_assert_same( 'Website Solo', Generator::internal_anchor( 999, array( 'lp_target_keyword' => '', 'offer_name' => 'Website', 'city' => 'Solo' ) ), 'anchor fallback ke offer + kota' );
+$labeled = "Attention: Judul pembuka\n\nInterest: Isi yang panjang di sini.";
+$unlabeled = FunnelContent::strip_framework_labels( $labeled );
+lpg_assert_true( ! str_contains( $unlabeled, 'Attention:' ) && ! str_contains( $unlabeled, 'Interest:' ), 'label framework dihapus dari konten' );
+$pipe = "Paragraf intro.\n| Faktor | Media Sosial | Website |\n| --- | --- | --- |\n| Jangkauan | Algoritma | SEO |";
+$extracted = FunnelContent::extract_table( $pipe );
+lpg_assert_same( array( 'Faktor', 'Media Sosial', 'Website' ), $extracted[1], 'tabel pipe dikonversi jadi kolom' );
+lpg_assert_same( array( array( 'Jangkauan', 'Algoritma', 'SEO' ) ), $extracted[2], 'tabel pipe dikonversi jadi baris' );
+lpg_assert_same( 'Paragraf intro.', $extracted[0], 'body bersih setelah tabel diekstrak' );
 $GLOBALS['funnel_posts']=array(); $GLOBALS['funnel_meta']=array();

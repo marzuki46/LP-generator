@@ -196,6 +196,20 @@ final class Publisher {
 			if ( isset( $section['bullets'] ) && is_array( $section['bullets'] ) ) {
 				$blocks[] = self::list_block( $section['bullets'] );
 			}
+			$table = is_array( $section['table'] ?? null ) ? $section['table'] : array();
+			if ( ! empty( $table['columns'] ) && is_array( $table['columns'] ) && is_array( $table['rows'] ?? null ) ) {
+				$width   = count( $table['columns'] );
+				$rows    = array();
+				foreach ( $table['rows'] as $row ) {
+					if ( ! is_array( $row ) ) { continue; }
+					$cells = array_slice( array_values( $row ), 0, $width );
+					while ( count( $cells ) < $width ) { $cells[] = ''; }
+					$rows[] = $cells;
+				}
+				if ( $rows ) {
+					$blocks[] = self::table_block( array_values( array_map( 'strval', $table['columns'] ) ), $rows );
+				}
+			}
 			$hint = sanitize_key( (string) ( $section['hint'] ?? '' ) );
 			if ( '' === $hint ) {
 				$hint = sanitize_title( $heading );

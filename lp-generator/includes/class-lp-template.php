@@ -50,6 +50,19 @@ final class LpTemplate {
 		$html   .= '<span class="lpg-lpm__model">' . LandingPage::text( self::label( $campaign ) ) . '</span>';
 		$html   .= '</nav>';
 
+		$price = trim( (string) ( $campaign['price'] ?? '' ) );
+		if ( '' === $price ) {
+			$price = (string) ( $campaign['language'] ?? 'id' ) === 'en' ? 'Tailored pricing' : 'Harga disesuaikan kebutuhan';
+		}
+		$order_label = 'en' === (string) ( $campaign['language'] ?? 'id' ) ? 'Order Now' : 'Pesan Sekarang';
+		$order_url   = (string) ( $campaign['offer_url'] ?? '' );
+		$affiliate   = 'affiliate' === (string) ( $campaign['offer_type'] ?? '' );
+		$html .= '<section class="lpm-offerbar" aria-label="' . esc_attr__( 'Harga dan pemesanan', 'lp-generator' ) . '">';
+		$html .= '<div class="lpm-offerbar__price"><span>' . esc_html__( 'MULAI DARI', 'lp-generator' ) . '</span><strong>' . LandingPage::text( $price ) . '</strong></div>';
+		// Affiliate LP keeps its disclosure before the first CTA; the hero button owns that CTA.
+		$html .= '<div class="lpm-offerbar__order">' . ( $affiliate ? '' : LandingPage::button( $order_url, $order_label, false ) ) . '</div>';
+		$html .= '</section>';
+
 		if ( 'split' === $model ) {
 			$html .= '<aside class="lpg-lpm__rail" aria-label="' . esc_attr__( 'Ringkasan penawaran', 'lp-generator' ) . '">';
 			$html .= '<p class="lpg-lpm__rail-label">' . LandingPage::text( $campaign['offer_name'] ?? '' ) . '</p>';

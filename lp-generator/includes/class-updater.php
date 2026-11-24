@@ -21,9 +21,13 @@ defined( 'ABSPATH' ) || exit;
 final class Updater {
 
 	/**
-	 * Locked manifest location. Change only in plugin code.
+	 * Primary manifest mirror. jsDelivr serves fresh main-branch content
+	 * without the stale edge cache seen on raw.githubusercontent.com.
 	 */
-	public const MANIFEST_URL = 'https://raw.githubusercontent.com/marzuki46/LP-generator/main/version.json';
+	public const MANIFEST_URL = 'https://cdn.jsdelivr.net/gh/marzuki46/LP-generator@main/version.json';
+
+	/** Fallback manifest location. */
+	public const MANIFEST_FALLBACK_URL = 'https://raw.githubusercontent.com/marzuki46/LP-generator/main/version.json';
 
 	/**
 	 * Plugin slug used by the WordPress updater.
@@ -99,9 +103,22 @@ final class Updater {
 				return $cached;
 			}
 		}
-		$url = add_query_arg( 't', time(), self::MANIFEST_URL );
+		$manifest = self::fetch_manifest( self::MANIFEST_URL );
+		if ( empty( $manifest['version'] ) ) {
+			$manifest = self::fetch_manifest( self::MANIFEST_FALLBACK_URL );
+		}
+		if ( empty( $manifest['version'] ) ) {
+			set_site_transient( 'lpgen_update_manifest', array(), 5 * MINUTE_IN_SECONDS );
+			return array();
+		}
+		set_site_transient( 'lpgen_update_manifest', $manifest, 15 * MINUTE_IN_SECONDS );
+		return $manifest;
+	}
+
+	/** Fetch one manifest mirror with cache-busting headers. */
+	private static function fetch_manifest( string $url ): array {
 		$response = wp_remote_get(
-			$url,
+			add_query_arg( 't', time(), $url ),
 			array(
 				'timeout' => 15,
 				'headers' => array(
@@ -112,12 +129,9 @@ final class Updater {
 			)
 		);
 		if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
-			set_site_transient( 'lpgen_update_manifest', array(), 5 * MINUTE_IN_SECONDS );
 			return array();
 		}
-		$manifest = self::sanitize_manifest( json_decode( (string) wp_remote_retrieve_body( $response ), true ) );
-		set_site_transient( 'lpgen_update_manifest', $manifest, 15 * MINUTE_IN_SECONDS );
-		return $manifest;
+		return self::sanitize_manifest( json_decode( (string) wp_remote_retrieve_body( $response ), true ) );
 	}
 
 	/**

@@ -534,7 +534,10 @@ final class Generator {
 		} else {
 			$result = AiClient::generate( $prompt );
 		}
-		if ( 'topic' !== $kind ) { $result['structured']['entities'] = $context['entities']; }
+		if ( 'topic' !== $kind ) {
+			$result['structured']['entities'] = $context['entities'];
+			$result['structured'] = self::clean_ai_copy( $result['structured'], $kind, (array) ( $context['topic_target_table'] ?? array() ) );
+		}
 		if ( 'lp' === $kind ) { $result['structured'] = DesignContract::bind_content( $result['structured'], $campaign ); }
 		FunnelContent::validate_content( $result['structured'], $kind );
 		if ( 'topic' === $kind ) {
@@ -945,6 +948,51 @@ final class Generator {
 			}
 		}
 		return '';
+	}
+
+	/** Strip framework labels and convert pipe tables into structured HTML-ready cells. */
+	private static function clean_ai_copy( array $data, string $kind, array $planned_table = array() ): array {
+		foreach ( array( 'title', 'intro', 'seo_title', 'meta_description', 'cta_text', 'cta_paragraph', 'anchor_suggestion' ) as $key ) {
+			if ( isset( $data[ $key ] ) && is_string( $data[ $key ] ) ) {
+				$data[ $key ] = FunnelContent::strip_framework_labels( $data[ $key ] );
+			}
+		}
+		$sections = isset( $data['sections'] ) && is_array( $data['sections'] ) ? $data['sections'] : array();
+		foreach ( $sections as $index => $section ) {
+			if ( ! is_array( $section ) ) {
+				continue;
+			}
+			foreach ( array( 'heading', 'body' ) as $key ) {
+				if ( isset( $section[ $key ] ) && is_string( $section[ $key ] ) ) {
+					$section[ $key ] = FunnelContent::strip_framework_labels( $section[ $key ] );
+				}
+			}
+			if ( isset( $section['body'] ) && is_string( $section['body'] ) ) {
+				$extracted = FunnelContent::extract_table( $section['body'] );
+				$section['body'] = $extracted[0];
+				if ( ! empty( $extracted[1] ) && empty( $section['table'] ) ) {
+					$section['table'] = array( 'columns' => $extracted[1], 'rows' => $extracted[2] );
+				}
+			}
+			$sections[ $index ] = $section;
+		}
+		if ( 'article' === $kind && ! empty( $planned_table['columns'] ) && is_array( $planned_table['rows'] ?? null ) ) {
+			$attached = false;
+			foreach ( $sections as $index => $section ) {
+				if ( ! empty( $section['table'] ) ) {
+					$attached = true;
+					break;
+				}
+			}
+			if ( ! $attached && $sections ) {
+				$sections[0]['table'] = array(
+					'columns' => array_values( array_map( 'strval', $planned_table['columns'] ) ),
+					'rows'    => array_values( array_map( static function ( $row ): array { return is_array( $row ) ? array_values( array_map( 'strval', $row ) ) : array(); }, $planned_table['rows'] ) ),
+				);
+			}
+		}
+		$data['sections'] = $sections;
+		return $data;
 	}
 
 	/** Anchor used by every support article: the campaign LP target keyword. */
