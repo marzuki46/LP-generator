@@ -21,6 +21,8 @@ final class ContentRepository {
 	 */
 	public const CAMPAIGN_KEYS = array(
 		'offer_type',
+		'lp_type',
+		'experiment_mode',
 		'offer_name',
 		'offer_url',
 		'audience',
@@ -30,6 +32,16 @@ final class ContentRepository {
 		'price',
 		'bonus',
 		'guarantee',
+		'product_type',
+		'product_status',
+		'product_specs',
+		'product_warranty',
+		'return_policy',
+		'amazon_asin',
+		'amazon_marketplace',
+		'amazon_affiliate_tag',
+		'amazon_source_reference',
+		'amazon_original_analysis',
 		'cta',
 		'voice',
 		'language',
@@ -189,6 +201,10 @@ final class ContentRepository {
 		$context['internal_link_target'] = in_array( (string) $context['internal_link_target'], array( 'bofu', 'next_stage' ), true ) ? (string) $context['internal_link_target'] : 'bofu';
 		$context['target_areas'] = Utils::lines( (string) $context['target_areas'] );
 
+		$context['language'] = LanguageService::clean( $context['language'] ?? 'id' );
+		$context['lp_type']  = LpTypeRegistry::clean( '' !== (string) ( $context['lp_type'] ?? '' ) ? $context['lp_type'] : LpTypeRegistry::from_offer_type( (string) ( $context['offer_type'] ?? '' ) ) );
+		$context['experiment_mode'] = ExperimentMode::clean( $context['experiment_mode'] ?? '' );
+		$context['noindex'] = ExperimentMode::should_noindex( $context );
 		$context['lp_layout'] = 'theme' === (string) $context['lp_layout'] ? 'theme' : 'canvas';
 		$context['lp_model'] = LpTemplate::clean( $context['lp_model'] ?? 'editorial' );
 		$context['lp_target_keyword'] = trim( sanitize_text_field( (string) ( $context['lp_target_keyword'] ?? '' ) ) );
@@ -263,6 +279,8 @@ final class ContentRepository {
 	public static function save_campaign_meta( int $post_id, array $input ): void {
 		$defaults = array(
 			'offer_type'       => 'product',
+			'lp_type'          => 'service',
+			'experiment_mode'  => 'CONTENT_PREVIEW',
 			'offer_name'       => '',
 			'offer_url'        => '',
 			'audience'         => '',
@@ -272,6 +290,16 @@ final class ContentRepository {
 			'price'            => '',
 			'bonus'            => '',
 			'guarantee'        => '',
+			'product_type'     => 'service',
+			'product_status'   => 'available',
+			'product_specs'    => '',
+			'product_warranty' => '',
+			'return_policy'    => '',
+			'amazon_asin'      => '',
+			'amazon_marketplace' => '',
+			'amazon_affiliate_tag' => '',
+			'amazon_source_reference' => '',
+			'amazon_original_analysis' => '',
 			'cta'              => '',
 			'voice'            => 'professional',
 			'language'         => 'id',
@@ -280,7 +308,7 @@ final class ContentRepository {
 			'tofu_count'       => 3,
 			'lp_post_type'     => 'page',
 			'article_post_type' => 'post',
-			'publish_status'   => 'publish',
+			'publish_status'   => 'draft',
 			'article_category' => 0,
 			'index_enabled'    => 1,
 			'index_delay'      => 10,

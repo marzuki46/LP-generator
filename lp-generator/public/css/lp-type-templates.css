@@ -1,0 +1,46 @@
+/* Type-specific LP templates. Scoped to .lpg-lpt. */
+.lpg-lpt__nav-space { display: none; }
+.lpg-lpt__hero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(240px, .7fr); gap: 32px; padding: 56px 24px; align-items: center; }
+.lpg-lpt__hero h1 { font-size: clamp(32px, 5vw, 56px); line-height: 1.05; margin: 8px 0 18px; }
+.lpg-lpt__section { padding: 36px 24px; border-bottom: 1px solid var(--lpm-line); }
+.lpg-lpt__copy { max-width: 720px; }
+.lpg-lpt__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; list-style: none; padding: 0; margin: 24px 0 0; }
+.lpg-lpt__cards li { padding: 18px; border: 1px solid var(--lpm-line); border-radius: 12px; background: var(--lpm-paper); }
+.lpg-lpt__table-wrap { overflow-x: auto; margin-top: 20px; }
+.lpg-lpt__table-wrap table { width: 100%; border-collapse: collapse; }
+.lpg-lpt__table-wrap th, .lpg-lpt__table-wrap td { border: 1px solid var(--lpm-line); padding: 10px 12px; text-align: left; }
+.lpg-lpt__faq, .lpg-lpt__final-cta, .lpg-lpt__contact { padding: 36px 24px; }
+.lpg-lpt__faq details { padding: 12px 0; border-bottom: 1px solid var(--lpm-line); }
+.lpg-lpt__secondary { display: inline-block; margin-left: 12px; }
+
+/* SERVICE: consultation-led, trust rail, contact focus. */
+.lpg-lpt--service .lpg-lpt__hero { background: var(--lpm-navy); color: #fff; }
+.lpg-lpt--service .lpg-lpt__hero .lpg-lp__button { background: var(--lpm-orange); color: #fff; border-radius: 8px; padding: 14px 26px; }
+.lpg-lpt--service .lpg-lpt__section:nth-of-type(even) { background: var(--lpm-tint); }
+.lpg-lpt--service .lpg-lpt__contact { background: var(--lpm-navy); color: #fff; }
+.lpg-lpt--service .lpg-lpt__contact ul { display: flex; flex-wrap: wrap; gap: 14px; list-style: none; padding: 0; }
+
+/* PRODUCT: spec/price forward, product banner. */
+.lpg-lpt--product .lpg-lpt__hero { background: linear-gradient(160deg, #f6f8fb, #e9eef5); }
+.lpg-lpt--product .lpg-lpt__product-banner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .7fr); gap: 24px; margin: 0 24px; padding: 28px; background: var(--lpm-navy); color: #fff; border-radius: 16px; }
+.lpg-lpt--product .lpg-lpt__kicker { color: var(--lpm-gold); letter-spacing: .12em; font-size: 11px; }
+.lpg-lpt--product .lpg-lpt__status { color: var(--lpm-gold); font-weight: 700; }
+.lpg-lpt--product .lpg-lpt__specs { list-style: none; padding: 0; margin: 0; }
+.lpg-lpt--product .lpg-lpt__specs li { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.18); }
+.lpg-lpt--product .lpg-lpt__section-cta .lpg-lp__button { background: var(--lpm-orange); color: #fff; }
+
+/* AMAZON AFFILIATE: disclosure first, analysis-led, neutral CTA. */
+.lpg-lpt--amazon_affiliate .lpg-lpt__disclosure-top { padding: 12px 24px; background: #fff4e6; color: #7a3b10; border-bottom: 1px solid #f0c9a4; font-size: 13px; }
+.lpg-lpt--amazon_affiliate .lpg-lpt__hero { background: #fff; }
+.lpg-lpt--amazon_affiliate .lpg-lpt__quick { padding: 28px 24px; background: var(--lpm-tint); }
+.lpg-lpt--amazon_affiliate .lpg-lpt__quick-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.lpg-lpt--amazon_affiliate .lpg-lpt__quick-grid article { padding: 18px; background: #fff; border-left: 3px solid var(--lpm-orange); border-radius: 10px; }
+.lpg-lpt--amazon_affiliate .lpg-lpt__final-cta { background: var(--lpm-navy); color: #fff; }
+.lpg-lpt--amazon_affiliate .lpg-lpt__final-cta .lpg-lp__button { background: var(--lpm-orange); color: #fff; }
+
+@media (max-width: 720px) {
+  .lpg-lpt__hero,
+  .lpg-lpt--product .lpg-lpt__product-banner { grid-template-columns: 1fr; padding: 28px 16px; margin: 0 12px; }
+  .lpg-lpt__section, .lpg-lpt__faq, .lpg-lpt__final-cta, .lpg-lpt__contact { padding: 24px 16px; }
+  .lpg-lpt__secondary { display: block; margin: 12px 0 0; }
+}

@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.9.3
+Stable tag: 2.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,13 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 2.0.0 =
+* Add SERVICE, PRODUCT and AMAZON_AFFILIATE landing-page types with type-specific briefs, schemas and visual templates.
+* Complete ID/EN localisation of public UI, related cards, footer service area and affiliate disclosure.
+* Keep Yoast as the single authority for canonical, robots, sitemap, social metadata and JSON-LD graph; never overwrite the content focus keyword.
+* Add duplicate prevention, local/affiliate value gates and a six-dimension internal quality report.
+* Add experiment mode (default draft + noindex for new campaigns) and a validated publishing workflow with history.
 
 = 1.9.3 =
 * Read the update manifest through the GitHub contents API (base64 decoded) to avoid CDN-cached stale versions, with fresh raw HEAD and CDN fallbacks.

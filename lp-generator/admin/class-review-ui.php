@@ -74,6 +74,10 @@ final class ReviewUI {
 						<tr data-lpgen-campaign="<?php echo esc_attr( (string) $id ); ?>">
 							<td><a href="<?php echo esc_url( $edit_url ); ?>"><?php echo esc_html( get_the_title( $id ) ); ?></a></td>
 							<td data-lpgen-field="status"><span class="lpgen-badge lpgen-badge--<?php echo esc_attr( sanitize_key( $status ) ); ?>"><?php echo esc_html( 'draft' === $status ? __( 'Belum digenerate', 'lp-generator' ) : $status ); ?></span>
+							<?php $experiment_label = ExperimentMode::admin_label( array( 'experiment_mode' => ContentRepository::get_meta( $id, 'experiment_mode', '' ) ) ); ?>
+							<?php if ( '' !== $experiment_label ) : ?>
+								<br><span class="lpgen-badge" style="background:#fef3c7;color:#92400e;font-weight:600;"><?php echo esc_html( $experiment_label ); ?></span>
+							<?php endif; ?>
 							<?php if ( '' === Utils::clean_url( (string) ContentRepository::get_meta( $id, 'offer_url', '' ) ) ) : ?>
 								<br><small style="color:#b32d2e;"><?php echo esc_html__( 'URL CTA belum valid — isi di edit campaign.', 'lp-generator' ); ?></small>
 							<?php endif; ?>
@@ -186,6 +190,17 @@ final class ReviewUI {
 						<?php echo esc_html( sprintf( '%s · interval %d menit · delay index %d detik', $mode, (int) ( $campaign['schedule_interval'] ?? 0 ), (int) ( $campaign['index_delay'] ?? 10 ) ) ); ?>
 					</p>
 				</div>
+				<?php
+				$experiment_label = ExperimentMode::admin_label( $campaign );
+				$promote_item_id  = 0;
+				foreach ( $items as $candidate ) {
+					if ( absint( $candidate['post_id'] ?? 0 ) > 0 ) { $promote_item_id = (int) $candidate['id']; break; }
+				}
+				?>
+				<?php if ( '' !== $experiment_label ) : ?>
+					<p><span class="lpgen-badge" style="background:#fef3c7;color:#92400e;font-weight:600;"><?php echo esc_html( $experiment_label ); ?></span>
+						<span class="description"><?php echo esc_html__( 'Halaman noindex dan di luar sitemap. Promosi hanya setelah pemeriksaan; publish tetap manual.', 'lp-generator' ); ?></span></p>
+				<?php endif; ?>
 				<p>
 					<?php echo esc_html__( 'Status campaign:', 'lp-generator' ); ?>
 					<strong><?php echo esc_html( $status ); ?></strong>
@@ -195,6 +210,11 @@ final class ReviewUI {
 					<?php if ( in_array( $status, array( 'review', 'publishing', 'failed' ), true ) ) : ?>
 						<button type="button" class="button button-primary" data-lpgen-action="publish-campaign" data-campaign="<?php echo esc_attr( (string) $campaign_id ); ?>">
 							<?php echo esc_html( 'failed' === $status ? __( 'Coba Publish Ulang', 'lp-generator' ) : __( 'Publish & Index', 'lp-generator' ) ); ?>
+						</button>
+					<?php endif; ?>
+					<?php if ( '' !== $experiment_label ) : ?>
+						<button type="button" class="button button-secondary" data-lpgen-action="promote-experiment" data-campaign="<?php echo esc_attr( (string) $campaign_id ); ?>" data-item="<?php echo esc_attr( (string) $promote_item_id ); ?>">
+							<?php echo esc_html__( 'Promosikan dari Eksperimen', 'lp-generator' ); ?>
 						</button>
 					<?php endif; ?>
 				</p>
@@ -271,6 +291,11 @@ final class ReviewUI {
 									<?php endif; ?>
 								</td>
 								<td><span class="lpgen-badge lpgen-badge--<?php echo esc_attr( sanitize_key( $item_status ) ); ?>"><?php echo esc_html( $item_status ); ?></span>
+									<br /><small><?php echo esc_html__( 'Workflow:', 'lp-generator' ); ?> <?php echo esc_html( PublishingWorkflow::state( $item_id ) ); ?></small>
+									<?php $quality_report = json_decode( (string) ContentRepository::get_meta( $item_id, '_lpgen_v2_quality', '' ), true ); ?>
+									<?php if ( is_array( $quality_report ) ) : ?>
+										<br /><small><?php echo esc_html( sprintf( 'Quality: %d · %s', (int) ( $quality_report['score'] ?? 0 ), (string) ( $quality_report['decision'] ?? '' ) ) ); ?></small>
+									<?php endif; ?>
 									<?php if ( '' !== (string) $item['error'] ) : ?>
 										<br /><small><?php echo esc_html( (string) $item['error'] ); ?></small>
 									<?php endif; ?>

@@ -487,6 +487,7 @@ final class Generator {
 		$areas = (array) ( $campaign['target_areas'] ?? array() );
 		$context['content_area'] = $areas ? $areas[ $context['item_index'] % count( $areas ) ] : (string) ( $campaign['city'] ?? '' );
 		$context['target_stage'] = 'bofu';
+		$context['lp_brief']     = LpBriefGenerator::generate( $context );
 
 		if ( 'article' === $kind ) {
 			$topic_item_id = (int) ( $payload['topic_item_id'] ?? 0 );
@@ -565,6 +566,8 @@ final class Generator {
 		$blocks = Publisher::build_blocks( $result['structured'], $kind, $campaign, $images );
 		ContentRepository::save_item_result( $item_id, $result['structured'], $result['model'], $result['tokens'], $blocks );
 		self::save_lp_spec( $item_id, $result['structured'], $campaign, $context, 'topic' === $kind ? 'outline' : 'write' );
+		self::record_quality_report( $item_id, $result['structured'], $campaign, $context, $kind );
+		PublishingWorkflow::mark_generated( $item_id );
 		if ( 'topic' === $kind ) { TopicMemory::add_from_item( $item_id ); }
 		if ( 'writing' === (string) ( Orchestrator::state( $item_id )['stage'] ?? '' ) ) {
 			Orchestrator::transition( $item_id, 'writing', 'review' );
@@ -989,6 +992,44 @@ final class Generator {
 			'message' => sprintf( __( '%d gambar item #%d diperbarui.', 'lp-generator' ), count( $images ), $item_id ),
 			'count'   => count( $images ),
 		);
+	}
+
+	/** Compute and store the internal quality report without changing publish status. */
+	private static function record_quality_report( int $item_id, array $structured, array $campaign, array $context, string $kind ): void {
+		$type   = LpTypeRegistry::clean( $campaign['lp_type'] ?? '' );
+		$brief  = isset( $context['lp_brief'] ) && is_array( $context['lp_brief'] ) ? $context['lp_brief'] : LpBriefGenerator::generate( $campaign );
+		$seo    = SeoMetadataEngine::build(
+			array( 'seo_title' => $structured['seo_title'] ?? $structured['title'] ?? '', 'meta_description' => $structured['meta_description'] ?? '', 'title' => $structured['title'] ?? '' ),
+			$campaign,
+			array( 'post_id' => $item_id, 'images' => ContentRepository::item_images( $item_id ) )
+		);
+		$duplicate = DuplicateGuard::check(
+			array(
+				'campaign_id' => (int) ( $campaign['campaign_id'] ?? 0 ),
+				'title' => (string) ( $structured['title'] ?? '' ),
+				'slug' => sanitize_title( (string) ( $structured['title'] ?? '' ) ),
+				'city' => (string) ( $campaign['city'] ?? '' ),
+				'language' => (string) ( $campaign['language'] ?? 'id' ),
+				'exclude_item_id' => $item_id,
+			),
+			$structured
+		);
+		$report = QualityGate::evaluate(
+			array(
+				'campaign' => $campaign,
+				'data' => $structured,
+				'kind' => $kind,
+				'brief' => $brief,
+				'seo' => $seo,
+				'duplicate' => $duplicate,
+				'local_gate' => 'service' === $type ? LocalValueGate::check( $brief, $campaign ) : null,
+				'affiliate_gate' => 'amazon_affiliate' === $type ? AffiliateValueGate::check( $brief, $campaign, $structured ) : null,
+			)
+		);
+		QualityGate::store( $item_id, $report );
+		foreach ( array_merge( $report['warnings'], $report['blockers'] ) as $message ) {
+			LpWarnings::add( $item_id, 'quality', (string) $message );
+		}
 	}
 
 	/** Persist a canonical, normalised spec and its warnings for one item. */

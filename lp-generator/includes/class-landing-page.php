@@ -42,7 +42,8 @@ final class LandingPage {
 		$css = (string) file_get_contents( LPG_PATH . 'public/css/landing-page.css' ) . "\n"
 			. (string) file_get_contents( LPG_PATH . 'public/css/aida.css' ) . "\n"
 			. (string) file_get_contents( LPG_PATH . 'public/css/lp-models.css' ) . "\n"
-			. (string) file_get_contents( LPG_PATH . 'public/css/article-themes.css' );
+			. (string) file_get_contents( LPG_PATH . 'public/css/article-themes.css' ) . "\n"
+			. (string) file_get_contents( LPG_PATH . 'public/css/lp-type-templates.css' );
 		$settings = get_option( 'lpgen_settings', array() );
 		$css .= "\n" . self::sanitize_css( is_array( $settings ) ? ( $settings['lp_custom_css'] ?? '' ) : '' );
 		return '<!doctype html><html><head><base href="about:srcdoc"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><style>' . $css . '</style></head><body>' . wp_kses_post( $content ) . '</body></html>';
@@ -71,6 +72,7 @@ final class LandingPage {
 		wp_enqueue_style( 'lpgen-aida', LPG_URL . 'public/css/aida.css', array( 'lpgen-landing-page' ), LPG_VERSION );
 		wp_enqueue_style( 'lpgen-lp-models', LPG_URL . 'public/css/lp-models.css', array( 'lpgen-aida' ), LPG_VERSION );
 		wp_enqueue_style( 'lpgen-article-themes', LPG_URL . 'public/css/article-themes.css', array( 'lpgen-lp-models' ), LPG_VERSION );
+		wp_enqueue_style( 'lpgen-lp-type-templates', LPG_URL . 'public/css/lp-type-templates.css', array( 'lpgen-article-themes' ), LPG_VERSION );
 		$settings = get_option( 'lpgen_settings', array() );
 		$custom = self::sanitize_css( is_array( $settings ) ? ( $settings['lp_custom_css'] ?? '' ) : '' );
 		if ( '' !== $custom ) { wp_add_inline_style( 'lpgen-aida', $custom ); }
@@ -217,6 +219,9 @@ final class LandingPage {
 
 	/** No style/script/embed tags: HTML survives WordPress post sanitization. */
 	public static function render( array $data, array $campaign, array $images = array() ): string {
+		if ( array_key_exists( 'lp_type', $campaign ) ) {
+			return LpTypeTemplate::render( $data, $campaign, $images );
+		}
 		if ( DesignContract::AIDA === DesignContract::id_for( (string) ( $campaign['framework_slug'] ?? '' ) ) && DesignContract::active( $campaign ) ) { return AidaLayout::render( $data, $campaign, $images ); }
 		$slug = sanitize_key( (string) ( $campaign['framework_slug'] ?? 'aida' ) );
 		if ( DesignContract::active( $campaign ) ) { DesignContract::validate_images( $images, $campaign ); }
@@ -236,7 +241,7 @@ final class LandingPage {
 			if ( '' === $hint || 'hero' === $hint ) { $hero_images[] = $image; } else { $positioned[ $hint ][] = $image; }
 		}
 		$model = LpTemplate::model( $campaign );
-		$html = '<div class="lpg-lp lpg-lp--' . esc_attr( $slug ) . ' lpg-lp--' . esc_attr( $type ) . ' ' . esc_attr( LpTemplate::root_class( $campaign ) ) . '" data-framework="' . esc_attr( $slug ) . '" data-lp-model="' . esc_attr( $model ) . '">';
+		$html = '<div class="lpg-lp lpg-lp--' . esc_attr( $slug ) . ' lpg-lp--' . esc_attr( $type ) . ' ' . esc_attr( LpTemplate::root_class( $campaign ) ) . '" data-framework="' . esc_attr( $slug ) . '" data-lp-model="' . esc_attr( $model ) . '" data-lp-type="' . esc_attr( LpTemplate::type( $campaign ) ) . '">';
 		$html .= LpTemplate::open( $campaign, $data );
 		$html .= '<header class="lpg-lp__hero' . ( $hero_images ? ' lpg-lp__hero--split' : '' ) . '"><div class="lpg-lp__hero-copy">';
 		$eyebrow = trim( implode( ' · ', array_filter( array( (string) ( $campaign['brand'] ?? '' ), (string) ( $campaign['city'] ?? '' ) ) ) ) );

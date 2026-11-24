@@ -182,6 +182,9 @@ if ( ! function_exists( 'set_post_thumbnail' ) ) {
 }
 
 require_once dirname( __DIR__ ) . '/includes/class-utils.php';
+require_once dirname( __DIR__ ) . '/includes/class-language-service.php';
+require_once dirname( __DIR__ ) . '/includes/class-lp-type-strategy.php';
+require_once dirname( __DIR__ ) . '/includes/class-lp-brief-generator.php';
 require_once dirname( __DIR__ ) . '/includes/class-research-source.php';
 require_once dirname( __DIR__ ) . '/includes/class-frameworks.php';
 require_once dirname( __DIR__ ) . '/includes/class-design-contract.php';
@@ -199,8 +202,18 @@ require_once dirname( __DIR__ ) . '/includes/class-lp-parent-pages.php';
 require_once dirname( __DIR__ ) . '/includes/class-lp-warnings.php';
 require_once dirname( __DIR__ ) . '/includes/class-lp-spec.php';
 require_once dirname( __DIR__ ) . '/includes/class-lp-template.php';
+require_once dirname( __DIR__ ) . '/includes/class-lp-type-template.php';
 require_once dirname( __DIR__ ) . '/includes/class-landing-page.php';
 require_once dirname( __DIR__ ) . '/includes/class-aida-layout.php';
+require_once dirname( __DIR__ ) . '/includes/class-experiment-mode.php';
+require_once dirname( __DIR__ ) . '/includes/class-publishing-workflow.php';
+require_once dirname( __DIR__ ) . '/includes/class-duplicate-guard.php';
+require_once dirname( __DIR__ ) . '/includes/class-local-value-gate.php';
+require_once dirname( __DIR__ ) . '/includes/class-affiliate-value-gate.php';
+require_once dirname( __DIR__ ) . '/includes/class-quality-gate.php';
+require_once dirname( __DIR__ ) . '/includes/class-seo-metadata-engine.php';
+require_once dirname( __DIR__ ) . '/includes/class-schema-registry.php';
+require_once dirname( __DIR__ ) . '/includes/class-internal-link-engine.php';
 require_once dirname( __DIR__ ) . '/includes/class-seo-standards.php';
 require_once dirname( __DIR__ ) . '/includes/class-publisher.php';
 require_once dirname( __DIR__ ) . '/includes/class-updater.php';

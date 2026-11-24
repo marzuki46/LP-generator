@@ -10,28 +10,28 @@ final class SeoStandards {
    throw new \RuntimeException('Internal link harus menuju situs WordPress ini, bukan domain lain.');
   }
  }
- /** Update only the dedicated resource slot of a plugin-generated AIDA LP. */
+ /** Refresh the related-article card slot using contextual link ranking. */
  public static function refresh_related(int $campaign_id): void {
-  $lp=null;$resources=array();
+  $lp=null;
   foreach(ContentRepository::items($campaign_id) as $item) {
-   if ('published'!==($item['status'] ?? '') || 'publish'!==get_post_status((int)($item['post_id'] ?? 0))) {continue;}
-   if ('lp'===$item['kind']) {$lp=$item;continue;}
-   if ('article'===$item['kind'] && in_array($item['stage'],array('tofu','mofu','tag'),true)) {$resources[]=$item;}
+   if ('lp'===$item['kind'] && 'published'===($item['status'] ?? '')) {$lp=$item;break;}
   }
+  $resources=InternalLinkEngine::suggest_for_lp($campaign_id);
   if (!$lp || !$resources) {return;}
+  $campaign=ContentRepository::get_campaign($campaign_id);
+  $strings=LanguageService::strings((string)($campaign['language'] ?? 'id'));
   $post=get_post((int)$lp['post_id']);
   if (!$post || !str_contains($post->post_content,'lpg-related:start') || (int)get_post_meta($post->ID,'_lpgen_campaign_id',true)!==$campaign_id) {return;}
   $cards='';
-  foreach(array_slice($resources,0,6) as $resource) {
-   $url=(string)get_permalink((int)$resource['post_id']);self::assert_internal($url);
-   $stage=strtoupper((string)($resource['stage'] ?? 'artikel'));
+  foreach($resources as $resource) {
+   $url=(string)$resource['url'];self::assert_internal($url);
    $cards.='<a class="lpg-related__card" href="'.esc_url($url).'">'
-    .'<span class="lpg-related__kicker">'.esc_html($stage).'</span>'
+    .'<span class="lpg-related__kicker">'.esc_html($strings['related_kicker']).'</span>'
     .'<span class="lpg-related__title">'.esc_html((string)$resource['title']).'</span>'
-    .'<span class="lpg-related__link">'.esc_html__('Baca panduan','lp-generator').' &rarr;</span>'
+    .'<span class="lpg-related__link">'.esc_html($strings['read_guide']).' &rarr;</span>'
     .'</a>';
   }
-  $nav='<nav class="lpg-related" aria-label="'.esc_attr__('Panduan terkait','lp-generator').'"><div class="lpg-related__head"><h2>'.esc_html__('Panduan terkait','lp-generator').'</h2><p>'.esc_html__('Pelajari sebelum menentukan pilihan','lp-generator').'</p></div><div class="lpg-related__grid">'.$cards.'</div></nav>';
+  $nav='<nav class="lpg-related" aria-label="'.esc_attr($strings['related']).'"><div class="lpg-related__head"><h2>'.esc_html($strings['related']).'</h2><p>'.esc_html($strings['learn_more']).'</p></div><div class="lpg-related__grid">'.$cards.'</div></nav>';
   $updated=preg_replace_callback('/<!-- lpg-related:start -->.*?<!-- lpg-related:end -->/s',static fn(): string=>'<!-- lpg-related:start -->'.$nav.'<!-- lpg-related:end -->',$post->post_content,1);
   if ($updated!==$post->post_content) {wp_update_post(array('ID'=>$post->ID,'post_content'=>wp_kses_post($updated)));}
  }

@@ -285,7 +285,7 @@ final class Publisher {
 			$link = (string) ( $pick['permalink'] ?? '' );
 			if ( '' === $link && ! empty( $pick['post_id'] ) ) { $link = (string) get_permalink( (int) $pick['post_id'] ); }
 			if ( '' === $link ) { continue; }
-			$kicker  = strtoupper( (string) ( $pick['stage'] ?? 'artikel' ) );
+			$kicker  = LanguageService::strings( (string) ( $campaign['language'] ?? 'id' ) )['quick_recommendations'];
 			$title   = (string) ( $pick['title'] ?? '' );
 			$excerpt = Utils::truncate( sanitize_text_field( (string) ( $pick['meta_description'] ?? '' ) ), 110 );
 			if ( '' === $excerpt ) { $excerpt = Utils::truncate( $title, 110 ); }
@@ -502,9 +502,14 @@ final class Publisher {
 			wp_set_post_terms( $post_id, $tags, 'post_tag', true );
 		}
 		self::apply_seo_meta( $post_id, $item, $campaign );
-		if ( 'publish' === $status ) { SeoStandards::refresh_related( absint( $campaign['campaign_id'] ?? 0 ) ); }
+		ExperimentMode::apply_noindex( $post_id, $campaign );
+		$workflow = PublishingWorkflow::state( $item_id );
+		if ( in_array( $workflow, array( 'APPROVED', 'SCHEDULED' ), true ) ) {
+			PublishingWorkflow::transition( $item_id, $workflow, 'PUBLISHED', array( 'campaign_id' => absint( $campaign['campaign_id'] ?? 0 ), 'post_id' => $post_id ) );
+		}
+		if ( 'publish' === $status && ExperimentMode::sitemap_eligible( $campaign ) ) { SeoStandards::refresh_related( absint( $campaign['campaign_id'] ?? 0 ) ); }
 
-		if ( 'publish' === $status && ! empty( $campaign['index_enabled'] ) ) {
+		if ( 'publish' === $status && ! empty( $campaign['index_enabled'] ) && ExperimentMode::sitemap_eligible( $campaign ) ) {
 			Indexer::schedule( absint( $campaign['campaign_id'] ?? 0 ), $item_id, $permalink, (int) ( $campaign['index_delay'] ?? 10 ) );
 		}
 		return $post_id;
@@ -577,6 +582,13 @@ final class Publisher {
 
 		update_post_meta( $post_id, '_lpgen_meta_description', sanitize_text_field( $description ) );
 		update_post_meta( $post_id, '_lpgen_seo_title', sanitize_text_field( $seo_title ) );
+		$engine_meta = SeoMetadataEngine::build(
+			array( 'seo_title' => $seo_title, 'meta_description' => $description, 'title' => (string) ( $item['title'] ?? '' ) ),
+			$campaign,
+			array( 'post_id' => $post_id, 'images' => ContentRepository::item_images( (int) ( $item['id'] ?? 0 ) ) )
+		);
+		SeoMetadataEngine::store( $post_id, $engine_meta );
+		SeoMetadataEngine::apply_yoast( $post_id, $engine_meta );
 		if ( ! $yoast_enabled ) { return; }
 		update_post_meta( $post_id, '_yoast_wpseo_focuskw', $keyword );
 		update_post_meta( $post_id, '_yoast_wpseo_title', sanitize_text_field( $seo_title ) );

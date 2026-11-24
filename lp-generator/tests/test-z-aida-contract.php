@@ -50,6 +50,7 @@ foreach(array('kind'=>'article','stage'=>'mofu','status'=>'published','post_id'=
 SeoStandards::refresh_related(101);
 $updated=get_post(800)->post_content;
 lpg_assert_true(str_contains($updated,'href="https://example.test/post/810"'),'LP menaut ke panduan terbit dalam campaign yang sama');
+lpg_assert_true(!str_contains($updated,'>TOFU<') && !str_contains($updated,'>MOFU<') && !str_contains($updated,'>TAG<'),'label TOFU/MOFU/Tag tidak tampil di publik');
 lpg_assert_true(!str_contains($updated,'post/820'),'panduan campaign lain tidak masuk ke LP');
 lpg_assert_true(str_contains($updated,$data['title']),'pembaruan slot internal link mempertahankan konten LP');
 SeoStandards::refresh_related(101);

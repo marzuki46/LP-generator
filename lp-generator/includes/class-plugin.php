@@ -29,7 +29,10 @@ final class Plugin {
 		add_action( 'admin_enqueue_scripts', array( Admin::class, 'enqueue_assets' ) );
 		Settings::hook();
 		add_action( 'wp_head', array( SeoStandards::class, 'meta_description' ), 2 );
+		add_action( 'wp_head', array( ExperimentMode::class, 'maybe_output_robots' ), 3 );
 		add_filter( 'pre_get_document_title', array( SeoStandards::class, 'document_title' ) );
+		add_filter( 'wpseo_schema_graph', array( SchemaRegistry::class, 'inject_yoast' ), 10, 2 );
+		add_action( 'wp_head', array( SchemaRegistry::class, 'maybe_output_fallback' ), 5 );
 		add_filter( 'wp_kses_allowed_html', array( LandingPage::class, 'allow_table_focus' ), 10, 2 );
 		add_action( 'wp_enqueue_scripts', array( LandingPage::class, 'prepare_canvas_assets' ), PHP_INT_MAX );
 		add_filter( 'template_include', array( LandingPage::class, 'template' ), 99 );

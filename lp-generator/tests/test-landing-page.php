@@ -30,6 +30,18 @@ foreach (array_keys(LpTemplate::MODELS) as $model) {
  lpg_assert_true(str_contains($html,'<!-- lpg-related:start -->'),'model '.$model.' punya slot related link');
 }
 lpg_assert_same('editorial',LpTemplate::clean('tidak-ada'),'model tidak dikenal jatuh ke editorial');
+foreach (array('service','product','amazon_affiliate') as $lp_type) {
+ $fixture=lpg_lp_fixture('aida');$fixture['campaign']['lp_type']=$lp_type;$fixture['campaign']['price']='Mulai Rp 800.000';
+ $fixture['campaign']['product_specs']="Responsive\nSEO lokal";$fixture['campaign']['product_status']='available';
+ $html=LandingPage::render($fixture['data'],$fixture['campaign']);
+ lpg_assert_true(str_contains($html,'data-lp-type="'.$lp_type.'"') && str_contains($html,'lpg-lpt--'.$lp_type),'template tipe '.$lp_type.' dipakai');
+ lpg_assert_true(str_contains($html,'Area layanan: Solo') && str_contains($html,'lpg-lpm__footer'),'footer menyesuaikan lokasi campaign');
+ lpg_assert_same(1,preg_match_all('/<h1\b/',$html),'tipe '.$lp_type.' tetap satu H1');
+ lpg_assert_same(count($fixture['data']['sections']),substr_count($html,'data-step='),'tipe '.$lp_type.' mempertahankan langkah framework');
+ if ('service'===$lp_type) { lpg_assert_true(str_contains($html,'lpg-lpt__contact') && !str_contains($html,'lpg-lpt__disclosure-top'),'service memakai blok kontak'); }
+ if ('product'===$lp_type) { lpg_assert_true(str_contains($html,'lpg-lpt__product-banner') && str_contains($html,'Mulai Rp 800.000'),'product memakai banner harga/spec'); }
+ if ('amazon_affiliate'===$lp_type) { lpg_assert_true(str_contains($html,'lpg-lpt__disclosure-top') && str_contains($html,'Amazon Associate') && str_contains($html,'lpg-lpt__quick'),'affiliate memakai disclosure dan rekomendasi cepat'); }
+}
 $fixture=lpg_lp_fixture('dipada');
 lpg_assert_same('Desire',$fixture['campaign']['framework_plan']['steps'][0]['name'],'DIPADA Desire pertama dipertahankan');
 lpg_assert_same('Desire',$fixture['campaign']['framework_plan']['steps'][4]['name'],'DIPADA Desire kedua dipertahankan');

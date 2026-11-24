@@ -132,24 +132,25 @@
 
 /* Price + order strip: every LP is a commercial page. */
 .lpm-offerbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 18px 24px;
+  gap: 14px;
+  padding: 16px 24px;
   background: linear-gradient(90deg, var(--lpm-orange), #ff8a5b);
   color: #fff;
 }
+.lpm-offerbar__price { min-width: 0; }
 .lpm-offerbar__price span { display: block; font-size: 11px; letter-spacing: .14em; opacity: .85; }
-.lpm-offerbar__price strong { display: block; font-size: clamp(20px, 3vw, 30px); line-height: 1.15; }
-.lpm-offerbar__order .lpg-lp__button { background: var(--lpm-navy); color: #fff; border-radius: 999px; padding: 14px 28px; box-shadow: 0 8px 18px rgba(0,0,0,.18); }
+.lpm-offerbar__price strong { display: block; font-size: clamp(18px, 3vw, 30px); line-height: 1.15; overflow-wrap: anywhere; }
+.lpm-offerbar__order .lpg-lp__button { background: var(--lpm-navy); color: #fff; border-radius: 999px; padding: 12px 20px; box-shadow: 0 8px 18px rgba(0,0,0,.18); white-space: nowrap; }
 
 /* Related-article cards. */
 .lpg-related { padding: 40px 24px; background: var(--lpm-tint); }
 .lpg-related__head { max-width: 760px; margin-bottom: 20px; }
 .lpg-related__head h2 { margin: 0 0 6px; font-size: clamp(24px, 3vw, 34px); }
 .lpg-related__head p { margin: 0; color: var(--lpm-muted); }
-.lpg-related__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.lpg-related__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .lpg-related__card {
   display: flex;
   flex-direction: column;
@@ -176,5 +177,13 @@
   .lpg-lpm--split .lpg-lp__hero,
   .lpg-lpm--split .lpg-lp__section { grid-template-columns: 1fr; }
   .lpg-lpm__nav { flex-wrap: wrap; }
-  .lpg-lpm__footer { flex-direction: column; }
+  .lpm-offerbar { padding: 14px 16px; gap: 10px; }
+  .lpm-offerbar__order .lpg-lp__button { padding: 11px 14px; font-size: 13px; }
+  .lpg-lpm__footer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+  .lpg-lpm__footer span:last-child:nth-child(3) { grid-column: 1 / -1; }
+  .lpg-related { padding: 28px 16px; }
+  .lpg-related__grid { gap: 10px; }
+  .lpg-related__card { min-height: 132px; padding: 14px; gap: 7px; }
+  .lpg-related__title { font-size: 14px; }
+  .lpg-related__link { font-size: 12px; }
 }

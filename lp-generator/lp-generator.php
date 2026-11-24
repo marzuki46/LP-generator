@@ -3,7 +3,7 @@
  * Plugin Name:       LP Generator
  * Plugin URI:        https://example.com/lp-generator
  * Description:       Generates a complete TOFU/MOFU/BOFU funnel — landing page plus supporting articles — from a single offer campaign using 9Router AI, then submits new URLs to PuSH and IndexNow 10 seconds after publishing.
- * Version:           1.9.3
+ * Version:           2.0.0
  * Update URI:        https://github.com/marzuki46/LP-generator
  * Requires at least: 6.4
  * Requires PHP:      8.1
@@ -22,7 +22,7 @@ namespace LPG;
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'LPG_VERSION', '1.9.3' );
+define( 'LPG_VERSION', '2.0.0' );
 define( 'LPG_FILE', __FILE__ );
 define( 'LPG_PATH', plugin_dir_path( __FILE__ ) );
 define( 'LPG_URL', plugin_dir_url( __FILE__ ) );
@@ -30,6 +30,9 @@ define( 'LPG_DB_VERSION', '2' );
 define( 'LPG_TEXT_DOMAIN', 'lp-generator' );
 
 require_once LPG_PATH . 'includes/class-utils.php';
+require_once LPG_PATH . 'includes/class-language-service.php';
+require_once LPG_PATH . 'includes/class-lp-type-strategy.php';
+require_once LPG_PATH . 'includes/class-lp-brief-generator.php';
 require_once LPG_PATH . 'includes/class-research-source.php';
 require_once LPG_PATH . 'includes/class-frameworks.php';
 require_once LPG_PATH . 'includes/class-design-contract.php';
@@ -50,8 +53,18 @@ require_once LPG_PATH . 'includes/class-lp-parent-pages.php';
 require_once LPG_PATH . 'includes/class-lp-warnings.php';
 require_once LPG_PATH . 'includes/class-lp-spec.php';
 require_once LPG_PATH . 'includes/class-lp-template.php';
+require_once LPG_PATH . 'includes/class-lp-type-template.php';
 require_once LPG_PATH . 'includes/class-landing-page.php';
 require_once LPG_PATH . 'includes/class-aida-layout.php';
+require_once LPG_PATH . 'includes/class-experiment-mode.php';
+require_once LPG_PATH . 'includes/class-publishing-workflow.php';
+require_once LPG_PATH . 'includes/class-duplicate-guard.php';
+require_once LPG_PATH . 'includes/class-local-value-gate.php';
+require_once LPG_PATH . 'includes/class-affiliate-value-gate.php';
+require_once LPG_PATH . 'includes/class-quality-gate.php';
+require_once LPG_PATH . 'includes/class-seo-metadata-engine.php';
+require_once LPG_PATH . 'includes/class-schema-registry.php';
+require_once LPG_PATH . 'includes/class-internal-link-engine.php';
 require_once LPG_PATH . 'includes/class-seo-standards.php';
 require_once LPG_PATH . 'includes/class-publisher.php';
 require_once LPG_PATH . 'includes/class-generator.php';

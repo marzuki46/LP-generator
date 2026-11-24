@@ -24,6 +24,7 @@ final class Ajax {
 			'start-campaign',
 			'restart-campaign',
 			'publish-campaign',
+			'promote-experiment',
 			'run-now',
 			'process-queue',
 			'set-status',
@@ -104,6 +105,12 @@ final class Ajax {
 			case 'publish-campaign':
 				$result = Generator::start_publish( isset( $_POST['campaign'] ) ? absint( $_POST['campaign'] ) : 0 );
 				break;
+			case 'promote-experiment':
+				$result = ExperimentMode::promote(
+					isset( $_POST['campaign'] ) ? absint( $_POST['campaign'] ) : 0,
+					isset( $_POST['item'] ) ? absint( $_POST['item'] ) : 0
+				);
+				break;
 			case 'run-now':
 				Generator::run_next();
 				$result = array(
@@ -124,6 +131,12 @@ final class Ajax {
 					return;
 				}
 				ContentRepository::set_item_status( $item_id, $status );
+				if ( 'approved' === $status ) {
+					PublishingWorkflow::advance_to( $item_id, 'APPROVED', array( 'campaign_id' => isset( $_POST['campaign'] ) ? absint( $_POST['campaign'] ) : 0 ) );
+				} elseif ( 'rejected' === $status ) {
+					$state = PublishingWorkflow::state( $item_id );
+					if ( PublishingWorkflow::can( $state, 'REJECTED' ) ) { PublishingWorkflow::transition( $item_id, $state, 'REJECTED' ); }
+				}
 				$result = array(
 					'ok'      => true,
 					'message' => sprintf( __( 'Item #%d → %s', 'lp-generator' ), $item_id, $status ),

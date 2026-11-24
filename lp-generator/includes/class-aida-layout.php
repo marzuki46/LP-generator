@@ -14,7 +14,7 @@ final class AidaLayout {
   $brand=trim(implode(' · ',array_filter(array((string)($campaign['brand'] ?? ''),(string)($campaign['city'] ?? '')))));
   $has_brief=!empty($campaign['benefits']) || isset($slots['aida-hero-visual']);
   $model=LpTemplate::model($campaign);
-  $html='<div class="lpg-lp lpg-lp--aida lpg-aida '.esc_attr(LpTemplate::root_class($campaign)).'" data-design-id="aida-1" data-lp-model="'.esc_attr($model).'">';
+  $html='<div class="lpg-lp lpg-lp--aida lpg-aida '.esc_attr(LpTemplate::root_class($campaign)).'" data-design-id="aida-1" data-lp-model="'.esc_attr($model).'" data-lp-type="'.esc_attr(LpTemplate::type($campaign)).'">';
   $html.=LpTemplate::open($campaign,$data);
   $html.='<nav class="lpg-aida__nav" aria-label="'.esc_attr__('Navigasi halaman','lp-generator').'"><span data-lpg-bind="brand">'.LandingPage::text($brand).'</span><div><a href="#aida-interest">'.($en?'Your needs':esc_html__('Kebutuhan','lp-generator')).'</a><a href="#aida-desire">'.($en?'Benefits':esc_html__('Manfaat','lp-generator')).'</a><a href="#aida-action">'.($en?'Next step':esc_html__('Langkah berikutnya','lp-generator')).'</a></div></nav>';
   $html.='<header id="aida-attention" class="lpg-aida__hero'.($has_brief?'':' lpg-aida__hero--single').'" data-section-id="aida-attention" data-step="1"><div class="lpg-aida__hero-copy"><p class="lpg-lp__eyebrow" data-lpg-bind="offer">'.LandingPage::text($campaign['offer_name'] ?? '').'</p><h1 data-lpg-bind="title">'.LandingPage::text($data['title'] ?? '').'</h1>';

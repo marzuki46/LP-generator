@@ -107,6 +107,9 @@
 			data.keyword = $.trim(kw);
 			data.language = $('#lpgen_language').val() || 'id';
 		}
+		if ('promote-experiment' === action) {
+			data.item = $button.data('item');
+		}
 		if ('set-status' === action) {
 			data.item = $button.data('item');
 			data.status = $button.data('status');
@@ -195,7 +198,7 @@
 					runQueueLoop(campaign, response.jobs || 6, releaseButton);
 					return;
 				}
-				if (response && response.ok && ('publish-campaign' === action || 'regenerate' === action || 'regenerate-image' === action || 'generate-entities' === action || 'generate-tag-content' === action || 'generate-framework' === action)) {
+				if (response && response.ok && ('publish-campaign' === action || 'promote-experiment' === action || 'regenerate' === action || 'regenerate-image' === action || 'generate-entities' === action || 'generate-tag-content' === action || 'generate-framework' === action)) {
 					window.setTimeout(function () { window.location.reload(); }, 900);
 				}
 			})

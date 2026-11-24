@@ -55,7 +55,7 @@ final class CampaignUI {
 			'lp_post_type'      => 'page',
 			'lp_layout'        => 'canvas',
 			'article_post_type' => 'post',
-			'publish_status'    => 'publish',
+			'publish_status'    => 'draft',
 			'index_enabled'     => 1,
 			'index_delay'       => 10,
 			'content_push_enabled' => 1,
@@ -120,13 +120,26 @@ final class CampaignUI {
 						</td>
 					</tr>
 					<tr>
+						<th><label for="lpgen_lp_type"><?php echo esc_html__( 'Tipe Landing Page', 'lp-generator' ); ?> *</label></th>
+						<td>
+							<select name="lpgen[lp_type]" id="lpgen_lp_type" style="font-weight:600;min-width:240px;">
+								<?php foreach ( LpTypeRegistry::all() as $type_key => $strategy ) : ?>
+									<option value="<?php echo esc_attr( $type_key ); ?>" <?php selected( LpTypeRegistry::clean( $values['lp_type'] ?? '' ), $type_key ); ?>><?php echo esc_html( $strategy->label( LanguageService::clean( $values['language'] ?? 'id' ) ) ); ?></option>
+								<?php endforeach; ?>
+							</select>
+							<p class="description"><?php echo esc_html__( 'Strategi konten, SEO, schema, CTA, dan pemeriksaan kualitas mengikuti tipe ini.', 'lp-generator' ); ?></p>
+							<p><label for="lpgen_experiment_mode"><?php echo esc_html__( 'Mode eksperimen', 'lp-generator' ); ?> <select id="lpgen_experiment_mode" name="lpgen[experiment_mode]"><option value="" <?php selected( ExperimentMode::clean( $values['experiment_mode'] ?? '' ), '' ); ?>><?php echo esc_html__( 'Produksi', 'lp-generator' ); ?></option><?php foreach ( ExperimentMode::MODES as $mode ) : ?><option value="<?php echo esc_attr( $mode ); ?>" <?php selected( ExperimentMode::clean( $values['experiment_mode'] ?? '' ), $mode ); ?>><?php echo esc_html( str_replace( '_', ' ', $mode ) ); ?></option><?php endforeach; ?></select></label><br><span class="description"><?php echo esc_html__( 'Default untuk campaign baru: CONTENT_PREVIEW. Halaman eksperimen membrane noindex dan tidak masuk sitemap sampai dipromosikan.', 'lp-generator' ); ?></span></p>
+						</td>
+					</tr>
+					<tr>
 						<th><label for="lpgen_language"><?php echo esc_html__( 'Bahasa Konten', 'lp-generator' ); ?> *</label></th>
 						<td>
 							<select name="lpgen[language]" id="lpgen_language" style="font-weight:600;min-width:220px;">
-								<option value="id" <?php selected( $values['language'], 'id' ); ?>>🇮🇩 Bahasa Indonesia (Rekomendasi)</option>
-								<option value="en" <?php selected( $values['language'], 'en' ); ?>>🇺🇸 English</option>
+								<?php foreach ( LanguageService::SUPPORTED as $language ) : ?>
+									<option value="<?php echo esc_attr( $language ); ?>" <?php selected( LanguageService::clean( $values['language'] ?? 'id' ), $language ); ?>><?php echo esc_html( LanguageService::label( $language, 'id' ) ); ?></option>
+								<?php endforeach; ?>
 							</select>
-							<p class="description"><?php echo esc_html__( 'Pilih bahasa utama untuk Landing Page dan seluruh artikel TOFU/MOFU yang akan dibuat.', 'lp-generator' ); ?></p>
+							<p class="description"><?php echo esc_html__( 'Pilih bahasa utama untuk Landing Page dan seluruh artikel pendukung. Daftar bahasa tidak diterjemahkan sebagian saja.', 'lp-generator' ); ?></p>
 						</td>
 					</tr>
 					<tr>
@@ -214,6 +227,26 @@ final class CampaignUI {
 							<p><label for="lpgen_city"><?php echo esc_html__( 'Kota utama LP', 'lp-generator' ); ?></label> <input id="lpgen_city" name="lpgen[city]" value="<?php echo esc_attr( (string) $values['city'] ); ?>" placeholder="Solo" /></p>
 							<textarea class="large-text" rows="3" name="lpgen[target_areas]" id="lpgen_target_areas" placeholder="Solo&#10;Sukoharjo&#10;Karanganyar&#10;Klaten"><?php echo esc_textarea( (string) $values['target_areas'] ); ?></textarea>
 							<p class="description"><?php echo esc_html__( 'Satu area per baris. AI akan membagi topik lokal secara alami dan semuanya tetap diarahkan ke BOFU campaign ini.', 'lp-generator' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th><?php echo esc_html__( 'Data khusus tipe LP', 'lp-generator' ); ?></th>
+						<td>
+							<details style="border:1px solid #c3c4c7;border-radius:6px;padding:10px 12px;" <?php echo 'product' === LpTypeRegistry::clean( $values['lp_type'] ?? '' ) || 'amazon_affiliate' === LpTypeRegistry::clean( $values['lp_type'] ?? '' ) ? 'open' : ''; ?>>
+								<summary><strong><?php echo esc_html__( 'Produk / Amazon Affiliate', 'lp-generator' ); ?></strong></summary>
+								<p><label><?php echo esc_html__( 'Jenis produk', 'lp-generator' ); ?> <select name="lpgen[product_type]"><option value="physical" <?php selected( $values['product_type'] ?? '', 'physical' ); ?>>Physical</option><option value="digital" <?php selected( $values['product_type'] ?? '', 'digital' ); ?>>Digital</option><option value="saas" <?php selected( $values['product_type'] ?? '', 'saas' ); ?>>SaaS</option><option value="service" <?php selected( $values['product_type'] ?? '', 'service' ); ?>>Service</option></select></label></p>
+								<p><label><?php echo esc_html__( 'Status produk', 'lp-generator' ); ?> <input class="regular-text" name="lpgen[product_status]" value="<?php echo esc_attr( (string) ( $values['product_status'] ?? '' ) ); ?>" placeholder="available / preorder / unavailable" /></label></p>
+								<p><label><?php echo esc_html__( 'Spesifikasi (satu per baris)', 'lp-generator' ); ?><textarea class="large-text" rows="3" name="lpgen[product_specs]"><?php echo esc_textarea( (string) ( $values['product_specs'] ?? '' ) ); ?></textarea></label></p>
+								<p><label><?php echo esc_html__( 'Garansi / lisensi', 'lp-generator' ); ?> <input class="regular-text" name="lpgen[product_warranty]" value="<?php echo esc_attr( (string) ( $values['product_warranty'] ?? '' ) ); ?>" /></label></p>
+								<p><label><?php echo esc_html__( 'Kebijakan pengembalian', 'lp-generator' ); ?> <input class="regular-text" name="lpgen[return_policy]" value="<?php echo esc_attr( (string) ( $values['return_policy'] ?? '' ) ); ?>" /></label></p>
+								<hr />
+								<p><label><?php echo esc_html__( 'Amazon ASIN (wajib untuk affiliate)', 'lp-generator' ); ?> <input class="regular-text" name="lpgen[amazon_asin]" value="<?php echo esc_attr( (string) ( $values['amazon_asin'] ?? '' ) ); ?>" placeholder="B0..." /></label></p>
+								<p><label><?php echo esc_html__( 'Marketplace Amazon', 'lp-generator' ); ?> <input class="regular-text" name="lpgen[amazon_marketplace]" value="<?php echo esc_attr( (string) ( $values['amazon_marketplace'] ?? ( $values['amazon_region'] ?? '' ) ) ); ?>" placeholder="com / co.uk / de" /></label></p>
+								<p><label><?php echo esc_html__( 'Amazon Associate Tag', 'lp-generator' ); ?> <input class="regular-text" name="lpgen[amazon_affiliate_tag]" value="<?php echo esc_attr( (string) ( $values['amazon_affiliate_tag'] ?? ( $values['amazon_tag'] ?? '' ) ) ); ?>" /></label></p>
+								<p><label><?php echo esc_html__( 'Sumber referensi / bukti', 'lp-generator' ); ?> <input class="regular-text" name="lpgen[amazon_source_reference]" value="<?php echo esc_attr( (string) ( $values['amazon_source_reference'] ?? '' ) ); ?>" placeholder="https://sumber-resmi..." /></label></p>
+								<p><label><?php echo esc_html__( 'Analisis orisinal', 'lp-generator' ); ?><textarea class="large-text" rows="3" name="lpgen[amazon_original_analysis]"><?php echo esc_textarea( (string) ( $values['amazon_original_analysis'] ?? '' ) ); ?></textarea></label></p>
+								<p class="description"><?php echo esc_html__( 'Tanpa ASIN, tag, dan sumber terverifikasi, LP affiliate tetap draft dan tidak dipublish.', 'lp-generator' ); ?></p>
+							</details>
 						</td>
 					</tr>
 					</tbody>
@@ -529,7 +562,31 @@ final class CampaignUI {
 					$data[ $key ] = in_array( $value, array( 'product', 'service', 'affiliate' ), true ) ? $value : 'product';
 					break;
 				case 'language':
-					$data[ $key ] = 'en' === $value ? 'en' : 'id';
+					$data[ $key ] = LanguageService::clean( $value );
+					break;
+				case 'lp_type':
+					$data[ $key ] = LpTypeRegistry::clean( $value );
+					break;
+				case 'experiment_mode':
+					$data[ $key ] = ExperimentMode::clean( $value );
+					break;
+				case 'product_type':
+					$data[ $key ] = in_array( $value, array( 'physical', 'digital', 'saas', 'service' ), true ) ? $value : 'service';
+					break;
+				case 'product_status':
+					$data[ $key ] = in_array( sanitize_key( (string) $value ), array( 'available', 'preorder', 'unavailable' ), true ) ? sanitize_key( (string) $value ) : 'available';
+					break;
+				case 'product_specs':
+				case 'amazon_original_analysis':
+					$data[ $key ] = Utils::clean_textarea( $value );
+					break;
+				case 'product_warranty':
+				case 'return_policy':
+				case 'amazon_asin':
+				case 'amazon_marketplace':
+				case 'amazon_affiliate_tag':
+				case 'amazon_source_reference':
+					$data[ $key ] = Utils::clean_text( $value );
 					break;
 				case 'lp_layout':
 					$data[ $key ] = 'theme' === $value ? 'theme' : 'canvas';
