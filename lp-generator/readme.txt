@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 1.9.2
+Stable tag: 1.9.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,10 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 1.9.3 =
+* Read the update manifest through the GitHub contents API (base64 decoded) to avoid CDN-cached stale versions, with fresh raw HEAD and CDN fallbacks.
+
 
 = 1.9.2 =
 * Vary BOFU internal-link placement per article (top, middle, bottom) instead of always appending at the end.

@@ -1,9 +1,9 @@
 {
-  "version": "1.9.2",
-  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.9.2.zip",
+  "version": "1.9.3",
+  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.9.3.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>Penempatan internal link ke LP kini bervariasi: atas, tengah, atau bawah per artikel.</li><li>Kotak related kecil berisi 2 konten dengan 3 baris tiap kartu, diletakkan berlawanan dengan link utama.</li></ul>"
+  "changelog": "<ul><li>Manifest update dibaca lewat GitHub contents API agar tidak terkena cache CDN yang menampilkan versi lama.</li></ul>"
 }

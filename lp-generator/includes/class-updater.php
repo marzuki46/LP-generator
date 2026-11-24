@@ -24,10 +24,13 @@ final class Updater {
 	 * Primary manifest mirror. This GitHub raw path is not served from the
 	 * stale edge cache that affected raw.githubusercontent.com and jsDelivr.
 	 */
-	public const MANIFEST_URL = 'https://github.com/marzuki46/LP-generator/raw/refs/heads/main/version.json';
+	public const MANIFEST_URL = 'https://api.github.com/repos/marzuki46/LP-generator/contents/version.json';
 
-	/** Secondary mirror. */
-	public const MANIFEST_FALLBACK_URL = 'https://cdn.jsdelivr.net/gh/marzuki46/LP-generator@main/version.json';
+	/** Secondary mirror (GitHub raw HEAD is usually fresh). */
+	public const MANIFEST_FALLBACK_URL = 'https://github.com/marzuki46/LP-generator/raw/HEAD/version.json';
+
+	/** Third mirror. */
+	public const MANIFEST_THIRD_URL = 'https://cdn.jsdelivr.net/gh/marzuki46/LP-generator@main/version.json';
 
 	/** Last-resort mirror. */
 	public const MANIFEST_LAST_URL = 'https://raw.githubusercontent.com/marzuki46/LP-generator/main/version.json';
@@ -111,6 +114,9 @@ final class Updater {
 			$manifest = self::fetch_manifest( self::MANIFEST_FALLBACK_URL );
 		}
 		if ( empty( $manifest['version'] ) ) {
+			$manifest = self::fetch_manifest( self::MANIFEST_THIRD_URL );
+		}
+		if ( empty( $manifest['version'] ) ) {
 			$manifest = self::fetch_manifest( self::MANIFEST_LAST_URL );
 		}
 		if ( empty( $manifest['version'] ) ) {
@@ -137,7 +143,16 @@ final class Updater {
 		if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
 			return array();
 		}
-		return self::sanitize_manifest( json_decode( (string) wp_remote_retrieve_body( $response ), true ) );
+		$body = (string) wp_remote_retrieve_body( $response );
+		$data = json_decode( $body, true );
+		// GitHub contents API returns base64 content instead of raw JSON.
+		if ( is_array( $data ) && isset( $data['content'], $data['encoding'] ) && 'base64' === strtolower( (string) $data['encoding'] ) ) {
+			$decoded = base64_decode( preg_replace( '/\s+/', '', (string) $data['content'] ) ?? '', true );
+			if ( false !== $decoded ) {
+				$data = json_decode( $decoded, true );
+			}
+		}
+		return self::sanitize_manifest( is_array( $data ) ? $data : array() );
 	}
 
 	/**

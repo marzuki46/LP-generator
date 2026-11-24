@@ -2,7 +2,11 @@
 
 Plugin WordPress yang mengubah satu campaign offer menjadi funnel konten lengkap (TOFU → MOFU → BOFU) memakai 9Router AI, lalu mengirim URL baru ke Google PuSH + IndexNow **10 detik setelah publish**.
 
-Versi saat ini: **1.9.2**.
+Versi saat ini: **1.9.3**.
+
+## Pembaruan v1.9.3 — Manifest update tanpa cache lama
+
+Pemeriksaan versi sekarang membaca manifest lewat **GitHub contents API** (base64 didekode), dengan fallback `raw/HEAD`, jsDelivr, dan raw.githubusercontent. Ini mengatasi notifikasi versi yang masih menampilkan 1.9.1 walaupun repo sudah 1.9.2.
 
 ## Pembaruan v1.9.2 — Internal link bervariasi & kotak related
 
@@ -187,12 +191,12 @@ Lihat [`docs/05-funnel-lokal.md`](docs/05-funnel-lokal.md) untuk contoh campaign
 ## Implementasi
 
 - `lp-generator/` — source plugin, siap di-copy ke `wp-content/plugins/lp-generator/`.
-- `lp-generator-1.9.2.zip` — paket siap upload lewat **Plugins → Add New → Upload Plugin**.
+- `lp-generator-1.9.3.zip` — paket siap upload lewat **Plugins → Add New → Upload Plugin**.
 - `version.json` — manifest update untuk fitur *one-click update* dari Github.
 
 ## Instalasi & update
 
-1. Upload `lp-generator-1.9.2.zip` lewat **Plugins → Add New → Upload Plugin**, lalu aktifkan.
+1. Upload `lp-generator-1.9.3.zip` lewat **Plugins → Add New → Upload Plugin**, lalu aktifkan.
 2. Isi kredensial 9Router di **LP Generator → Settings → AI**.
 3. Saat ada rilis baru, WordPress akan menampilkan notifikasi **Update now** di halaman **Plugins** — tinggal klik. Manifest yang dibaca plugin terkunci ke `https://raw.githubusercontent.com/marzuki46/LP-generator/main/version.json`, dan paket update diambil dari file ZIP yang ada di repo yang sama. Tidak perlu upload manual lagi.
 
@@ -227,7 +231,7 @@ php tests\run.php
 php tests\smoke-bootstrap.php
 ```
 
-Terakhir dijalankan pada paket v1.9.2: **920 test passed, 0 failed**; `php -l` untuk file yang diubah lolos; bootstrap & hook PASS. Pengujian browser untuk tombol Generate juga PASS. Empat model LP diverifikasi dengan screenshot Playwright desktop 1440px dan mobile 390px (tanpa overflow horizontal). Generate/publish langsung ke WordPress dan 9Router produksi belum diuji pada sesi ini.
+Terakhir dijalankan pada paket v1.9.3: **920 test passed, 0 failed**; `php -l` untuk file yang diubah lolos; bootstrap & hook PASS. Pengujian browser untuk tombol Generate juga PASS. Empat model LP diverifikasi dengan screenshot Playwright desktop 1440px dan mobile 390px (tanpa overflow horizontal). Generate/publish langsung ke WordPress dan 9Router produksi belum diuji pada sesi ini.
 
 ## Alur singkat
 
