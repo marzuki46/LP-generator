@@ -195,6 +195,7 @@ require_once dirname( __DIR__ ) . '/includes/class-cognitive-engine.php';
 require_once dirname( __DIR__ ) . '/includes/class-structured-output.php';
 require_once dirname( __DIR__ ) . '/includes/class-orchestrator.php';
 require_once dirname( __DIR__ ) . '/includes/class-visual-identity.php';
+require_once dirname( __DIR__ ) . '/includes/class-lp-parent-pages.php';
 require_once dirname( __DIR__ ) . '/includes/class-lp-warnings.php';
 require_once dirname( __DIR__ ) . '/includes/class-lp-spec.php';
 require_once dirname( __DIR__ ) . '/includes/class-lp-template.php';

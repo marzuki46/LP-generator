@@ -41,7 +41,8 @@ final class LandingPage {
 	public static function preview_document( string $content ): string {
 		$css = (string) file_get_contents( LPG_PATH . 'public/css/landing-page.css' ) . "\n"
 			. (string) file_get_contents( LPG_PATH . 'public/css/aida.css' ) . "\n"
-			. (string) file_get_contents( LPG_PATH . 'public/css/lp-models.css' );
+			. (string) file_get_contents( LPG_PATH . 'public/css/lp-models.css' ) . "\n"
+			. (string) file_get_contents( LPG_PATH . 'public/css/article-themes.css' );
 		$settings = get_option( 'lpgen_settings', array() );
 		$css .= "\n" . self::sanitize_css( is_array( $settings ) ? ( $settings['lp_custom_css'] ?? '' ) : '' );
 		return '<!doctype html><html><head><base href="about:srcdoc"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><style>' . $css . '</style></head><body>' . wp_kses_post( $content ) . '</body></html>';
@@ -64,10 +65,12 @@ final class LandingPage {
 
 	/** Load the same scoped presentation on the frontend and in the block editor. */
 	public static function enqueue_assets(): void {
-		if ( ! is_admin() && ( ! is_singular( array( 'page', 'post' ) ) || false === strpos( (string) get_post_field( 'post_content', get_queried_object_id() ), 'lpg-lp' ) ) ) { return; }
+		$content = (string) get_post_field( 'post_content', get_queried_object_id() );
+		if ( ! is_admin() && ( ! is_singular( array( 'page', 'post' ) ) || ( false === strpos( $content, 'lpg-lp' ) && false === strpos( $content, 'lpg-article' ) ) ) ) { return; }
 		wp_enqueue_style( 'lpgen-landing-page', LPG_URL . 'public/css/landing-page.css', array(), LPG_VERSION );
 		wp_enqueue_style( 'lpgen-aida', LPG_URL . 'public/css/aida.css', array( 'lpgen-landing-page' ), LPG_VERSION );
 		wp_enqueue_style( 'lpgen-lp-models', LPG_URL . 'public/css/lp-models.css', array( 'lpgen-aida' ), LPG_VERSION );
+		wp_enqueue_style( 'lpgen-article-themes', LPG_URL . 'public/css/article-themes.css', array( 'lpgen-lp-models' ), LPG_VERSION );
 		$settings = get_option( 'lpgen_settings', array() );
 		$custom = self::sanitize_css( is_array( $settings ) ? ( $settings['lp_custom_css'] ?? '' ) : '' );
 		if ( '' !== $custom ) { wp_add_inline_style( 'lpgen-aida', $custom ); }

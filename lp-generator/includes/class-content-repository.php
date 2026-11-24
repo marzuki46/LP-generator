@@ -49,6 +49,9 @@ final class ContentRepository {
 		'internal_link_target',
 		'target_areas',
 		'phone',
+		'contact_email',
+		'contact_address',
+		'contact_hours',
 		'brand',
 		'city',
 		'entity_enabled',
@@ -77,9 +80,11 @@ final class ContentRepository {
 		'bofu_mode',
 		'bofu_existing_id',
 		'bofu_path',
+		'parent_pages',
 		'lp_layout',
 		'lp_model',
 		'lp_target_keyword',
+		'article_theme',
 		'topic_mode',
 		'manual_mofu_topics',
 		'manual_tofu_topics',
@@ -187,6 +192,7 @@ final class ContentRepository {
 		$context['lp_layout'] = 'theme' === (string) $context['lp_layout'] ? 'theme' : 'canvas';
 		$context['lp_model'] = LpTemplate::clean( $context['lp_model'] ?? 'editorial' );
 		$context['lp_target_keyword'] = trim( sanitize_text_field( (string) ( $context['lp_target_keyword'] ?? '' ) ) );
+		$context['article_theme'] = in_array( (string) ( $context['article_theme'] ?? '' ), array( 'editorial', 'magazine', 'minimal' ), true ) ? (string) $context['article_theme'] : 'editorial';
 		$context['bofu_mode'] = 'existing' === (string) $context['bofu_mode'] ? 'existing' : 'new';
 		$context['bofu_existing_id'] = absint( $context['bofu_existing_id'] );
 		$context['topic_mode'] = 'manual' === (string) $context['topic_mode'] ? 'manual' : 'auto';
@@ -227,6 +233,7 @@ final class ContentRepository {
 		$context['image_count']      = max( 1, min( 6, $stored_count ) );
 		$context['image_upload_ids'] = implode( ',', ImagePipeline::clean_upload_ids( $context['image_upload_ids'] ?? '' ) );
 
+		$context['parent_pages'] = LpParentPages::all( $context );
 		$context['bofu_url'] = 'new' === $context['bofu_mode'] && '' !== (string) $context['bofu_path'] ? home_url( '/' . FunnelContent::clean_path( (string) $context['bofu_path'] ) . '/' ) : '';
 		if ( 'existing' === $context['bofu_mode'] && 'publish' === get_post_status( $context['bofu_existing_id'] ) ) {
 			$context['bofu_url'] = (string) get_permalink( $context['bofu_existing_id'] );
@@ -305,7 +312,12 @@ final class ContentRepository {
 			'internal_link_target' => 'bofu',
 			'lp_model' => 'editorial',
 			'lp_target_keyword' => '',
+			'article_theme' => 'editorial',
 			'bofu_mode' => 'new',
+			'parent_pages' => '',
+			'contact_email' => '',
+			'contact_address' => '',
+			'contact_hours' => '',
 		);
 		// Preserve fields on partial updates (e.g. framework generation).
 		$values = array();

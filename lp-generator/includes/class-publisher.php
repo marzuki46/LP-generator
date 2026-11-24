@@ -247,7 +247,9 @@ final class Publisher {
 		if ( 'lp' === $kind && '' !== $cta_text && '' !== $cta_url ) {
 			$blocks[] = self::build_cta_block( $cta_url, $cta_text, 'affiliate' === ( $campaign['offer_type'] ?? '' ) );
 		}
-		return implode( "\n\n", array_filter( $blocks ) );
+		$theme   = in_array( (string) ( $campaign['article_theme'] ?? '' ), array( 'editorial', 'magazine', 'minimal' ), true ) ? (string) $campaign['article_theme'] : 'editorial';
+		$content = implode( "\n\n", array_filter( $blocks ) );
+		return "<!-- wp:group {\"className\":\"lpg-article lpg-article--" . esc_attr( $theme ) . "\"} -->\n<div class=\"wp-block-group lpg-article lpg-article--" . esc_attr( $theme ) . "\">\n" . $content . "\n</div>\n<!-- /wp:group -->";
 	}
 
 	/**
@@ -341,29 +343,47 @@ final class Publisher {
 				$post_args['post_name'] = array_pop( $parts );
 				$parent_id   = 0;
 				$cumulative  = array();
+				$chain       = array();
 				foreach ( $parts as $part ) {
 					$cumulative[] = $part;
-					$parent_path  = implode( '/', $cumulative );
-					$parent       = get_page_by_path( $parent_path, OBJECT, 'page' );
+					$chain[]      = implode( '/', $cumulative );
+				}
+				$chain[] = $path;
+				$lp_url  = home_url( '/' . $path . '/' );
+				$anchor  = class_exists( Generator::class )
+					? Generator::internal_anchor( (int) ( $item['id'] ?? 0 ), $campaign )
+					: trim( (string) ( $campaign['offer_name'] ?? '' ) . ' ' . (string) ( $campaign['city'] ?? '' ) );
+				foreach ( $chain as $index => $parent_path ) {
+					if ( $parent_path === $path ) { break; }
+					$part         = basename( $parent_path );
+					$next_path    = (string) ( $chain[ $index + 1 ] ?? '' );
+					$spec         = LpParentPages::for_path( $campaign, $parent_path );
+					$parent_args  = array(
+						'post_type'    => 'page',
+						'post_status'  => 'publish',
+						'post_title'   => $spec['title'],
+						'post_name'    => $part,
+						'post_content' => wp_kses_post( LpParentPages::blocks( $campaign, $parent_path, $next_path, $lp_url, $anchor ) ),
+						'post_excerpt' => sanitize_textarea_field( $spec['intro'] ),
+						'post_parent'  => $parent_id,
+					);
+					$parent_args['meta_input'] = array( '_lpgen_canvas' => 1 );
+					$parent = get_page_by_path( $parent_path, OBJECT, 'page' );
 					if ( ! $parent ) {
-						$parent_id = wp_insert_post(
-							array(
-								'post_type'   => 'page',
-								'post_status' => 'publish',
-								'post_title'  => ucwords( str_replace( '-', ' ', $part ) ),
-								'post_name'   => $part,
-								'post_parent' => $parent_id,
-							),
-							true
-						);
+						$parent_id = wp_insert_post( $parent_args, true );
 						if ( is_wp_error( $parent_id ) || (int) $parent_id <= 0 ) {
 							throw new \RuntimeException( 'Gagal membuat halaman induk LP: ' . $parent_path );
 						}
+						update_post_meta( (int) $parent_id, '_lpgen_parent_page', (int) ( $campaign['campaign_id'] ?? 0 ) );
 						Database::log( 'info', sprintf( 'Halaman induk LP dibuat: /%s', $parent_path ), (int) ( $campaign['campaign_id'] ?? 0 ) );
 						$parent_id = (int) $parent_id;
 					} else {
 						$parent_id = (int) $parent->ID;
-						if ( 'publish' !== (string) $parent->post_status ) {
+						if ( (int) get_post_meta( $parent_id, '_lpgen_parent_page', true ) === (int) ( $campaign['campaign_id'] ?? 0 ) ) {
+							$parent_args['ID'] = $parent_id;
+							wp_update_post( $parent_args, true );
+							Database::log( 'info', sprintf( 'Halaman induk LP diperbarui: /%s', $parent_path ), (int) ( $campaign['campaign_id'] ?? 0 ) );
+						} elseif ( 'publish' !== (string) $parent->post_status ) {
 							wp_update_post( array( 'ID' => $parent_id, 'post_status' => 'publish' ), true );
 						}
 					}

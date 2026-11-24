@@ -1,9 +1,9 @@
 {
-  "version": "1.9.0",
-  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.9.0.zip",
+  "version": "1.9.1",
+  "package": "https://raw.githubusercontent.com/marzuki46/LP-generator/main/lp-generator-1.9.1.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>Canonical lpSpec JSON Schema + normalizer deterministik dengan warning per step pada tiap item.</li><li>Status gambar completed/placeholder/failed dan tombol Ganti gambar untuk regenerate selektif.</li></ul>"
+  "changelog": "<ul><li>Input konten untuk setiap halaman induk bertingkat: judul, pengantar, isi, dan CTA per wilayah.</li><li>Halaman induk otomatis responsive, punya menu wilayah, dan Contact Us lengkap per campaign.</li><li>Tema artikel pendukung (Editorial, Magazine, Minimal) bisa dipilih per campaign.</li><li>Label model desain di bagian atas LP dihapus.</li></ul>"
 }

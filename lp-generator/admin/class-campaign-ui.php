@@ -167,13 +167,45 @@ final class CampaignUI {
 							</fieldset>
 							<p><label for="lpgen_bofu_path"><?php echo esc_html__( 'Path LP baru (opsional)', 'lp-generator' ); ?></label><br />
 							<input class="regular-text" id="lpgen_bofu_path" name="lpgen[bofu_path]" value="<?php echo esc_attr( (string) ( $values['bofu_path'] ?? '' ) ); ?>" placeholder="jasa/website/solo" /></p>
-							<p class="description"><?php echo esc_html__( 'Untuk path bertingkat, halaman induk jasa/website harus sudah ada. Untuk LP yang sudah terbit, pilih halaman di atas. Isi kota dan area sekitar agar artikel tetap relevan. Setiap konten mendapat 8–12 entitas AI tersendiri.', 'lp-generator' ); ?></p>
+							<p class="description"><?php echo esc_html__( 'Path bertingkat akan dibuatkan halaman induk otomatis saat publish. Isi konten induk di bawah agar halaman yang lebih umum tidak kosong. Untuk LP yang sudah terbit, pilih halaman di atas.', 'lp-generator' ); ?></p>
+							<?php
+							$path_parts = explode( '/', FunnelContent::clean_path( (string) ( $values['bofu_path'] ?? '' ) ) );
+							array_pop( $path_parts );
+							$cumulative = array();
+							$parent_specs = LpParentPages::all( $values );
+							foreach ( $path_parts as $part ) {
+								if ( '' === $part ) { continue; }
+								$cumulative[] = $part;
+								$parent_path  = implode( '/', $cumulative );
+								$spec         = isset( $parent_specs[ $parent_path ] ) ? $parent_specs[ $parent_path ] : LpParentPages::for_path( $values, $parent_path );
+								?>
+								<details style="margin-top:10px;border:1px solid #c3c4c7;border-radius:6px;padding:10px 12px;">
+									<summary><strong><?php echo esc_html( sprintf( __( 'Konten halaman induk: /%s', 'lp-generator' ), $parent_path ) ); ?></strong></summary>
+									<p><label><?php echo esc_html__( 'Judul', 'lp-generator' ); ?> <input class="regular-text" name="lpgen[parent_pages][<?php echo esc_attr( $parent_path ); ?>][title]" value="<?php echo esc_attr( (string) $spec['title'] ); ?>" /></label></p>
+									<p><label><?php echo esc_html__( 'Pengantar', 'lp-generator' ); ?><textarea class="large-text" rows="2" name="lpgen[parent_pages][<?php echo esc_attr( $parent_path ); ?>][intro]"><?php echo esc_textarea( (string) $spec['intro'] ); ?></textarea></label></p>
+									<p><label><?php echo esc_html__( 'Isi halaman (2–3 paragraf)', 'lp-generator' ); ?><textarea class="large-text" rows="4" name="lpgen[parent_pages][<?php echo esc_attr( $parent_path ); ?>][body]"><?php echo esc_textarea( (string) $spec['body'] ); ?></textarea></label></p>
+									<p><label><?php echo esc_html__( 'Teks tombol lanjutan', 'lp-generator' ); ?> <input class="regular-text" name="lpgen[parent_pages][<?php echo esc_attr( $parent_path ); ?>][cta]" value="<?php echo esc_attr( (string) $spec['cta'] ); ?>" /></label></p>
+									<p class="description"><?php echo esc_html__( 'Plugin otomatis menambahkan tautan ke sub-halaman berikutnya dan ke LP dengan anchor target keyword.', 'lp-generator' ); ?></p>
+								</details>
+								<?php
+							}
+							?>
 						</td>
 					</tr>
 					<tr>
 						<th><label for="lpgen_offer_url"><?php echo esc_html__( 'URL CTA / WhatsApp / Checkout', 'lp-generator' ); ?></label></th>
 						<td>
 							<input type="url" class="regular-text" name="lpgen[offer_url]" id="lpgen_offer_url" value="<?php echo esc_attr( (string) $values['offer_url'] ); ?>" placeholder="https://wa.me/62812... atau https://domain.com/beli" />
+						</td>
+					</tr>
+					<tr>
+						<th><?php echo esc_html__( 'Kontak & alamat (Contact Us)', 'lp-generator' ); ?></th>
+						<td>
+							<p><label for="lpgen_phone"><?php echo esc_html__( 'Telepon / WhatsApp', 'lp-generator' ); ?> <input class="regular-text" id="lpgen_phone" name="lpgen[phone]" value="<?php echo esc_attr( (string) ( $values['phone'] ?? '' ) ); ?>" placeholder="0812..." /></label></p>
+							<p><label for="lpgen_contact_email"><?php echo esc_html__( 'Email', 'lp-generator' ); ?> <input class="regular-text" type="email" id="lpgen_contact_email" name="lpgen[contact_email]" value="<?php echo esc_attr( (string) ( $values['contact_email'] ?? '' ) ); ?>" placeholder="halo@domain.com" /></label></p>
+							<p><label for="lpgen_contact_address"><?php echo esc_html__( 'Alamat', 'lp-generator' ); ?><textarea class="large-text" rows="2" id="lpgen_contact_address" name="lpgen[contact_address]"><?php echo esc_textarea( (string) ( $values['contact_address'] ?? '' ) ); ?></textarea></label></p>
+							<p><label for="lpgen_contact_hours"><?php echo esc_html__( 'Jam operasional', 'lp-generator' ); ?> <input class="regular-text" id="lpgen_contact_hours" name="lpgen[contact_hours]" value="<?php echo esc_attr( (string) ( $values['contact_hours'] ?? '' ) ); ?>" placeholder="Senin–Jumat 09.00–17.00 WIB" /></label></p>
+							<p class="description"><?php echo esc_html__( 'Data ini hanya untuk campaign/wilayah ini dan tampil di footer Contact Us LP.', 'lp-generator' ); ?></p>
 						</td>
 					</tr>
 					<tr>
@@ -206,6 +238,7 @@ final class CampaignUI {
 							<p class="description"><?php echo esc_html__( 'LP dibuat sebagai HTML responsif WordPress. AI menyiapkan rencana section khusus campaign mengikuti formula pilihan, atau merancang urutan sendiri pada mode Framework AI Khusus. Rencana disiapkan otomatis saat Mulai Generate.', 'lp-generator' ); ?></p>
 							<p><label for="lpgen_lp_layout"><?php echo esc_html__( 'Tampilan LP:', 'lp-generator' ); ?></label> <select id="lpgen_lp_layout" name="lpgen[lp_layout]"><option value="canvas" <?php selected( $values['lp_layout'], 'canvas' ); ?>><?php echo esc_html__( 'Halaman LP penuh', 'lp-generator' ); ?></option><option value="theme" <?php selected( $values['lp_layout'], 'theme' ); ?>><?php echo esc_html__( 'Ikuti layout tema WordPress', 'lp-generator' ); ?></option></select></p>
 							<p><label for="lpgen_lp_model"><?php echo esc_html__( 'Model desain LP:', 'lp-generator' ); ?></label> <select id="lpgen_lp_model" name="lpgen[lp_model]"><?php foreach ( LpTemplate::MODELS as $model_key => $model_label ) : ?><option value="<?php echo esc_attr( $model_key ); ?>" <?php selected( LpTemplate::clean( $values['lp_model'] ?? '' ), $model_key ); ?>><?php echo esc_html( $model_label ); ?></option><?php endforeach; ?></select><br><span class="description"><?php echo esc_html__( 'JSON konten AI dikonversi plugin ke model visual ini. Framework copywriting tetap mengatur urutan pesan.', 'lp-generator' ); ?></span></p>
+							<p><label for="lpgen_article_theme"><?php echo esc_html__( 'Tema artikel pendukung:', 'lp-generator' ); ?></label> <select id="lpgen_article_theme" name="lpgen[article_theme]"><option value="editorial" <?php selected( $values['article_theme'] ?? 'editorial', 'editorial' ); ?>><?php echo esc_html__( 'Editorial', 'lp-generator' ); ?></option><option value="magazine" <?php selected( $values['article_theme'] ?? '', 'magazine' ); ?>><?php echo esc_html__( 'Magazine', 'lp-generator' ); ?></option><option value="minimal" <?php selected( $values['article_theme'] ?? '', 'minimal' ); ?>><?php echo esc_html__( 'Minimal', 'lp-generator' ); ?></option></select><br><span class="description"><?php echo esc_html__( 'Tema ini dipakai TOFU, MOFU, dan artikel tag campaign ini saja.', 'lp-generator' ); ?></span></p>
 							<p><label for="lpgen_lp_target_keyword"><?php echo esc_html__( 'Target keyword LP (anchor internal link):', 'lp-generator' ); ?></label> <input class="regular-text" type="text" id="lpgen_lp_target_keyword" name="lpgen[lp_target_keyword]" value="<?php echo esc_attr( (string) ( $values['lp_target_keyword'] ?? '' ) ); ?>" placeholder="<?php echo esc_attr( trim( (string) ( $values['offer_name'] ?? '' ) . ' ' . (string) ( $values['city'] ?? '' ) ) ); ?>" /><br><span class="description"><?php echo esc_html__( 'Kosongkan untuk memakai Nama penawaran + Kota. Anchor ini dipakai semua artikel TOFU/MOFU/tag yang menuju LP.', 'lp-generator' ); ?></span></p>
 							<div id="lpgen_framework_steps_preview" style="margin-top:10px;">
 								<!-- Rendered via JS and PHP -->
@@ -541,6 +574,18 @@ final class CampaignUI {
 				case 'index_enabled':
 					$data[ $key ] = empty( $value ) ? 0 : 1;
 					break;
+				case 'article_theme':
+					$data[ $key ] = in_array( $value, array( 'editorial', 'magazine', 'minimal' ), true ) ? $value : 'editorial';
+					break;
+				case 'contact_email':
+					$data[ $key ] = sanitize_email( (string) $value );
+					break;
+				case 'contact_address':
+					$data[ $key ] = Utils::clean_textarea( $value );
+					break;
+				case 'contact_hours':
+					$data[ $key ] = Utils::clean_text( $value );
+					break;
 				case 'offer_url':
 					$clean_url = Utils::clean_url( $value );
 					if ( '' === $clean_url && '' !== trim( (string) $value ) ) {
@@ -555,6 +600,9 @@ final class CampaignUI {
 					break;
 				case 'bofu_path':
 					$data[ $key ] = FunnelContent::clean_path( (string) $value );
+					break;
+				case 'parent_pages':
+					$data[ $key ] = wp_json_encode( LpParentPages::clean( $value ) );
 					break;
 				case 'bofu_existing_id':
 					$data[ $key ] = absint( $value );

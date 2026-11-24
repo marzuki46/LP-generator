@@ -47,7 +47,6 @@ final class LpTemplate {
 		$eyebrow = '' !== $brand && '' !== $city ? $brand . ' · ' . $city : ( '' !== $brand ? $brand : $city );
 		$html    = '<nav class="lpg-lpm__nav" aria-label="' . esc_attr__( 'Navigasi halaman', 'lp-generator' ) . '">';
 		$html   .= '<span class="lpg-lpm__brand">' . LandingPage::text( $eyebrow ) . '</span>';
-		$html   .= '<span class="lpg-lpm__model">' . LandingPage::text( self::label( $campaign ) ) . '</span>';
 		$html   .= '</nav>';
 
 		$price = trim( (string) ( $campaign['price'] ?? '' ) );

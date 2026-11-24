@@ -116,11 +116,14 @@ $GLOBALS['wpdb']=new class { public string $prefix='wp_'; public int $insert_id=
 require_once dirname(__DIR__) . '/includes/class-generator.php';
 funnel_fixture(30,'LP Website Solo',Publisher::paragraph_block('Isi LP hasil review orisinal.'),'lpgen_item');
 foreach(array('kind'=>'lp','stage'=>'bofu','status'=>'approved','entities'=>json_encode($entities),'structured'=>'{}') as $key=>$value) { update_post_meta(30,'_lpgen_'.$key,$value); }
-$campaign=array('bofu_path'=>'jasa/website/solo','lp_post_type'=>'page','publish_status'=>'publish','index_enabled'=>0);
+$parent_input=array('jasa'=>array('title'=>'Jasa di Solo','intro'=>'Panduan layanan jasa di Solo.','body'=>'Halaman umum untuk semua kebutuhan jasa.','cta'=>'Mulai dari sini'),'jasa/website'=>array('title'=>'Jasa Website Solo','intro'=>'Panduan memilih jasa website.','body'=>'Bandingkan pendekatan dan pilih yang paling sesuai.','cta'=>'Lihat website'));
+$campaign=array('bofu_path'=>'jasa/website/solo','lp_post_type'=>'page','publish_status'=>'publish','index_enabled'=>0,'offer_name'=>'Jasa Website Solo','city'=>'Solo','lp_target_keyword'=>'jasa website Solo','parent_pages'=>wp_json_encode($parent_input));
 $first_id=Publisher::publish_item(30,$campaign);
 lpg_assert_true($first_id>0,'LP path bertingkat terbit tanpa induk dibuat manual');
 $auto_parent=get_page_by_path('jasa/website',OBJECT,'page');
 lpg_assert_true($auto_parent && (int)$auto_parent->ID>0,'halaman induk LP dibuat otomatis');
+lpg_assert_same('Jasa Website Solo',(string)$auto_parent->post_title,'judul induk memakai input campaign');
+lpg_assert_true(str_contains((string)$auto_parent->post_content,'jasa/website/solo') || str_contains((string)$auto_parent->post_content,'jasa website Solo'),'induk punya tautan lanjutan ke LP');
 $new_id=Publisher::publish_item(30,$campaign);
 lpg_assert_same('solo',get_post($new_id)->post_name,'slug terakhir LP sesuai path');
 lpg_assert_same((int)$auto_parent->ID,get_post($new_id)->post_parent,'LP berada di halaman induk yang tepat');
