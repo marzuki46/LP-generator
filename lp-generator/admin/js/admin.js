@@ -161,6 +161,30 @@
 							var aText = $.isArray(d.target_areas) ? d.target_areas.join("\n") : d.target_areas;
 							$('#lpgen_target_areas').val(aText);
 						}
+						if (d.offer_type) { $('#lpgen_offer_type').val(d.offer_type).trigger('change'); }
+						if (d.lp_type) { $('#lpgen_lp_type').val(d.lp_type).trigger('change'); }
+						['city', 'cta', 'voice', 'guarantee', 'price'].forEach(function (key) {
+							var $field = $('#lpgen_' + key);
+							if (d[key] !== undefined && d[key] !== null && $field.length) { $field.val(d[key]); }
+						});
+						if ($.isArray(d.bonus) || typeof d.bonus === 'string') {
+							var bText2 = $.isArray(d.bonus) ? d.bonus.join("\n") : d.bonus;
+							$('#lpgen_bonus').val(bText2);
+						}
+						if ($.isArray(d.price_tiers) && d.price_tiers.length) {
+							var $tiers = $('#lpgen_price_tiers');
+							var wanted = Math.min(4, Math.max(2, d.price_tiers.length));
+							while ($tiers.find('.lpgen-tier-row').length < wanted) { $('#lpgen_tier_add').trigger('click'); }
+							while ($tiers.find('.lpgen-tier-row').length > wanted) { $tiers.find('.lpgen-tier-row').last().find('.lpgen-tier-remove').trigger('click'); }
+							$tiers.find('.lpgen-tier-row').each(function (i) {
+								var tier = d.price_tiers[i] || {};
+								$(this).find('input[name*="[name]"]').val(tier.name || '');
+								$(this).find('input[name*="[price]"]').val(tier.price || '');
+								$(this).find('input[name*="[badge]"]').val(tier.badge || '');
+								$(this).find('textarea[name*="[description]"]').val(tier.description || '');
+								$(this).find('textarea[name*="[features]"]').val($.isArray(tier.features) ? tier.features.join("\n") : (tier.features || ''));
+							});
+						}
 						// Open accordion so user sees the generated preview
 						$('details').prop('open', true);
 						showResult('✨ Rekomendasi AI berhasil diisikan ke form! Anda bisa mengubahnya sebelum mulai generate.', true);
@@ -444,4 +468,43 @@
 		picker.open();
 	});
 	$(document).on('click', '[data-lpgen-slot-clear]', function () { var target = $(this).attr('data-lpgen-slot-clear'); $('#' + target).val(0).trigger('change'); $('#' + target + '_label').text('Belum dipilih'); });
+
+	function refreshTierButtons() {
+		var $wrap = $('#lpgen_price_tiers');
+		if (!$wrap.length) { return; }
+		var count = $wrap.find('.lpgen-tier-row').length;
+		$('#lpgen_tier_add').prop('disabled', count >= 4);
+		$wrap.find('.lpgen-tier-remove').prop('disabled', count <= 2);
+		$wrap.find('.lpgen-tier-row').each(function (index) {
+			$(this).attr('data-index', index);
+			$(this).find('input, textarea').each(function () {
+				var name = $(this).attr('name') || '';
+				$(this).attr('name', name.replace(/\[\d+\]/, '[' + index + ']'));
+			});
+			$(this).find('.lpgen-tier-row__head strong').text('Paket ' + (index + 1));
+		});
+	}
+	$(document).on('click', '#lpgen_tier_add', function () {
+		var $wrap = $('#lpgen_price_tiers');
+		if ($wrap.find('.lpgen-tier-row').length >= 4) { return; }
+		var index = $wrap.find('.lpgen-tier-row').length;
+		var row = '<div class="lpgen-tier-row" data-index="' + index + '">' +
+			'<div class="lpgen-tier-row__head"><strong>Paket ' + (index + 1) + '</strong>' +
+			'<button type="button" class="button button-small lpgen-tier-remove">Hapus</button></div>' +
+			'<div class="lpgen-tier-row__grid">' +
+			'<label>Nama paket<input type="text" name="lpgen[price_tiers][' + index + '][name]" placeholder="Starter" /></label>' +
+			'<label>Harga<input type="text" name="lpgen[price_tiers][' + index + '][price]" placeholder="Rp 500.000" /></label>' +
+			'<label>Badge (opsional)<input type="text" name="lpgen[price_tiers][' + index + '][badge]" placeholder="Populer" /></label>' +
+			'<label class="lpgen-tier-row__wide">Deskripsi<textarea rows="2" name="lpgen[price_tiers][' + index + '][description]"></textarea></label>' +
+			'<label class="lpgen-tier-row__wide">Termasuk (satu per baris)<textarea rows="3" name="lpgen[price_tiers][' + index + '][features]"></textarea></label>' +
+			'</div></div>';
+		$wrap.find('.lpgen-tier-actions').before(row);
+		refreshTierButtons();
+	});
+	$(document).on('click', '.lpgen-tier-remove', function () {
+		if ($('#lpgen_price_tiers .lpgen-tier-row').length <= 2) { return; }
+		$(this).closest('.lpgen-tier-row').remove();
+		refreshTierButtons();
+	});
+	refreshTierButtons();
 })(jQuery);

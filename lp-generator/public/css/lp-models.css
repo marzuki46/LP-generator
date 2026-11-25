@@ -90,6 +90,9 @@
 }
 .lpg-lpm__footer-col { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
 .lpg-lpm__footer-col strong { color: #fff; font-size: 13px; }
+.lpg-lpm__footer-about { grid-column: span 1; }
+.lpg-lpm__footer-about p { margin: 0; color: rgba(255,255,255,.74); font-size: 12px; line-height: 1.7; }
+.lpg-lpm__footer-about > span:last-child { color: rgba(255,255,255,.55); font-size: 11px; }
 .lpg-lpm__footer-col a { color: rgba(255,255,255,.78); text-decoration: none; }
 .lpg-lpm__footer-col a:hover { color: #fff; text-decoration: underline; }
 

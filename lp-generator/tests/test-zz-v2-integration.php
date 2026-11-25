@@ -25,6 +25,19 @@ foreach ( array( 'service', 'product', 'amazon_affiliate' ) as $lp_type ) {
 			lpg_assert_true( false === strpos( $html, 'lpm-offerbar' ), $label . ': tidak ada price bar di atas' );
 			lpg_assert_true( false !== strpos( $html, 'lpg-lpt__price-card' ), $label . ': kartu harga di tahap-action' );
 			lpg_assert_true( false !== strpos( $html, 'lpg-lpm__breadcrumb' ) && false !== strpos( $html, 'lpg-lpm__nav-links' ), $label . ': navigasi & breadcrumb hadir' );
+			lpg_assert_true( false !== strpos( $html, 'lpg-lpt__section-grid' ), $label . ': section dua kolom' );
+			lpg_assert_true( substr_count( $html, 'lpg-lpt__support-card' ) >= 3, $label . ': support content cards hadir' );
+			$footer_copy_needle = 'en' === $language ? 'Start with what your business needs.' : 'Mulai dari kebutuhan bisnis Anda.';
+			lpg_assert_true( false !== strpos( $html, 'lpg-lpm__footer-about' ) && false !== strpos( $html, $footer_copy_needle ), $label . ': footer punya paragraf copywriting' );
+			lpg_assert_true( false !== strpos( $html, '<strong>' . $area_label . '</strong><span>' ), $label . ': area layanan menurun, bukan koma' );
+			$nav_labels = 'en' === $language
+				? array( 'Home', 'Blog', 'Services', 'Contact us', 'About Us' )
+				: array( 'Beranda', 'Blog', 'Jasa', 'Hubungi kami', 'Tentang Kami' );
+			foreach ( $nav_labels as $nav_label ) {
+				lpg_assert_true( false !== strpos( $html, '>' . $nav_label . '</a>' ), $label . ': menu ' . $nav_label );
+			}
+			lpg_assert_true( false !== strpos( $html, '?s=' ) && false !== strpos( $html, 'Solo' ), $label . ': blog mengikuti keyword + kota' );
+			lpg_assert_true( false !== strpos( $html, '/jasa/website/solo/' ), $label . ': menu Jasa mengikuti kota' );
 		}
 		if ( 'en' === $language && 'service' === $lp_type ) {
 			$indonesian_chrome = array( 'MULAI DARI', 'PAKET & INVESTASI', 'Ringkasan penawaran', 'Panduan terkait', 'Pelajari sebelum menentukan pilihan', 'Baca panduan', 'Rekomendasi singkat', 'Pertanyaan yang sering diajukan', 'Pesan sekarang', 'Hubungi kami', 'Tersedia', 'Sebagai Amazon Associate', 'Halaman ini memuat tautan afiliasi' );
@@ -48,6 +61,30 @@ $ids = array_column( $graph, '@id' );
 lpg_assert_same( count( $ids ), count( array_unique( $ids ) ), 'schema @id tidak duplikat' );
 lpg_assert_true( in_array( 'Article', array_column( $graph, '@type' ), true ), 'schema affiliate memakai Article' );
 lpg_assert_true( false === strpos( (string) wp_json_encode( $graph ), 'aggregateRating' ), 'schema affiliate tanpa aggregateRating' );
+
+$tier_fixture = lpg_lp_fixture( 'aida' );
+$tier_fixture['campaign']['lp_type'] = 'service';
+$tier_fixture['campaign']['price'] = '';
+$tier_fixture['campaign']['price_tiers'] = array(
+ array( 'name' => 'Starter', 'price' => 'Rp 500.000', 'description' => 'Untuk kebutuhan dasar.', 'features' => array( 'Halaman profil', 'Responsif' ), 'badge' => '' ),
+ array( 'name' => 'Bisnis', 'price' => 'Rp 800.000', 'description' => 'Untuk usaha yang ingin lebih banyak manfaat.', 'features' => array( 'Katalog', 'SEO lokal' ), 'badge' => 'Populer' ),
+ array( 'name' => 'Premium', 'price' => 'Rp 1.500.000', 'description' => 'Untuk kebutuhan lanjutan.', 'features' => array( 'Booking', 'Multi-bahasa' ), 'badge' => '' ),
+);
+$tier_html = LandingPage::render( $tier_fixture['data'], $tier_fixture['campaign'] );
+lpg_assert_same( 3, substr_count( $tier_html, 'lpg-lpt__price-tier' ) - substr_count( $tier_html, 'lpg-lpt__price-tier--featured' ), 'tiga kartu harga tampil' );
+lpg_assert_true( false !== strpos( $tier_html, '>Starter<' ) && false !== strpos( $tier_html, 'Rp 1.500.000' ), 'nama dan harga tiap tier tampil' );
+lpg_assert_true( false !== strpos( $tier_html, '>Populer<' ) && false !== strpos( $tier_html, 'lpg-lpt__price-tier--featured' ), 'tier unggulan ditandai' );
+lpg_assert_same( 3, count( LPG\ContentRepository::price_tiers( wp_json_encode( $tier_fixture['campaign']['price_tiers'] ) ) ), 'price_tiers dinormalisasi' );
+
+$service_schema = SchemaRegistry::graph(
+ array( 'lp_type' => 'service', 'offer_name' => 'Jasa Website', 'city' => 'Solo', 'target_areas' => array( 'Solo', 'Sukoharjo' ), 'benefits' => array( 'Cepat', 'Responsif' ) ),
+ array( 'title' => 'LP', 'intro' => 'Intro', 'faq' => array( array( 'q' => 'Berapa lama?', 'a' => 'Tergantung ruang lingkup.' ) ) ),
+ array( 'url' => 'https://example.test/jasa/' )
+);
+$service_types = array_column( $service_schema, '@type' );
+lpg_assert_true( in_array( 'FAQPage', $service_types, true ), 'schema FAQPage di-inject' );
+lpg_assert_true( false !== strpos( (string) wp_json_encode( $service_schema ), '#offer-catalog' ), 'schema offer catalog punya @id unik' );
+lpg_assert_same( count( $service_schema ), count( array_unique( array_column( $service_schema, '@id' ) ) ), 'schema service @id unik' );
 
 $meta = SeoMetadataEngine::build(
 	array( 'seo_title' => 'Judul', 'meta_description' => 'Deskripsi', 'title' => 'Halaman' ),

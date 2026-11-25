@@ -1,9 +1,9 @@
 {
-  "version": "2.0.3",
-  "package": "https://github.com/marzuki46/LP-generator/releases/download/v2.0.3/lp-generator-2.0.3.zip",
+  "version": "2.0.4",
+  "package": "https://github.com/marzuki46/LP-generator/releases/download/v2.0.4/lp-generator-2.0.4.zip",
   "homepage": "https://github.com/marzuki46/LP-generator",
   "requires": "6.4",
   "requires_php": "8.1",
   "tested": "6.8",
-  "changelog": "<ul><li>Perbaikan publish: path milik campaign yang sama dipakai ulang saat retry, bukan error bentrok.</li><li>AIDA service: sticky navigation + breadcrumb, sticky proof rail, kartu investasi di tahap Action, footer 4 kolom.</li><li>Price bar MULAI DARI tidak muncul di awal; harga tampil bersama kartu investasi setelah narasi nilai.</li><li>Lazy loading dan async decoding untuk gambar konten.</li></ul>"
+  "changelog": "<ul><li>Navigasi LP AIDA: Home root domain, Blog keyword + kota, Jasa LP wilayah, Contact &amp; About Us root domain (bisa dioverride).</li><li>Kartu harga 2–4 paket dengan perbandingan fitur dan badge paket unggulan.</li><li>Area layanan menurun tanpa koma dan footer punya paragraf penjelas penawaran.</li><li>Rekomendasi AI mengisi seluruh field campaign relevan termasuk paket harga.</li><li>CSS form campaign dan repeater harga diperbaiki.</li></ul>"
 }

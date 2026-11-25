@@ -30,6 +30,10 @@ final class ContentRepository {
 		'promise',
 		'benefits',
 		'price',
+		'price_tiers',
+		'blog_url',
+		'contact_url',
+		'about_url',
 		'bonus',
 		'guarantee',
 		'product_type',
@@ -192,6 +196,7 @@ final class ContentRepository {
 			$context[ $key ] = self::get_meta( $campaign_id, $key, '' );
 		}
 
+		$context['price_tiers'] = self::price_tiers( $context['price_tiers'] ?? '' );
 		$context['benefits'] = Utils::lines( (string) $context['benefits'] );
 		$context['bonus']    = Utils::lines( (string) $context['bonus'] );
 		$context['mofu_count'] = Utils::clamp_count( $context['mofu_count'] ?: 2 );
@@ -265,6 +270,30 @@ final class ContentRepository {
 	 * @param mixed  $default Default.
 	 * @return mixed
 	 */
+	/** Normalise 2–4 pricing tiers from JSON or a legacy pipe-delimited string. */
+	public static function price_tiers( $raw ): array {
+		$data = is_array( $raw ) ? $raw : json_decode( (string) $raw, true );
+		if ( ! is_array( $data ) ) { return array(); }
+		$out = array();
+		foreach ( $data as $tier ) {
+			if ( ! is_array( $tier ) ) { continue; }
+			$name = trim( sanitize_text_field( (string) ( $tier['name'] ?? '' ) ) );
+			$price = trim( sanitize_text_field( (string) ( $tier['price'] ?? '' ) ) );
+			if ( '' === $name && '' === $price ) { continue; }
+			$features = $tier['features'] ?? array();
+			$features = is_array( $features ) ? $features : Utils::lines( (string) $features );
+			$out[] = array(
+				'name' => $name,
+				'price' => $price,
+				'description' => trim( sanitize_textarea_field( (string) ( $tier['description'] ?? '' ) ) ),
+				'features' => array_values( array_filter( array_map( 'trim', $features ) ) ),
+				'badge' => trim( sanitize_text_field( (string) ( $tier['badge'] ?? '' ) ) ),
+			);
+			if ( count( $out ) >= 4 ) { break; }
+		}
+		return $out;
+	}
+
 	public static function get_meta( int $post_id, string $key, $default = '' ) {
 		$value = get_post_meta( $post_id, '_lpgen_' . $key, true );
 		return '' === $value || null === $value ? $default : $value;
@@ -288,6 +317,10 @@ final class ContentRepository {
 			'promise'          => '',
 			'benefits'         => '',
 			'price'            => '',
+			'price_tiers'      => '',
+			'blog_url'         => '',
+			'contact_url'      => '',
+			'about_url'        => '',
 			'bonus'            => '',
 			'guarantee'        => '',
 			'product_type'     => 'service',

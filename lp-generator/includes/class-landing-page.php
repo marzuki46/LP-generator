@@ -161,9 +161,11 @@ final class LandingPage {
 	public static function images( array $images, bool $hero = false ): string {
 		if ( ! $images ) { return ''; }
 		$html = '<div class="lpg-lp__gallery' . ( $hero ? ' lpg-lp__gallery--hero' : '' ) . '">';
+		$first_image = true;
 		foreach ( $images as $image ) {
 			if ( ! is_array( $image ) || empty( $image['url'] ) || '' === esc_url( (string) $image['url'] ) ) { continue; }
-			$html .= '<figure><img src="' . esc_url( (string) $image['url'] ) . '" alt="' . esc_attr( (string) ( $image['alt'] ?? '' ) ) . '" class="wp-image-' . absint( $image['id'] ?? 0 ) . '" loading="' . ( $hero ? 'eager' : 'lazy' ) . '" decoding="async"' . ( $hero ? ' fetchpriority="high"' : '' ) . ( ! empty( $image['width'] ) && ! empty( $image['height'] ) ? ' width="' . absint( $image['width'] ) . '" height="' . absint( $image['height'] ) . '"' : '' ) . ' /></figure>';
+			$html .= '<figure><img src="' . esc_url( (string) $image['url'] ) . '" alt="' . esc_attr( (string) ( $image['alt'] ?? '' ) ) . '" class="wp-image-' . absint( $image['id'] ?? 0 ) . '" loading="' . ( $hero && $first_image ? 'eager' : 'lazy' ) . '" decoding="async"' . ( $hero && $first_image ? ' fetchpriority="high"' : '' ) . ( ! empty( $image['width'] ) && ! empty( $image['height'] ) ? ' width="' . absint( $image['width'] ) . '" height="' . absint( $image['height'] ) . '"' : '' ) . ' /></figure>';
+			$first_image = false;
 		}
 		return $html . '</div>';
 	}

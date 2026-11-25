@@ -30,12 +30,52 @@ final class SchemaRegistry {
     'provider' => array( '@id' => $org ),
    );
    if ( ! empty( $campaign['city'] ) ) {
-    $service['areaServed'] = array( '@type' => 'City', 'name' => (string) $campaign['city'] );
+    $areas = $campaign['target_areas'] ?? array();
+    $areas = is_array( $areas ) ? $areas : Utils::lines( (string) $areas );
+    $areas = array_values( array_filter( array_map( 'trim', $areas ) ) );
+    if ( ! in_array( (string) $campaign['city'], $areas, true ) ) { array_unshift( $areas, (string) $campaign['city'] ); }
+    $service['areaServed'] = array_map(
+     static fn( $area ): array => array( '@type' => 'City', 'name' => (string) $area ),
+     array_slice( $areas, 0, 10 )
+    );
+   }
+   $benefits = array_values( array_filter( array_map( 'trim', (array) ( $campaign['benefits'] ?? array() ) ) ) );
+   if ( $benefits ) {
+    $service['hasOfferCatalog'] = array(
+     '@type' => 'OfferCatalog',
+     '@id' => $url . '#offer-catalog',
+     'name' => (string) ( $campaign['offer_name'] ?? '' ),
+     'itemListElement' => array_map(
+      static fn( $benefit ): array => array( '@type' => 'Offer', 'itemOffered' => array( '@type' => 'Service', 'name' => (string) $benefit ) ),
+      array_slice( $benefits, 0, 10 )
+     ),
+    );
    }
    if ( ! empty( $campaign['price'] ) && 'available' === (string) ( $campaign['product_status'] ?? 'available' ) ) {
     $service['offers'] = array( '@type' => 'Offer', 'priceSpecification' => array( '@type' => 'PriceSpecification', 'description' => (string) $campaign['price'] ) );
    }
    $nodes[] = $service;
+  }
+
+  $faq = is_array( $data['faq'] ?? null ) ? $data['faq'] : array();
+  if ( $faq ) {
+   $questions = array();
+   foreach ( $faq as $pair ) {
+    if ( is_array( $pair ) && ! empty( $pair['q'] ) && ! empty( $pair['a'] ) ) {
+     $questions[] = array(
+      '@type' => 'Question',
+      'name' => wp_strip_all_tags( (string) $pair['q'] ),
+      'acceptedAnswer' => array( '@type' => 'Answer', 'text' => wp_strip_all_tags( (string) $pair['a'] ) ),
+     );
+    }
+   }
+   if ( $questions ) {
+    $nodes[] = array(
+     '@type' => 'FAQPage',
+     '@id' => $url . '#faq',
+     'mainEntity' => array_slice( $questions, 0, 12 ),
+    );
+   }
   }
 
   if ( 'product' === $type ) {

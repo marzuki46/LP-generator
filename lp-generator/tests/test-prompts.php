@@ -295,7 +295,7 @@ lpg_assert_true( in_array( 'h1: must be exactly one', $seo_meta['blockers'], tru
 
 $svc_schema = SchemaRegistry::graph( array( 'lp_type' => 'service', 'offer_name' => 'Jasa Website', 'city' => 'Solo', 'price' => 'Rp800rb' ), array( 'title' => 'LP', 'intro' => 'Intro' ), array( 'url' => 'https://example.test/lp/' ) );
 lpg_assert_true( in_array( 'Service', array_column( $svc_schema, '@type' ), true ), 'schema service punya node Service' );
-lpg_assert_true( isset( $svc_schema[1]['areaServed']['name'] ) && 'Solo' === $svc_schema[1]['areaServed']['name'], 'areaServed memakai kota nyata' );
+lpg_assert_true( isset( $svc_schema[1]['areaServed'][0]['name'] ) && 'Solo' === $svc_schema[1]['areaServed'][0]['name'], 'areaServed memakai kota nyata' );
 $aff_schema = SchemaRegistry::graph( array( 'lp_type' => 'amazon_affiliate', 'offer_name' => 'Review', 'language' => 'id' ), array( 'title' => 'Review', 'meta_description' => 'Desc' ), array( 'url' => 'https://example.test/review/' ) );
 $aff_json = wp_json_encode( $aff_schema );
 lpg_assert_true( str_contains( $aff_json, 'Article' ) && ! str_contains( $aff_json, 'aggregateRating' ) && ! str_contains( $aff_json, 'priceSpecification' ), 'schema affiliate tanpa rating/harga rekaan' );

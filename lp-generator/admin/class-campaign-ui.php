@@ -222,6 +222,16 @@ final class CampaignUI {
 						</td>
 					</tr>
 					<tr>
+						<th><?php echo esc_html__( 'Menu atas LP', 'lp-generator' ); ?></th>
+						<td class="lpgen-field-grid">
+							<p><label for="lpgen_blog_url"><?php echo esc_html__( 'Blog / support content', 'lp-generator' ); ?> <input class="regular-text" type="url" id="lpgen_blog_url" name="lpgen[blog_url]" value="<?php echo esc_attr( (string) ( $values['blog_url'] ?? '' ) ); ?>" placeholder="<?php echo esc_attr( esc_url( home_url( '/?s=' ) ) ); ?>" /></label>
+							<br><span class="description"><?php echo esc_html__( 'Kosongkan untuk otomatis: pencarian blog dengan keyword + kota campaign ini.', 'lp-generator' ); ?></span></p>
+							<p><label for="lpgen_contact_url"><?php echo esc_html__( 'Contact Us', 'lp-generator' ); ?> <input class="regular-text" type="url" id="lpgen_contact_url" name="lpgen[contact_url]" value="<?php echo esc_attr( (string) ( $values['contact_url'] ?? '' ) ); ?>" placeholder="<?php echo esc_attr( esc_url( home_url( '/contact/' ) ) ); ?>" /></label></p>
+							<p><label for="lpgen_about_url"><?php echo esc_html__( 'About Us', 'lp-generator' ); ?> <input class="regular-text" type="url" id="lpgen_about_url" name="lpgen[about_url]" value="<?php echo esc_attr( (string) ( $values['about_url'] ?? '' ) ); ?>" placeholder="<?php echo esc_attr( esc_url( home_url( '/about-us/' ) ) ); ?>" /></label></p>
+							<p class="description"><?php echo esc_html__( 'Home tetap root domain. Blog & Jasa mengikuti kota/keyword campaign. Contact & About Us memakai halaman root domain kecuali diisi di sini.', 'lp-generator' ); ?></p>
+						</td>
+					</tr>
+					<tr>
 						<th><label for="lpgen_target_areas"><?php echo esc_html__( 'Target Area / Kota (Opsional)', 'lp-generator' ); ?></label></th>
 						<td>
 							<p><label for="lpgen_city"><?php echo esc_html__( 'Kota utama LP', 'lp-generator' ); ?></label> <input id="lpgen_city" name="lpgen[city]" value="<?php echo esc_attr( (string) $values['city'] ); ?>" placeholder="Solo" /></p>
@@ -232,7 +242,7 @@ final class CampaignUI {
 					<tr>
 						<th><?php echo esc_html__( 'Data khusus tipe LP', 'lp-generator' ); ?></th>
 						<td>
-							<details style="border:1px solid #c3c4c7;border-radius:6px;padding:10px 12px;" <?php echo 'product' === LpTypeRegistry::clean( $values['lp_type'] ?? '' ) || 'amazon_affiliate' === LpTypeRegistry::clean( $values['lp_type'] ?? '' ) ? 'open' : ''; ?>>
+							<details class="lpgen-form-section" style="border:1px solid #c3c4c7;border-radius:6px;padding:10px 12px;" <?php echo 'product' === LpTypeRegistry::clean( $values['lp_type'] ?? '' ) || 'amazon_affiliate' === LpTypeRegistry::clean( $values['lp_type'] ?? '' ) ? 'open' : ''; ?>>
 								<summary><strong><?php echo esc_html__( 'Produk / Amazon Affiliate', 'lp-generator' ); ?></strong></summary>
 								<p><label><?php echo esc_html__( 'Jenis produk', 'lp-generator' ); ?> <select name="lpgen[product_type]"><option value="physical" <?php selected( $values['product_type'] ?? '', 'physical' ); ?>>Physical</option><option value="digital" <?php selected( $values['product_type'] ?? '', 'digital' ); ?>>Digital</option><option value="saas" <?php selected( $values['product_type'] ?? '', 'saas' ); ?>>SaaS</option><option value="service" <?php selected( $values['product_type'] ?? '', 'service' ); ?>>Service</option></select></label></p>
 								<p><label><?php echo esc_html__( 'Status produk', 'lp-generator' ); ?> <input class="regular-text" name="lpgen[product_status]" value="<?php echo esc_attr( (string) ( $values['product_status'] ?? '' ) ); ?>" placeholder="available / preorder / unavailable" /></label></p>
@@ -353,7 +363,7 @@ final class CampaignUI {
 
 			<!-- BAGIAN 4: PENGATURAN LANJUTAN (COLLAPSIBLE) -->
 			<div class="lpgen-form-section" style="margin-top:20px;padding-top:16px;border-top:1px solid #dcdcde;">
-				<details style="background:#f6f7f7;padding:12px 16px;border:1px solid #c3c4c7;border-radius:6px;">
+				<details class="lpgen-form-section" style="background:#f6f7f7;padding:12px 16px;border:1px solid #c3c4c7;border-radius:6px;">
 					<summary style="font-weight:600;font-size:14px;cursor:pointer;color:#2271b1;">
 						⚙️ <?php echo esc_html__( 'Pengaturan Lanjutan (Persona, Jadwal, Internal Link, Gambar, Amazon)', 'lp-generator' ); ?>
 					</summary>
@@ -379,6 +389,36 @@ final class CampaignUI {
 							<tr>
 								<th><label for="lpgen_price"><?php echo esc_html__( 'Harga / Mulai Dari', 'lp-generator' ); ?></label></th>
 								<td><input type="text" class="regular-text" name="lpgen[price]" id="lpgen_price" value="<?php echo esc_attr( (string) $values['price'] ); ?>" /></td>
+							</tr>
+							<tr>
+								<th><?php echo esc_html__( 'Kartu harga (2–4 pilihan)', 'lp-generator' ); ?></th>
+								<td class="lpgen-price-tiers" id="lpgen_price_tiers" data-next="<?php echo esc_attr( (string) count( ContentRepository::price_tiers( $values['price_tiers'] ?? '' ) ) ); ?>">
+									<?php
+									$tiers = ContentRepository::price_tiers( $values['price_tiers'] ?? '' );
+									if ( ! $tiers ) {
+										$tiers = array_fill( 0, 3, array( 'name' => '', 'price' => '', 'description' => '', 'features' => array(), 'badge' => '' ) );
+									}
+									foreach ( $tiers as $index => $tier ) :
+										?>
+										<div class="lpgen-tier-row" data-index="<?php echo esc_attr( (string) $index ); ?>">
+											<div class="lpgen-tier-row__head">
+												<strong><?php echo esc_html( sprintf( __( 'Paket %d', 'lp-generator' ), $index + 1 ) ); ?></strong>
+												<button type="button" class="button button-small lpgen-tier-remove" <?php echo count( $tiers ) <= 2 ? 'disabled' : ''; ?>><?php echo esc_html__( 'Hapus', 'lp-generator' ); ?></button>
+											</div>
+											<div class="lpgen-tier-row__grid">
+												<label><?php echo esc_html__( 'Nama paket', 'lp-generator' ); ?><input type="text" name="lpgen[price_tiers][<?php echo esc_attr( (string) $index ); ?>][name]" value="<?php echo esc_attr( (string) $tier['name'] ); ?>" placeholder="Starter" /></label>
+												<label><?php echo esc_html__( 'Harga', 'lp-generator' ); ?><input type="text" name="lpgen[price_tiers][<?php echo esc_attr( (string) $index ); ?>][price]" value="<?php echo esc_attr( (string) $tier['price'] ); ?>" placeholder="Rp 500.000" /></label>
+												<label><?php echo esc_html__( 'Badge (opsional)', 'lp-generator' ); ?><input type="text" name="lpgen[price_tiers][<?php echo esc_attr( (string) $index ); ?>][badge]" value="<?php echo esc_attr( (string) $tier['badge'] ); ?>" placeholder="Populer" /></label>
+												<label class="lpgen-tier-row__wide"><?php echo esc_html__( 'Deskripsi', 'lp-generator' ); ?><textarea rows="2" name="lpgen[price_tiers][<?php echo esc_attr( (string) $index ); ?>][description]"><?php echo esc_textarea( (string) $tier['description'] ); ?></textarea></label>
+												<label class="lpgen-tier-row__wide"><?php echo esc_html__( 'Termasuk (satu per baris)', 'lp-generator' ); ?><textarea rows="3" name="lpgen[price_tiers][<?php echo esc_attr( (string) $index ); ?>][features]"><?php echo esc_textarea( implode( "\n", (array) $tier['features'] ) ); ?></textarea></label>
+											</div>
+										</div>
+									<?php endforeach; ?>
+									<div class="lpgen-tier-actions">
+										<button type="button" class="button button-secondary" id="lpgen_tier_add" <?php echo count( $tiers ) >= 4 ? 'disabled' : ''; ?>><?php echo esc_html__( '+ Tambah paket', 'lp-generator' ); ?></button>
+										<span class="description"><?php echo esc_html__( 'Isi 2–4 paket. Kosongkan semua untuk memakai satu harga di atas.', 'lp-generator' ); ?></span>
+									</div>
+								</td>
 							</tr>
 							<tr>
 								<th><label for="lpgen_bonus"><?php echo esc_html__( 'Bonus (satu per baris)', 'lp-generator' ); ?></label></th>
@@ -569,6 +609,14 @@ final class CampaignUI {
 					break;
 				case 'experiment_mode':
 					$data[ $key ] = ExperimentMode::clean( $value );
+					break;
+				case 'price_tiers':
+					$data[ $key ] = wp_json_encode( ContentRepository::price_tiers( $value ) );
+					break;
+				case 'blog_url':
+				case 'contact_url':
+				case 'about_url':
+					$data[ $key ] = esc_url_raw( trim( (string) $value ) );
 					break;
 				case 'product_type':
 					$data[ $key ] = in_array( $value, array( 'physical', 'digital', 'saas', 'service' ), true ) ? $value : 'service';

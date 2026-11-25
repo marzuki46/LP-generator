@@ -57,16 +57,27 @@ final class LpTemplate {
 		$html      = '<nav class="lpg-lpm__nav" aria-label="' . esc_attr( $strings['nav_page'] ) . '"><div class="lpg-lpm__nav-inner">';
 		$html     .= '<span class="lpg-lpm__brand">' . LandingPage::text( $eyebrow ) . '</span>';
 		if ( $aida_service ) {
+			$keyword     = trim( (string) ( $campaign['lp_target_keyword'] ?? '' ) );
+			if ( '' === $keyword ) { $keyword = trim( (string) ( $campaign['offer_name'] ?? '' ) . ' ' . $city ); }
+			$blog_url    = trim( (string) ( $campaign['blog_url'] ?? '' ) );
+			if ( '' === $blog_url ) { $blog_url = home_url( '/?s=' . rawurlencode( $keyword ) ); }
+			$path        = FunnelContent::clean_path( (string) ( $campaign['bofu_path'] ?? '' ) );
+			if ( '' === $path && '' !== $city ) { $path = 'jasa/website/' . sanitize_title( $city ); }
+			$jasa_url    = '' !== $path ? home_url( '/' . $path . '/' ) : home_url( '/jasa/' );
+			$contact_url = trim( (string) ( $campaign['contact_url'] ?? '' ) );
+			if ( '' === $contact_url ) { $contact_url = home_url( '/contact/' ); }
+			$about_url   = trim( (string) ( $campaign['about_url'] ?? '' ) );
+			if ( '' === $about_url ) { $about_url = home_url( '/about-us/' ); }
 			$links = array(
-				'#aida-interest' => $strings['needs'],
-				'#aida-desire'   => $strings['solution'],
-				'#aida-price'    => $strings['pricing'],
-				'#aida-faq'      => $strings['faq'],
-				'#kontak'        => $strings['contact'],
+				$strings['home']    => home_url( '/' ),
+				$strings['blog']    => $blog_url,
+				$strings['nav_services'] => $jasa_url,
+				$strings['contact'] => $contact_url,
+				$strings['about']   => $about_url,
 			);
 			$html .= '<div class="lpg-lpm__nav-links">';
-			foreach ( $links as $href => $label ) {
-				$html .= '<a href="' . esc_attr( $href ) . '">' . esc_html( $label ) . '</a>';
+			foreach ( $links as $label => $href ) {
+				$html .= '<a href="' . esc_url( $href ) . '">' . esc_html( $label ) . '</a>';
 			}
 			$html .= '</div>';
 		}
@@ -150,12 +161,34 @@ final class LpTemplate {
 				. '<a href="#aida-price">' . esc_html( $strings['pricing'] ) . '</a>'
 				. '<a href="#aida-faq">' . esc_html( $strings['faq'] ) . '</a></div>'
 			: '';
+		$keyword = trim( (string) ( $campaign['lp_target_keyword'] ?? '' ) );
+		if ( '' === $keyword ) { $keyword = trim( (string) ( $campaign['offer_name'] ?? '' ) ); }
+		$en = 'en' === (string) ( $campaign['language'] ?? 'id' );
+		$footer_copy = array(
+			'service' => $en
+				? 'Start with what your business needs. Explore the service, review the process, and discuss the scope before choosing your next step.'
+				: 'Mulai dari kebutuhan bisnis Anda. Pelajari layanannya, pahami prosesnya, lalu diskusikan ruang lingkup pekerjaan sebelum menentukan langkah berikutnya.',
+			'product' => $en
+				? 'Choose with a clear understanding of what you need. Review the features, specifications, and purchase terms to find the right fit.'
+				: 'Pilih dengan memahami kebutuhan Anda. Tinjau fitur, spesifikasi, dan ketentuan pembelian agar produk yang dipilih benar-benar sesuai.',
+			'amazon_affiliate' => $en
+				? 'Make a more informed choice. Compare the benefits and limitations, then check the current price and purchase terms on Amazon.'
+				: 'Tentukan pilihan dengan informasi yang lebih jelas. Bandingkan kelebihan dan keterbatasannya, lalu periksa harga terkini serta ketentuan pembelian di Amazon.',
+		);
+		$intro = $footer_copy[ $type ] ?? $footer_copy['service'];
+		$area_lines = '';
+		foreach ( array_slice( $areas, 0, 5 ) as $area ) {
+			$area_lines .= '<span>' . LandingPage::text( (string) $area ) . '</span>';
+		}
+		if ( '' === $area_lines && '' !== $city ) {
+			$area_lines = '<span>' . LandingPage::text( $city ) . '</span>';
+		}
 		$html .= '<footer class="lpg-lpm__footer">'
-			. '<div class="lpg-lpm__footer-col"><strong>' . LandingPage::text( $campaign['offer_name'] ?? '' ) . '</strong>'
-			. '<span>' . LandingPage::text( $campaign['brand'] ?? '' ) . '</span></div>'
+			. '<div class="lpg-lpm__footer-col lpg-lpm__footer-about"><strong>' . LandingPage::text( $keyword ) . '</strong>'
+			. '<p>' . esc_html( $intro ) . '</p>'
+			. '<span>' . esc_html( (string) ( $campaign['brand'] ?? '' ) ) . '</span></div>'
 			. $footer_nav
-			. '<div class="lpg-lpm__footer-col"><strong>' . esc_html( $strings['service_area'] ) . '</strong>'
-			. '<span>' . ( '' !== $location ? LandingPage::text( $location ) : '—' ) . '</span></div>'
+			. '<div class="lpg-lpm__footer-col"><strong>' . esc_html( $strings['service_area'] ) . '</strong>' . $area_lines . '</div>'
 			. '<div class="lpg-lpm__footer-col"><strong>' . esc_html( $strings['contact'] ) . '</strong>'
 			. '<span>' . LandingPage::text( $campaign['phone'] ?? $campaign['contact_email'] ?? '' ) . '</span></div>'
 			. '</footer>';

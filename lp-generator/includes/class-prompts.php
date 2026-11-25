@@ -557,7 +557,7 @@ final class Prompts {
 	 * @return array{system:string,user:string,required:string[]}
 	 */
 	public static function build_campaign_suggestion( string $keyword, string $language = 'id' ): array {
-		$required  = array( 'audience', 'problem', 'promise', 'benefits', 'manual_mofu_topics', 'manual_tofu_topics', 'target_areas' );
+		$required  = array( 'audience', 'problem', 'promise', 'benefits', 'manual_mofu_topics', 'manual_tofu_topics', 'target_areas', 'offer_type', 'lp_type', 'city', 'cta', 'voice', 'guarantee', 'bonus', 'price', 'price_tiers' );
 		$lang_text = 'id' === $language ? 'Bahasa Indonesia' : 'English';
 		$user      = implode(
 			"\n\n",
@@ -572,6 +572,15 @@ final class Prompts {
 				'- "manual_mofu_topics": array of 2-3 comparison/decision/review topics (MOFU stage) that lead directly to this offer.',
 				'- "manual_tofu_topics": array of 2-3 educational/awareness topics (TOFU stage) that educate the target audience.',
 				'- "target_areas": array of relevant nearby areas only when explicitly indicated by the supplied location. Return an empty array if location is unknown; never choose unrelated major cities.',
+				'- "offer_type": one of "product", "service", or "affiliate".',
+				'- "lp_type": one of "service", "product", or "amazon_affiliate".',
+				'- "city": the single main city explicitly indicated by the keyword, or an empty string when unknown.',
+				'- "cta": a concise call-to-action button label.',
+				'- "voice": a short tone-of-voice description.',
+				'- "guarantee": a non-fabricated guarantee statement; empty string if unknown.',
+				'- "bonus": array of plausible bonus items; empty array if unknown.',
+				'- "price": a price range only when supplied by the keyword or clearly generic; empty string otherwise.',
+				'- "price_tiers": array of 2 to 4 objects with keys "name", "price", "description", "features" (array of short strings), and "badge". Use empty arrays/strings when real prices are unknown; never invent factual prices.',
 			)
 		);
 		return array(

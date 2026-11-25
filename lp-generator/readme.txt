@@ -4,7 +4,7 @@ Tags: landing page, seo, content, ai, funnel
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 8.1
-Stable tag: 2.0.3
+Stable tag: 2.0.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,13 @@ The requested behavior is to let the post settle and permalink become available 
 No. Google has no public URL push API for ordinary pages. PuSH notifies feed hubs; IndexNow covers participating engines. Use Search Console manually for Google priority.
 
 == Changelog ==
+
+= 2.0.4 =
+* Navigasi LP AIDA: Home (root domain), Blog (support content keyword + kota), Jasa (LP wilayah), Contact & About Us (root domain, bisa dioverride per campaign).
+* Kartu harga 2–4 paket dengan perbandingan fitur, badge paket unggulan, dan input repeater di form campaign.
+* Area layanan ditampilkan menurun tanpa koma; footer memiliki paragraf penjelas penawaran.
+* Rekomendasi AI kini mengisi seluruh field campaign yang relevan, termasuk kota, tipe offer, CTA, voice, bonus, garansi, dan paket harga.
+* Perbaikan CSS form campaign dan repeater harga.
 
 = 2.0.3 =
 * Fix publish LP: path yang sudah dibuat oleh campaign yang sama dipakai ulang saat retry, bukan dianggap bentrok.
